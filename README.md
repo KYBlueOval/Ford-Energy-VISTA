@@ -1,4 +1,4 @@
-# Ford Energy VISTA v1.2.3
+# Ford Energy VISTA v1.2.4
 
 **Visitor Intelligence, Security, Tracking & Analytics**
 
@@ -63,8 +63,15 @@ New visitor photographs are saved in the configured Google Drive folder as `Full
 Adds a searchable approved sponsor email directory with automatic sponsor name/department population and manual unlisted-email entry.
 
 
-## v1.2.3
+## v1.2.4
 
 - Searchable sponsor directory with manual email entry remains enabled.
 - Replaces the former color-threshold photo effect with MediaPipe person segmentation and a solid light-blue ID-photo background.
 - Adds Google Drive preview embedding, YouTube embedding, direct MP4 support, and a visible fallback link for training videos that cannot be embedded.
+
+
+## v1.2.4 Registration Header Text Update
+
+- Top-brand subtitle: `Visitor Registration - Site Access Reservation System`
+- Hero location: `BlueOval Glendale KY`
+- Hero title: `VISTA Visitor Pre-Arrival Registration`
