@@ -1,4 +1,4 @@
-# Ford Energy VISTA v1.2.1
+# Ford Energy VISTA v1.2.3
 
 **Visitor Intelligence, Security, Tracking & Analytics**
 
@@ -38,7 +38,7 @@ Keep the Drive folder restricted. Apps Script saves photos while executing as th
 - Added action notifications, selected-row highlighting, and improved photo/error states.
 
 
-## v1.2.1 agreements, training, and ID-photo enhancement
+## v1.2.2 agreements, training, and ID-photo enhancement
 - Updated visitor photo wording to government ID / passport-style standards.
 - Added 3:4 ID-photo crop and optional light-blue background preparation. The background tool is a browser-side best-effort process for plain backgrounds; Security must still visually verify photo quality.
 - Expanded the agreement workflow to seven separately acknowledged sections.
@@ -54,6 +54,17 @@ Keep the Drive folder restricted. Apps Script saves photos while executing as th
 5. Deploy Apps Script as a **new version** of the existing Web app.
 6. Confirm the `/exec` URL. If Google changes it, update both frontend `config.js` files.
 
-## v1.2.1 visitor-photo naming
+## v1.2.2 visitor-photo naming
 
 New visitor photographs are saved in the configured Google Drive folder as `Full Name-Company.jpg` or `.png`, for example `John Alan Doe-Clarion.jpg`. The Security Console also provides a Download Photo control that preserves that exact filename for Alpeta/uBio facial-recognition enrollment.
+
+
+## v1.2.2
+Adds a searchable approved sponsor email directory with automatic sponsor name/department population and manual unlisted-email entry.
+
+
+## v1.2.3
+
+- Searchable sponsor directory with manual email entry remains enabled.
+- Replaces the former color-threshold photo effect with MediaPipe person segmentation and a solid light-blue ID-photo background.
+- Adds Google Drive preview embedding, YouTube embedding, direct MP4 support, and a visible fallback link for training videos that cannot be embedded.

@@ -67,9 +67,13 @@
       <section class="panel form-step" data-step="2">
         <div class="section-heading"><div><p class="eyebrow">VISIT REQUEST</p><h2>Visit Information</h2></div></div>
         <div class="grid cols-2">
-          <label>Ford Energy sponsor *<input name="sponsorName" required /></label>
-          <label>Sponsor email *<input name="sponsorEmail" type="email" required /></label>
-          <label>Sponsor department *<input name="department" required /></label>
+          <label>Ford Energy sponsor *<input name="sponsorName" id="sponsorName" required autocomplete="off" /></label>
+          <label>Sponsor email *
+            <input name="sponsorEmail" id="sponsorEmail" type="email" list="sponsorEmailOptions" required autocomplete="off" placeholder="Search approved sponsors or enter an email" />
+            <datalist id="sponsorEmailOptions"></datalist>
+            <span class="field-help">Begin typing a sponsor name, department, or email and select a match. An unlisted sponsor email may also be entered manually.</span>
+          </label>
+          <label>Sponsor department *<input name="department" id="sponsorDepartment" required /></label>
           <label>Secondary point of contact<input name="secondaryContact" /></label>
           <label class="span-2">Reason for visit *<textarea name="reason" required rows="3"></textarea></label>
           <label>Project / assignment<input name="project" /></label>
@@ -182,6 +186,7 @@
 
   <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><h2>Registration Submitted</h2><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><div id="confirmationQr" class="confirmation-qr" aria-label="Registration QR code"></div><div id="confirmationSummary" class="confirmation-summary"></div><div class="arrival-reminder"><strong>Arrival instructions</strong><p>Proceed to the Main Security Building, park in Ford Energy / Visitor Parking, and bring the original valid government-issued photo ID used to verify your identity.</p><p>Do not bring undeclared restricted items or electronic storage devices.</p></div><a id="vgsLink" class="btn btn-secondary hidden" target="_blank" rel="noopener">Open VGS Navigation</a> <button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></dialog>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="config.js"></script><script src="app.js"></script>
+  <script src="config.js"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
+  <script src="app.js"></script>
 </body>
 </html>

@@ -1,12 +1,13 @@
 const FE = {
-  VERSION: '1.2.1',
-  SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements' },
+  VERSION: '1.2.3',
+  SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
   BADGE_HEADERS: ['BadgeUID','BadgeNumber','Status','CurrentVisitID','IssuedAt','ReturnedAt','Notes'],
   AGREEMENT_HEADERS: ['AgreementID','Title','Version','EffectiveDate','ContentHash','Active','LastUpdatedAt'],
   ACK_HEADERS: ['AcknowledgementID','VisitID','ConfirmationNumber','VisitorName','VisitorEmail','AgreementID','AgreementTitle','AgreementVersion','DatePresented','TimePresented','PresentedTimestamp','DateAccepted','TimeAccepted','AcceptedTimestamp','VisitorEnteredAcceptanceDate','TypedElectronicSignature','CheckboxAcknowledged','SessionID','ClientIP','UserAgent','ClientLanguage','ClientTimeZone','ClientTimestamp','Referrer','AgreementContentHash','CompletionStatus'],
   CONFIG_HEADERS: ['Key','Value'],
+  SPONSOR_HEADERS: ['SponsorID','SponsorName','SponsorEmail','Department','Active','SearchKeywords','LastUpdatedAt'],
   AGREEMENT_DEFINITIONS: [
     {id:'SECURITY',title:'Security Agreement',body:'Visitors are subject to screening, access restrictions, badge-control requirements, escort requirements, and Ford Energy Security direction. Unauthorized access, recording, removal of property or information, and bypass of security controls are prohibited.'},
     {id:'BIOMETRIC',title:'Biometric and Facial Recognition Consent',body:'The submitted photograph and approved identity-verification technologies may be used to support visitor identification, access control, safety, and security where authorized.'},
@@ -24,6 +25,7 @@ function doPost(e) {
     const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     const action = req.action || '';
     if (action === 'createVisit') return json_(createVisit_(req.payload || {}));
+    if (action === 'listSponsors') return json_(listSponsors_(req.payload || {}));
     requireSecurity_(req.pin);
     if (action === 'securityLogin') return json_({ok:true});
     if (action === 'listVisits') return json_(listVisits_(req.payload || {}));
@@ -42,6 +44,7 @@ function setupVisitorManagement() {
   ensureSheet_(ss, FE.SHEETS.BADGES, FE.BADGE_HEADERS);
   ensureSheet_(ss, FE.SHEETS.AGREEMENTS, FE.AGREEMENT_HEADERS);
   ensureSheet_(ss, FE.SHEETS.ACKS, FE.ACK_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.SPONSORS, FE.SPONSOR_HEADERS);
   const config = ensureSheet_(ss, FE.SHEETS.CONFIG, FE.CONFIG_HEADERS);
   const defaults = {
     SECURITY_PIN:'1937', PHOTO_FOLDER_ID:'', SITE_TIMEZONE:'America/New_York', NOTIFICATION_EMAIL:'',
@@ -54,8 +57,8 @@ function setupVisitorManagement() {
   const existing = config.getDataRange().getValues().slice(1).reduce((o,r)=>(o[String(r[0])]=r[1],o),{});
   Object.keys(defaults).forEach(k=>{ if (existing[k] === undefined || existing[k] === '') config.appendRow([k,defaults[k]]); });
   seedAgreements_();
-  [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA v1.2.1 setup complete. Visitor photos now use Full Name-Company filenames. Review Config and deploy a new Web app version.';
+  [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
+  return 'VISTA v1.2.3 setup complete. Sponsor directory search, AI background removal, and improved training-video embedding are enabled.';
 }
 
 function seedAgreements_(){
@@ -65,6 +68,26 @@ function seedAgreements_(){
     const hash=sha256_(`${d.id}|${d.title}|${version}|${d.body}`), existing=rows.find(r=>String(r.AgreementID)===d.id&&String(r.Version)===version);
     if(!existing) sheet.appendRow([d.id,d.title,version,new Date(),hash,'Yes',new Date()]);
   });
+}
+
+
+function listSponsors_(p) {
+  const q=String((p&&p.query)||'').trim().toLowerCase();
+  const rows=readObjects_(FE.SHEETS.SPONSORS)
+    .filter(r=>String(r.Active||'Yes').toLowerCase()!=='no')
+    .filter(r=>{
+      if(!q)return true;
+      return [r.SponsorName,r.SponsorEmail,r.Department,r.SearchKeywords].join(' ').toLowerCase().includes(q);
+    })
+    .map(r=>({
+      sponsorId:String(r.SponsorID||''),
+      name:String(r.SponsorName||'').trim(),
+      email:String(r.SponsorEmail||'').trim(),
+      department:String(r.Department||'').trim()
+    }))
+    .filter(r=>r.email)
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  return {ok:true,sponsors:rows.slice(0,500)};
 }
 
 function createVisit_(p) {

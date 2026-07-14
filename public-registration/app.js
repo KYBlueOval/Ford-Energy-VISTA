@@ -17,6 +17,30 @@
   const $ = s => document.querySelector(s);
   const nextBtn = $('#nextBtn'), backBtn = $('#backBtn'), submitBtn = $('#submitBtn');
   const agreementCheckboxes = [...document.querySelectorAll('[data-agreement-id]')];
+  let sponsorDirectory = [];
+
+  async function loadSponsorDirectory(){
+    const emailInput=$('#sponsorEmail'), list=$('#sponsorEmailOptions');
+    if(!emailInput||!list||!cfg.API_URL||cfg.API_URL.includes('PASTE_'))return;
+    try{
+      const res=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'listSponsors',payload:{}})});
+      const data=await res.json();
+      if(!data.ok)throw new Error(data.error||'Sponsor directory unavailable.');
+      sponsorDirectory=Array.isArray(data.sponsors)?data.sponsors:[];
+      list.innerHTML=sponsorDirectory.map(s=>`<option value="${escapeHtml(s.email)}">${escapeHtml([s.name,s.department].filter(Boolean).join(' — '))}</option>`).join('');
+      emailInput.placeholder=sponsorDirectory.length?'Search approved sponsors or enter an email':'Enter sponsor email';
+    }catch(err){
+      console.warn('Sponsor directory could not be loaded:',err);
+      emailInput.placeholder='Enter sponsor email manually';
+    }
+  }
+  function applySponsorSelection(){
+    const email=$('#sponsorEmail')?.value.trim().toLowerCase();
+    const match=sponsorDirectory.find(s=>String(s.email).trim().toLowerCase()===email);
+    if(!match)return;
+    if(match.name)$('#sponsorName').value=match.name;
+    if(match.department)$('#sponsorDepartment').value=match.department;
+  }
 
   function nowIso(){ return new Date().toISOString(); }
   function markAgreementPresented(key){
@@ -91,14 +115,38 @@
   }
 
   function loadTrainingVideo(){
-    const url = cfg.TRAINING_VIDEO_URL || '';
-    if (!url) return;
+    const rawUrl = String(cfg.TRAINING_VIDEO_URL || '').trim();
+    if (!rawUrl) return;
     const box = $('#trainingVideoContainer');
-    const youtube = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{6,})/i);
-    if (youtube) box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtube[1])}" title="Ford Energy Site Awareness Training" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-    else box.innerHTML = `<video controls preload="metadata"><source src="${escapeHtml(url)}">Your browser cannot play the training video.</video>`;
+    const youtube = rawUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,})/i);
+    const drive = rawUrl.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)/i);
+    const escaped = escapeHtml(rawUrl);
+    if (youtube) {
+      box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtube[1])}?rel=0" title="Ford Energy Site Awareness Training" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+      return;
+    }
+    if (drive) {
+      box.innerHTML = `<iframe src="https://drive.google.com/file/d/${encodeURIComponent(drive[1])}/preview" title="Ford Energy Site Awareness Training" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      return;
+    }
+    const video = document.createElement('video');
+    video.controls = true;
+    video.preload = 'metadata';
+    video.playsInline = true;
+    video.src = rawUrl;
+    video.setAttribute('controlsList','nodownload');
+    box.innerHTML = '';
+    box.appendChild(video);
+    const fallback = document.createElement('div');
+    fallback.className = 'video-fallback hidden';
+    fallback.innerHTML = `The embedded player could not load this file. <a href="${escaped}" target="_blank" rel="noopener">Open the training video in a new tab</a>.`;
+    box.appendChild(fallback);
+    video.addEventListener('error',()=>fallback.classList.remove('hidden'));
   }
   loadTrainingVideo();
+  $('#sponsorEmail')?.addEventListener('input',applySponsorSelection);
+  $('#sponsorEmail')?.addEventListener('change',applySponsorSelection);
+  loadSponsorDirectory();
 
   async function fileToCompressedDataUrl(file) {
     const data = await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
@@ -125,29 +173,42 @@
 
   $('#preparePhotoBtn').addEventListener('click', async()=>{
     if(!originalPhotoDataUrl) originalPhotoDataUrl=photoDataUrl;
-    const btn=$('#preparePhotoBtn'); btn.disabled=true; btn.textContent='Preparing…';
-    try{ setPhoto(await replaceSimpleBackground(originalPhotoDataUrl)); btn.textContent='ID Photo Prepared'; }
-    catch(err){ alert('The automatic background preparation could not confidently isolate the background. The cropped original photo has been retained.'); btn.textContent='Prepare ID Photo'; }
-    finally{btn.disabled=false}
+    const btn=$('#preparePhotoBtn'); btn.disabled=true; btn.textContent='Removing Background…';
+    try{
+      setPhoto(await removeBackgroundWithSegmentation(originalPhotoDataUrl));
+      btn.textContent='Background Removed';
+    } catch(err){
+      console.error(err);
+      alert('Background removal could not be completed. Confirm that the browser is online and try again. The original cropped photo has been retained.');
+      setPhoto(originalPhotoDataUrl);
+      btn.textContent='Remove Background';
+    } finally { btn.disabled=false; }
   });
 
-  async function replaceSimpleBackground(dataUrl){
+  async function removeBackgroundWithSegmentation(dataUrl){
+    if(typeof SelfieSegmentation==='undefined') throw new Error('The background-removal model did not load.');
     const img=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=dataUrl});
-    const c=document.createElement('canvas');c.width=900;c.height=1200;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,c.width,c.height);
-    const im=ctx.getImageData(0,0,c.width,c.height),d=im.data,w=c.width,h=c.height;
-    const samples=[]; const step=20,band=50;
-    for(let x=0;x<w;x+=step){for(let y=0;y<band;y+=step)samples.push(pixel(d,w,x,y));for(let y=h-band;y<h;y+=step)samples.push(pixel(d,w,x,y));}
-    for(let y=0;y<h;y+=step){for(let x=0;x<band;x+=step)samples.push(pixel(d,w,x,y));for(let x=w-band;x<w;x+=step)samples.push(pixel(d,w,x,y));}
-    const bg=samples.reduce((a,p)=>[a[0]+p[0],a[1]+p[1],a[2]+p[2]],[0,0,0]).map(v=>v/samples.length);
-    const blue=[214,234,248];
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-      const i=(y*w+x)*4,dist=Math.hypot(d[i]-bg[0],d[i+1]-bg[1],d[i+2]-bg[2]);
-      const edge=Math.min(x,y,w-1-x,h-1-y); const threshold=edge<80?92:58;
-      if(dist<threshold){const a=Math.max(0,Math.min(1,(threshold-dist)/24));d[i]=d[i]*(1-a)+blue[0]*a;d[i+1]=d[i+1]*(1-a)+blue[1]*a;d[i+2]=d[i+2]*(1-a)+blue[2]*a;}
-    }
-    ctx.putImageData(im,0,0);return c.toDataURL('image/jpeg',.88);
+    const segmenter=new SelfieSegmentation({locateFile:file=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`});
+    segmenter.setOptions({modelSelection:1,selfieMode:false});
+    const result=await new Promise(async(resolve,reject)=>{
+      let settled=false;
+      const timer=setTimeout(()=>{if(!settled){settled=true;reject(new Error('Background removal timed out.'));}},20000);
+      segmenter.onResults(r=>{if(!settled){settled=true;clearTimeout(timer);resolve(r);}});
+      try{await segmenter.send({image:img});}catch(e){if(!settled){settled=true;clearTimeout(timer);reject(e);}}
+    });
+    const w=900,h=1200,c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=w;c.height=h;
+    ctx.save();
+    ctx.clearRect(0,0,w,h);
+    ctx.drawImage(result.segmentationMask,0,0,w,h);
+    ctx.globalCompositeOperation='source-in';
+    ctx.drawImage(img,0,0,w,h);
+    ctx.globalCompositeOperation='destination-over';
+    ctx.fillStyle='#d8eaf8';
+    ctx.fillRect(0,0,w,h);
+    ctx.restore();
+    if(segmenter.close) await segmenter.close();
+    return c.toDataURL('image/jpeg',.9);
   }
-  function pixel(d,w,x,y){const i=(Math.floor(y)*w+Math.floor(x))*4;return[d[i],d[i+1],d[i+2]]}
 
   function agreementRecords(){
     return agreementCheckboxes.map(box=>{
