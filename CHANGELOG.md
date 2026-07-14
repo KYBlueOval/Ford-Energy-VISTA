@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3.0 Sprint 1.6.1
+- Added the previously missing `.github/workflows/sync-sponsors.yml` workflow.
+- Added scheduled and manual sponsor synchronization from the Google Sheets-backed Apps Script endpoint.
+- Added GitHub contents write permissions, validation, concurrency protection, and change-only commits.
+- Updated the sync script so unchanged sponsor data does not create a new timestamp or unnecessary commit.
+- Preserved the production `public-registration/config.js` exactly.
+
+
 ## v1.3.0 Sprint 1.1
 - Fixed sponsor directory loading from GitHub Pages by adding a public GET endpoint with POST fallback.
 - Added cache busting and robust Apps Script redirect handling.
