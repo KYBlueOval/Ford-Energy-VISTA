@@ -1,5 +1,5 @@
 (() => {
-  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.5 loaded');
+  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.6 loaded');
   const cfg = window.FE_VISITOR_CONFIG || {};
   const form = document.querySelector('#registrationForm');
   const steps = [...document.querySelectorAll('.form-step')];
@@ -32,7 +32,7 @@
 
     try {
       const directoryUrl = new URL('./data/sponsors.json', window.location.href);
-      directoryUrl.searchParams.set('v', '13015');
+      directoryUrl.searchParams.set('v', '13016');
       const response = await fetch(directoryUrl.toString(), {
         method: 'GET',
         cache: 'no-store',
@@ -45,6 +45,7 @@
 
       const data = await response.json();
       const rows = Array.isArray(data) ? data : (Array.isArray(data.sponsors) ? data.sponsors : []);
+      localStorage.setItem('feVistaSponsorDirectory', JSON.stringify({ savedAt: Date.now(), data }));
 
       sponsorDirectory = rows.map(s => ({
         sponsorId: String(s.sponsorId || s.SponsorID || '').trim(),
@@ -62,8 +63,26 @@
       console.info('VISTA sponsor directory loaded from same-origin JSON:', sponsorDirectory.length, data.generatedAt || '');
     } catch (err) {
       console.error('Sponsor directory could not be loaded:', err);
-      sponsorDirectory = [];
-      search.placeholder = 'Sponsor directory unavailable — use manual entry';
+      try {
+        const cached = JSON.parse(localStorage.getItem('feVistaSponsorDirectory') || 'null');
+        const rows = cached && cached.data && Array.isArray(cached.data.sponsors) ? cached.data.sponsors : [];
+        sponsorDirectory = rows.map(s => ({
+          sponsorId: String(s.sponsorId || s.SponsorID || '').trim(),
+          name: String(s.name || s.SponsorName || '').trim(),
+          email: String(s.email || s.SponsorEmail || '').trim(),
+          department: String(s.department || s.Department || '').trim(),
+          keywords: String(s.keywords || s.SearchKeywords || '').trim()
+        })).filter(s => s.name && s.email);
+        if (sponsorDirectory.length) {
+          search.placeholder = `Search ${sponsorDirectory.length} cached sponsor${sponsorDirectory.length === 1 ? '' : 's'}`;
+          console.warn('Using cached VISTA sponsor directory:', sponsorDirectory.length);
+        } else {
+          search.placeholder = 'Sponsor directory unavailable — use manual entry';
+        }
+      } catch (cacheErr) {
+        sponsorDirectory = [];
+        search.placeholder = 'Sponsor directory unavailable — use manual entry';
+      }
       search.dataset.directoryError = String(err && err.message || err);
     } finally {
       search.disabled = false;

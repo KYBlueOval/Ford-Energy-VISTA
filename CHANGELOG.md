@@ -28,3 +28,9 @@
 - Replaced cross-origin Apps Script sponsor lookup with same-origin `public-registration/data/sponsors.json`.
 - Removed JSONP/CORS/iframe bridge dependency for sponsor search.
 - Preserved production `config.js` unchanged.
+
+## v1.3.0 Sprint 1.6
+- Added GitHub Actions synchronization from the Google Sheets `Sponsors` tab through the Apps Script `listSponsors` endpoint.
+- Added server-side sponsor JSON validation and change-only commits.
+- Registration now uses the same-origin generated sponsor directory with local browser cache fallback.
+- Preserved the production `public-registration/config.js` unchanged.
