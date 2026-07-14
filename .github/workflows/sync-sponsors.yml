@@ -1,0 +1,68 @@
+name: Sync VISTA Sponsors
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vista-sponsor-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-sponsors:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Synchronize sponsor directory
+        env:
+          VISTA_SPONSOR_API_URL: ${{ vars.VISTA_SPONSOR_API_URL }}
+          DEFAULT_VISTA_SPONSOR_API_URL: https://script.google.com/macros/s/AKfycbxJhQ9P6V8Un4oyZEy5JNp4ravCRbfKm1Dvbav87t_pydQmwNhOMJfxIBmA1BMNoMLQ/exec
+        run: |
+          ENDPOINT="${VISTA_SPONSOR_API_URL:-$DEFAULT_VISTA_SPONSOR_API_URL}"
+          python scripts/sync_sponsors.py \
+            --endpoint "$ENDPOINT" \
+            --output public-registration/data/sponsors.json
+
+      - name: Validate generated sponsor directory
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("public-registration/data/sponsors.json")
+          data = json.loads(path.read_text(encoding="utf-8"))
+          sponsors = data.get("sponsors", [])
+          assert isinstance(sponsors, list) and sponsors, "Sponsor directory must contain at least one active sponsor"
+          for index, sponsor in enumerate(sponsors, start=1):
+              assert sponsor.get("name"), f"Sponsor {index} is missing name"
+              assert sponsor.get("email"), f"Sponsor {index} is missing email"
+          print(f"Validated {len(sponsors)} active sponsor(s).")
+          PY
+
+      - name: Commit sponsor directory changes
+        run: |
+          if git diff --quiet -- public-registration/data/sponsors.json; then
+            echo "Sponsor directory is already current."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public-registration/data/sponsors.json
+          git commit -m "chore: sync VISTA sponsors from Google Sheets"
+          git push origin HEAD:main
