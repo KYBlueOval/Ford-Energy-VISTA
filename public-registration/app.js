@@ -22,22 +22,57 @@
   let selectedSponsor = null;
   let sponsorActiveIndex = -1;
 
+  function loadJsonp(url, timeoutMs=12000){
+    return new Promise((resolve,reject)=>{
+      const callback=`feVistaSponsorCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const script=document.createElement('script');
+      const timer=setTimeout(()=>cleanup(new Error('Sponsor directory request timed out.')),timeoutMs);
+      function cleanup(err,data){
+        clearTimeout(timer);
+        try{delete window[callback]}catch(_){window[callback]=undefined}
+        script.remove();
+        err?reject(err):resolve(data);
+      }
+      window[callback]=data=>cleanup(null,data);
+      script.onerror=()=>cleanup(new Error('Sponsor directory JSONP request failed.'));
+      script.src=`${url}${url.includes('?')?'&':'?'}callback=${encodeURIComponent(callback)}&_=${Date.now()}`;
+      document.head.appendChild(script);
+    });
+  }
+
   async function loadSponsorDirectory(){
     const search=$('#sponsorSearch');
     if(!search||!cfg.API_URL||cfg.API_URL.includes('PASTE_'))return;
     search.placeholder='Loading sponsor directory…';
     search.disabled=true;
     try{
-      const res=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'listSponsors',payload:{}})});
-      const data=await res.json();
-      if(!data.ok)throw new Error(data.error||'Sponsor directory unavailable.');
+      let data;
+      const getUrl=`${cfg.API_URL}${cfg.API_URL.includes('?')?'&':'?'}action=listSponsors`;
+      try{
+        data=await loadJsonp(getUrl);
+      }catch(jsonpError){
+        console.warn('VISTA sponsor JSONP fallback failed; trying fetch.',jsonpError);
+        const res=await fetch(`${getUrl}&_=${Date.now()}`,{method:'GET',cache:'no-store',redirect:'follow'});
+        data=await res.json();
+      }
+      if(!data||!data.ok)throw new Error((data&&data.error)||'Sponsor directory unavailable.');
       sponsorDirectory=(Array.isArray(data.sponsors)?data.sponsors:[]).map(s=>({
-        sponsorId:String(s.sponsorId||''),name:String(s.name||'').trim(),email:String(s.email||'').trim(),department:String(s.department||'').trim(),keywords:String(s.keywords||'').trim()
+        sponsorId:String(s.sponsorId||s.SponsorID||''),
+        name:String(s.name||s.SponsorName||'').trim(),
+        email:String(s.email||s.SponsorEmail||'').trim(),
+        department:String(s.department||s.Department||'').trim(),
+        keywords:String(s.keywords||s.SearchKeywords||'').trim()
       })).filter(s=>s.name&&s.email);
-      search.placeholder=sponsorDirectory.length?'Search by sponsor name, email, department, or keyword':'No saved sponsors — use manual entry';
+      search.placeholder=sponsorDirectory.length
+        ?`Search ${sponsorDirectory.length} saved sponsor${sponsorDirectory.length===1?'':'s'} by name, email, department, or keyword`
+        :'No active saved sponsors were returned — use manual entry';
+      search.dataset.directoryCount=String(sponsorDirectory.length);
+      console.info('VISTA sponsor directory loaded:',sponsorDirectory.length,sponsorDirectory);
     }catch(err){
-      console.warn('Sponsor directory could not be loaded:',err);
+      console.error('Sponsor directory could not be loaded:',err);
+      sponsorDirectory=[];
       search.placeholder='Sponsor directory unavailable — use manual entry';
+      search.dataset.directoryError=String(err&&err.message||err);
     }finally{search.disabled=false}
   }
 

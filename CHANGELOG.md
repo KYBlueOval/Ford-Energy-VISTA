@@ -1,3 +1,11 @@
+# Changelog
+
+## v1.3.0 Sprint 1.1
+- Fixed sponsor directory loading from GitHub Pages by adding a public GET endpoint with POST fallback.
+- Added cache busting and robust Apps Script redirect handling.
+- Normalized Sponsors sheet headers and Active values.
+- Added sponsor count diagnostics in the registration picker.
+
 # Ford Energy VISTA Changelog
 
 ## v1.3.0 Sprint 1
@@ -8,3 +16,10 @@
 - Added SponsorID and SponsorSource to VisitRequests through non-destructive setup migration.
 - Preserved the production public-registration/config.js exactly.
 - Retained v1.2.4 header, video, agreements, photo naming, and security-console functionality.
+
+
+## v1.3.0 Sprint 1.2 — Sponsor Directory JSONP Hotfix
+- Replaced cross-origin sponsor directory loading with Apps Script JSONP support.
+- Retained GET/fetch fallback.
+- Added cache-busting for the public registration app script.
+- Preserved production config.js unchanged.

@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '1.3.0-sprint1',
+  VERSION: '1.3.0-sprint1.2',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -19,7 +19,19 @@ const FE = {
   ]
 };
 
-function doGet() { return json_({ok:true, service:'Ford Energy VISTA API', version:FE.VERSION}); }
+function doGet(e) {
+  const callback = String((e && e.parameter && e.parameter.callback) || '');
+  try {
+    const action = String((e && e.parameter && e.parameter.action) || '');
+    const result = action === 'listSponsors'
+      ? listSponsors_({ query: (e.parameter && e.parameter.query) || '' })
+      : {ok:true, service:'Ford Energy VISTA API', version:FE.VERSION};
+    return callback ? jsonp_(result, callback) : json_(result);
+  } catch (err) {
+    const result = {ok:false,error:String(err.message || err)};
+    return callback ? jsonp_(result, callback) : json_(result);
+  }
+}
 function doPost(e) {
   try {
     const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
@@ -72,23 +84,43 @@ function seedAgreements_(){
 
 
 function listSponsors_(p) {
-  const q=String((p&&p.query)||'').trim().toLowerCase();
-  const rows=readObjects_(FE.SHEETS.SPONSORS)
-    .filter(r=>String(r.Active||'Yes').toLowerCase()!=='no')
-    .filter(r=>{
-      if(!q)return true;
-      return [r.SponsorName,r.SponsorEmail,r.Department,r.SearchKeywords].join(' ').toLowerCase().includes(q);
-    })
-    .map(r=>({
-      sponsorId:String(r.SponsorID||''),
-      name:String(r.SponsorName||'').trim(),
-      email:String(r.SponsorEmail||'').trim(),
-      department:String(r.Department||'').trim(),
-      keywords:String(r.SearchKeywords||'').trim()
+  const q = String((p && p.query) || '').trim().toLowerCase();
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(FE.SHEETS.SPONSORS);
+  if (!sheet) return {ok:true,sponsors:[],count:0,warning:'Sponsors sheet not found.'};
+  if (sheet.getLastRow() < 2) return {ok:true,sponsors:[],count:0};
+
+  const values = sheet.getDataRange().getDisplayValues();
+  const headers = values.shift().map(h => String(h || '').trim());
+  const key = name => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
+  const col = {
+    id: key('SponsorID'),
+    name: key('SponsorName'),
+    email: key('SponsorEmail'),
+    department: key('Department'),
+    active: key('Active'),
+    keywords: key('SearchKeywords')
+  };
+
+  const valueAt = (row, index) => index >= 0 ? String(row[index] || '').trim() : '';
+  const isActive = value => {
+    const v = String(value || 'Yes').trim().toLowerCase();
+    return !['no','false','0','inactive','disabled'].includes(v);
+  };
+
+  const sponsors = values.map(row => ({
+      sponsorId: valueAt(row, col.id),
+      name: valueAt(row, col.name),
+      email: valueAt(row, col.email),
+      department: valueAt(row, col.department),
+      keywords: valueAt(row, col.keywords),
+      active: isActive(valueAt(row, col.active))
     }))
-    .filter(r=>r.email)
-    .sort((a,b)=>a.name.localeCompare(b.name));
-  return {ok:true,sponsors:rows.slice(0,500)};
+    .filter(s => s.active && s.name && s.email)
+    .filter(s => !q || [s.name,s.email,s.department,s.keywords].join(' ').toLowerCase().includes(q))
+    .map(({active, ...s}) => s)
+    .sort((a,b) => a.name.localeCompare(b.name));
+
+  return {ok:true,sponsors:sponsors.slice(0,500),count:sponsors.length};
 }
 
 function createVisit_(p) {
@@ -175,3 +207,8 @@ function ensureSheet_(ss,name,headers){let s=ss.getSheetByName(name);if(!s)s=ss.
 function sha256_(text){return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(text),Utilities.Charset.UTF_8).map(b=>(b+256)%256).map(b=>('0'+b.toString(16)).slice(-2)).join('')}
 function html_(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function json_(o){return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON)}
+function jsonp_(o,callback){
+  const cb=String(callback||'').replace(/[^A-Za-z0-9_.$]/g,'');
+  if(!cb) return json_(o);
+  return ContentService.createTextOutput(cb+'('+JSON.stringify(o)+');').setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
