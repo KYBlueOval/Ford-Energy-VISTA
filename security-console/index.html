@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ford Energy VISTA | Security Console</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header><div class="brand"><img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy"><span><strong>VISTA</strong><small>Visitor Security Console</small></span></div><div><span id="apiStatus" class="pill">Not connected</span><button id="logoutBtn" class="link hidden">Sign out</button></div></header>
+<main>
+<section id="loginView" class="login card"><h1>VISTA Security Console</h1><p>Enter the Security access PIN configured in Apps Script.</p><label>Security PIN<input id="pinInput" type="password" inputmode="numeric"></label><button id="loginBtn">Sign In</button><div id="loginMsg" class="msg"></div></section>
+<section id="appView" class="hidden">
+  <div class="title-row"><div><p class="eyebrow">MAIN SECURITY BUILDING</p><h1>VISTA Visitor Operations</h1></div><button id="refreshBtn">Refresh</button></div>
+  <div class="kpis"><div class="kpi"><span>Expected Today</span><b id="kExpected">0</b></div><div class="kpi"><span>Currently Onsite</span><b id="kOnsite">0</b></div><div class="kpi"><span>Checked Out Today</span><b id="kOut">0</b></div><div class="kpi"><span>Overdue</span><b id="kOverdue">0</b></div></div>
+  <div class="toolbar card"><input id="searchInput" placeholder="Search name, confirmation, sponsor, company, plate, badge UID"><select id="statusFilter"><option value="">All statuses</option><option>Submitted</option><option>Approved</option><option>Checked In</option><option>Checked Out</option><option>Denied</option><option>No Show</option></select><button id="searchBtn">Search</button></div>
+  <div class="layout"><section class="card table-card"><table><thead><tr><th>Visitor</th><th>Visit</th><th>Sponsor</th><th>Status</th><th>Badge</th><th></th></tr></thead><tbody id="visitorRows"></tbody></table><div id="emptyState" class="empty hidden">No visitor records matched.</div></section><aside id="detailPanel" class="card detail"><h2>Visitor Record</h2><p>Select a visitor to view check-in and checkout controls.</p></aside></div>
+</section>
+</main><script src="config.js"></script><script src="app.js"></script></body></html>

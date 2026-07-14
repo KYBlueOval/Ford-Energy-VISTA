@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#003478" />
+  <title>Ford Energy VISTA | Visitor Registration</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy" />
+      <div><strong>VISTA</strong><span>Visitor Registration</span></div>
+    </div>
+    <button id="saveDraftBtn" class="btn btn-ghost" type="button">Save Draft</button>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">GLENDALE SITE</p>
+        <h1>VISTA Visitor Pre-Registration</h1>
+        <p>Complete each section before arriving at the Main Security Building. Bring a valid government-issued photo ID.</p>
+      </div>
+      <div class="status-card"><span id="progressText">Step 1 of 5</span><div class="progress"><i id="progressBar"></i></div></div>
+    </section>
+
+    <nav class="steps" aria-label="Registration steps">
+      <button class="step active" data-step="1">1<span>Visitor</span></button>
+      <button class="step" data-step="2">2<span>Visit</span></button>
+      <button class="step" data-step="3">3<span>Vehicle & Photo</span></button>
+      <button class="step" data-step="4">4<span>Agreements</span></button>
+      <button class="step" data-step="5">5<span>Review</span></button>
+    </nav>
+
+    <form id="registrationForm" novalidate>
+      <section class="panel form-step active" data-step="1">
+        <div class="section-heading"><div><p class="eyebrow">PERSONAL DETAILS</p><h2>Visitor Information</h2></div><span>* Required</span></div>
+        <div class="grid cols-3">
+          <label>First name *<input name="firstName" required autocomplete="given-name" /></label>
+          <label>Middle name<input name="middleName" autocomplete="additional-name" /></label>
+          <label>Last name *<input name="lastName" required autocomplete="family-name" /></label>
+          <label>Email address *<input name="email" type="email" required autocomplete="email" /></label>
+          <label>Phone number *<input name="phone" type="tel" required autocomplete="tel" /></label>
+          <label>Company / organization *<input name="company" required /></label>
+          <label>Job title<input name="jobTitle" /></label>
+          <label>Relationship to Ford Energy *
+            <select name="relationship" required><option value="">Select</option><option>Vendor</option><option>Contractor</option><option>Customer</option><option>Government / Regulatory</option><option>Interview Candidate</option><option>Guest</option><option>Other</option></select>
+          </label>
+          <label>Country *<input name="country" value="United States" required /></label>
+        </div>
+        <h3>Home Address</h3>
+        <div class="grid cols-3">
+          <label class="span-2">Street address *<input name="street" required autocomplete="street-address" /></label>
+          <label>City *<input name="city" required autocomplete="address-level2" /></label>
+          <label>State / province *<input name="state" required autocomplete="address-level1" /></label>
+          <label>ZIP / postal code *<input name="postalCode" required autocomplete="postal-code" /></label>
+        </div>
+        <h3>Emergency Contact</h3>
+        <div class="grid cols-2">
+          <label>Name<input name="emergencyName" /></label>
+          <label>Phone<input name="emergencyPhone" type="tel" /></label>
+        </div>
+      </section>
+
+      <section class="panel form-step" data-step="2">
+        <div class="section-heading"><div><p class="eyebrow">VISIT REQUEST</p><h2>Visit Information</h2></div></div>
+        <div class="grid cols-2">
+          <label>Ford Energy sponsor *<input name="sponsorName" required /></label>
+          <label>Sponsor email *<input name="sponsorEmail" type="email" required /></label>
+          <label>Sponsor department *<input name="department" required /></label>
+          <label>Secondary point of contact<input name="secondaryContact" /></label>
+          <label class="span-2">Reason for visit *<textarea name="reason" required rows="3"></textarea></label>
+          <label>Project / assignment<input name="project" /></label>
+          <label>Visitor type *<select name="visitorType" required><option value="">Select</option><option>General Visitor</option><option>Contractor</option><option>Vendor</option><option>Customer</option><option>Regulatory / Government</option><option>Interview / Candidate</option></select></label>
+          <label>Start date *<input name="startDate" type="date" required /></label>
+          <label>Expected arrival time *<input name="arrivalTime" type="time" required /></label>
+          <label>End date *<input name="endDate" type="date" required /></label>
+          <label>Expected departure time *<input name="departureTime" type="time" required /></label>
+          <label class="span-2">Requested access areas *<textarea name="accessScope" required rows="3" placeholder="Example: Administration Building, Main Conference Room, Electrode Phase 1"></textarea></label>
+          <label>Escort required?<select name="escortRequired"><option>No</option><option>Yes</option><option>To be determined</option></select></label>
+          <label>Line tour requested?<select name="lineTour"><option>No</option><option>Yes</option></select></label>
+          <label class="span-2">Tools, secured items, or special accommodations<textarea name="specialItems" rows="3" placeholder="Laptop, USB device, camera, tools, accessibility needs, etc."></textarea></label>
+        </div>
+      </section>
+
+      <section class="panel form-step" data-step="3">
+        <div class="section-heading"><div><p class="eyebrow">ARRIVAL DETAILS</p><h2>Vehicle and Visitor Photograph</h2></div></div>
+        <div class="choice-row"><label class="check"><input id="drivingToggle" name="driving" type="checkbox" value="Yes" /> I will drive a vehicle to the site</label></div>
+        <div id="vehicleFields" class="grid cols-3 hidden">
+          <label>Make<input name="vehicleMake" /></label><label>Model<input name="vehicleModel" /></label><label>Year<input name="vehicleYear" inputmode="numeric" /></label>
+          <label>Color<input name="vehicleColor" /></label><label>License plate<input name="licensePlate" /></label><label>Plate state<input name="plateState" /></label>
+        </div>
+        <div class="photo-layout">
+          <div>
+            <h3>Passport-style photograph *</h3>
+            <p class="muted">Use a clear, recent image facing the camera. Do not upload your full driver’s license or passport.</p>
+            <div class="upload-actions">
+              <label class="btn btn-secondary">Choose Photo<input id="photoInput" type="file" accept="image/*" hidden /></label>
+              <button id="cameraBtn" class="btn btn-secondary" type="button">Use Camera</button>
+              <button id="removePhotoBtn" class="btn btn-ghost hidden" type="button">Remove</button>
+            </div>
+            <div id="cameraArea" class="camera hidden"><video id="cameraVideo" autoplay playsinline></video><button id="captureBtn" class="btn btn-primary" type="button">Capture Photo</button></div>
+          </div>
+          <div class="photo-card"><img id="photoPreview" alt="Visitor preview" /><div id="photoPlaceholder">Photo preview</div></div>
+        </div>
+      </section>
+
+      <section class="panel form-step" data-step="4">
+        <div class="section-heading"><div><p class="eyebrow">REQUIRED ACKNOWLEDGEMENTS</p><h2>Agreements and Site Rules</h2></div><span>Open and acknowledge each tab</span></div>
+        <div class="agreement-tabs" role="tablist">
+          <button type="button" class="agreement-tab active" data-agreement="security">Security</button>
+          <button type="button" class="agreement-tab" data-agreement="biometric">Biometric & Privacy</button>
+          <button type="button" class="agreement-tab" data-agreement="safety">Safety Golden Rules</button>
+          <button type="button" class="agreement-tab" data-agreement="conduct">Zero Tolerance</button>
+        </div>
+        <div class="agreement-content active" data-agreement="security"><h3>Security Agreement</h3><p>Visitors are subject to screening and must remain within approved areas. Photography, audio/video recording, weapons, unauthorized storage devices, and removal of Ford Energy property or information are prohibited unless specifically authorized.</p><p>Visitor badges remain Ford Energy property and must be returned before departure. Visitors must follow Security instructions and remain with their escort when required.</p><label class="check"><input name="agreeSecurity" type="checkbox" required /> I have read and agree to the Security Agreement.</label></div>
+        <div class="agreement-content" data-agreement="biometric"><h3>Biometric and Facial Recognition Consent / Privacy Agreement</h3><p>I understand that Ford Energy may use my submitted photograph and approved identity-verification technologies to support visitor identification, access control, safety, and security. Information will be handled according to Ford Energy privacy and retention requirements.</p><label class="check"><input name="agreeBiometric" type="checkbox" required /> I consent and acknowledge the Privacy Agreement.</label></div>
+        <div class="agreement-content" data-agreement="safety"><h3>Safety Golden Rules</h3><p>Follow energy-isolation requirements, wear assigned PPE and seatbelts, obey speed limits, do not operate equipment without authorization, report injuries and unsafe conditions, remain alert for industrial vehicles, and never bypass safety devices.</p><label class="check"><input name="agreeSafety" type="checkbox" required /> I acknowledge the Safety Golden Rules.</label></div>
+        <div class="agreement-content" data-agreement="conduct"><h3>Anti-Harassment and Zero-Tolerance Policy</h3><p>Bullying, harassment, threats, discrimination, retaliation, and disruptive behavior are prohibited. Visitors must treat employees, contractors, and other guests respectfully and comply with immediate direction from Ford Energy representatives.</p><label class="check"><input name="agreeConduct" type="checkbox" required /> I acknowledge the Anti-Harassment and Zero-Tolerance Policy.</label></div>
+        <div class="grid cols-2 agreement-signoff">
+          <label>Typed legal name *<input name="acknowledgementName" required /></label>
+          <label>Acknowledgement date *<input name="acknowledgementDate" type="date" required /></label>
+        </div>
+      </section>
+
+      <section class="panel form-step" data-step="5">
+        <div class="section-heading"><div><p class="eyebrow">FINAL REVIEW</p><h2>Review and Submit</h2></div></div>
+        <div id="reviewSummary" class="review-grid"></div>
+        <label class="check final-cert"><input name="certify" type="checkbox" required /> I certify that the information provided is accurate and understand that approval is not guaranteed.</label>
+        <div id="submitMessage" class="message hidden"></div>
+      </section>
+
+      <div class="form-actions"><button id="backBtn" class="btn btn-secondary" type="button" disabled>Back</button><button id="nextBtn" class="btn btn-primary" type="button">Continue</button><button id="submitBtn" class="btn btn-primary hidden" type="submit">Submit Visit Request</button></div>
+    </form>
+  </main>
+
+  <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><h2>Registration Submitted</h2><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><p>Keep this number and bring a valid government-issued photo ID to the Main Security Building.</p><button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></dialog>
+  <script src="config.js"></script><script src="app.js"></script>
+</body>
+</html>
