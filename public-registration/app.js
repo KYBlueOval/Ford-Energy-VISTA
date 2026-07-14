@@ -1,4 +1,5 @@
 (() => {
+  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.4 loaded');
   const cfg = window.FE_VISITOR_CONFIG || {};
   const form = document.querySelector('#registrationForm');
   const steps = [...document.querySelectorAll('.form-step')];
@@ -22,15 +23,18 @@
   let selectedSponsor = null;
   let sponsorActiveIndex = -1;
 
-  function loadSponsorBridge(timeoutMs=15000){
+  function loadSponsorBridge(timeoutMs=20000){
     return new Promise((resolve,reject)=>{
       const nonce=`VISTA-SPONSORS-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const iframe=document.createElement('iframe');
       iframe.hidden=true;
       iframe.setAttribute('aria-hidden','true');
       iframe.title='VISTA sponsor directory bridge';
-      const timer=setTimeout(()=>cleanup(new Error('Sponsor directory bridge timed out.')),timeoutMs);
+      let settled=false;
+      const timer=setTimeout(()=>cleanup(new Error('Sponsor directory bridge timed out. Verify the latest Apps Script deployment is active.')),timeoutMs);
       function cleanup(err,data){
+        if(settled)return;
+        settled=true;
         clearTimeout(timer);
         window.removeEventListener('message',onMessage);
         iframe.remove();
@@ -44,43 +48,23 @@
       window.addEventListener('message',onMessage);
       const sep=cfg.API_URL.includes('?')?'&':'?';
       iframe.src=`${cfg.API_URL}${sep}action=sponsorBridge&nonce=${encodeURIComponent(nonce)}&origin=${encodeURIComponent(location.origin)}&_=${Date.now()}`;
-      iframe.onerror=()=>cleanup(new Error('Sponsor directory bridge could not be loaded.'));
+      iframe.addEventListener('load',()=>console.info('VISTA sponsor bridge frame loaded. Waiting for directory response.'));
+      iframe.addEventListener('error',()=>cleanup(new Error('Sponsor directory bridge could not be loaded.')));
       document.body.appendChild(iframe);
     });
   }
 
-  function loadJsonp(url,timeoutMs=12000){
-    return new Promise((resolve,reject)=>{
-      const callback=`feVistaSponsorCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      const script=document.createElement('script');
-      const timer=setTimeout(()=>cleanup(new Error('Sponsor directory JSONP request timed out.')),timeoutMs);
-      function cleanup(err,data){
-        clearTimeout(timer);
-        try{delete window[callback]}catch(_){window[callback]=undefined}
-        script.remove();
-        err?reject(err):resolve(data);
-      }
-      window[callback]=data=>cleanup(null,data);
-      script.onerror=()=>cleanup(new Error('Sponsor directory JSONP request failed.'));
-      script.src=`${url}${url.includes('?')?'&':'?'}callback=${encodeURIComponent(callback)}&_=${Date.now()}`;
-      document.head.appendChild(script);
-    });
-  }
-
-  async function loadSponsorDirectory(){
+  async function loadSponsorDirectory(force=false){
     const search=$('#sponsorSearch');
+    const status=$('#sponsorDirectoryStatus');
     if(!search||!cfg.API_URL||cfg.API_URL.includes('PASTE_'))return;
+    if(search.dataset.loading==='true')return;
+    if(!force&&Number(search.dataset.directoryCount||0)>0)return;
+    search.dataset.loading='true';
     search.placeholder='Loading sponsor directory…';
-    search.disabled=true;
+    if(status){status.textContent='Loading saved Ford Energy sponsors…';status.dataset.state='loading'}
     try{
-      let data;
-      try{
-        data=await loadSponsorBridge();
-      }catch(bridgeError){
-        console.warn('VISTA sponsor iframe bridge failed; trying JSONP.',bridgeError);
-        const getUrl=`${cfg.API_URL}${cfg.API_URL.includes('?')?'&':'?'}action=listSponsors`;
-        data=await loadJsonp(getUrl);
-      }
+      const data=await loadSponsorBridge();
       if(!data||!data.ok)throw new Error((data&&data.error)||'Sponsor directory unavailable.');
       sponsorDirectory=(Array.isArray(data.sponsors)?data.sponsors:[]).map(s=>({
         sponsorId:String(s.sponsorId||s.SponsorID||''),
@@ -93,13 +77,17 @@
         ?`Search ${sponsorDirectory.length} saved sponsor${sponsorDirectory.length===1?'':'s'} by name, email, department, or keyword`
         :'No active saved sponsors were returned — use manual entry';
       search.dataset.directoryCount=String(sponsorDirectory.length);
+      delete search.dataset.directoryError;
+      if(status){status.textContent=sponsorDirectory.length?`${sponsorDirectory.length} saved sponsor${sponsorDirectory.length===1?'':'s'} loaded.`:'No active sponsors were returned. You may use manual entry.';status.dataset.state=sponsorDirectory.length?'ready':'empty'}
       console.info('VISTA sponsor directory loaded:',sponsorDirectory.length,sponsorDirectory);
+      if(document.activeElement===search&&search.value.trim())renderSponsorResults();
     }catch(err){
       console.error('Sponsor directory could not be loaded:',err);
       sponsorDirectory=[];
-      search.placeholder='Sponsor directory unavailable — use manual entry';
+      search.placeholder='Sponsor directory unavailable — select manual entry or retry';
       search.dataset.directoryError=String(err&&err.message||err);
-    }finally{search.disabled=false}
+      if(status){status.innerHTML='Sponsor directory unavailable. <button type="button" id="retrySponsorDirectory" class="link-button">Retry</button>';status.dataset.state='error';status.querySelector('#retrySponsorDirectory')?.addEventListener('click',()=>loadSponsorDirectory(true))}
+    }finally{delete search.dataset.loading}
   }
 
   function sponsorMatches(query){

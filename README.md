@@ -1,6 +1,6 @@
-# Ford Energy VISTA v1.3.0 Sprint 1.3
+# Ford Energy VISTA v1.3.0 Sprint 1
 
-
+# Ford Energy VISTA v1.2.4
 
 **Visitor Intelligence, Security, Tracking & Analytics**
 
