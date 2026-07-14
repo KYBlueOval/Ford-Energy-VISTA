@@ -23,3 +23,8 @@
 - Retained GET/fetch fallback.
 - Added cache-busting for the public registration app script.
 - Preserved production config.js unchanged.
+
+## v1.3.0 Sprint 1.5
+- Replaced cross-origin Apps Script sponsor lookup with same-origin `public-registration/data/sponsors.json`.
+- Removed JSONP/CORS/iframe bridge dependency for sponsor search.
+- Preserved production `config.js` unchanged.
