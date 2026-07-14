@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '1.3.0-sprint1.2',
+  VERSION: '1.3.0-sprint1.3',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -23,6 +23,7 @@ function doGet(e) {
   const callback = String((e && e.parameter && e.parameter.callback) || '');
   try {
     const action = String((e && e.parameter && e.parameter.action) || '');
+    if (action === 'sponsorBridge') return sponsorBridge_(e);
     const result = action === 'listSponsors'
       ? listSponsors_({ query: (e.parameter && e.parameter.query) || '' })
       : {ok:true, service:'Ford Energy VISTA API', version:FE.VERSION};
@@ -121,6 +122,30 @@ function listSponsors_(p) {
     .sort((a,b) => a.name.localeCompare(b.name));
 
   return {ok:true,sponsors:sponsors.slice(0,500),count:sponsors.length};
+}
+
+
+function sponsorBridge_(e) {
+  const p = (e && e.parameter) || {};
+  const nonce = String(p.nonce || '').replace(/[^A-Za-z0-9_.:-]/g, '').slice(0, 160);
+  const requestedOrigin = String(p.origin || '');
+  const allowedOrigins = ['https://kyblueoval.github.io'];
+  const targetOrigin = allowedOrigins.indexOf(requestedOrigin) >= 0 ? requestedOrigin : 'https://kyblueoval.github.io';
+  let payload;
+  try {
+    payload = listSponsors_({query: String(p.query || '')});
+  } catch (err) {
+    payload = {ok:false,error:String(err && err.message || err),sponsors:[],count:0};
+  }
+  const safePayload = JSON.stringify(payload).replace(/</g, '\\u003c');
+  const safeNonce = JSON.stringify(nonce);
+  const safeOrigin = JSON.stringify(targetOrigin);
+  const html = '<!doctype html><html><head><meta charset="utf-8"></head><body><script>' +
+    'parent.postMessage({type:"FE_VISTA_SPONSORS",nonce:' + safeNonce + ',payload:' + safePayload + '},' + safeOrigin + ');' +
+    '<\\/script></body></html>';
+  return HtmlService.createHtmlOutput(html)
+    .setTitle('VISTA Sponsor Directory')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function createVisit_(p) {

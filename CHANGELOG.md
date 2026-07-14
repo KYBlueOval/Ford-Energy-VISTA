@@ -1,3 +1,9 @@
+## v1.3.0 Sprint 1.3
+- Replaced cross-origin sponsor fetch with an Apps Script HTML iframe/postMessage bridge.
+- Retained JSONP only as a fallback.
+- Preserved the exact production `public-registration/config.js`.
+- Updated public-registration cache key to `13013`.
+
 # Changelog
 
 ## v1.3.0 Sprint 1.1

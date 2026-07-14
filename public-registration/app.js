@@ -22,11 +22,38 @@
   let selectedSponsor = null;
   let sponsorActiveIndex = -1;
 
-  function loadJsonp(url, timeoutMs=12000){
+  function loadSponsorBridge(timeoutMs=15000){
+    return new Promise((resolve,reject)=>{
+      const nonce=`VISTA-SPONSORS-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const iframe=document.createElement('iframe');
+      iframe.hidden=true;
+      iframe.setAttribute('aria-hidden','true');
+      iframe.title='VISTA sponsor directory bridge';
+      const timer=setTimeout(()=>cleanup(new Error('Sponsor directory bridge timed out.')),timeoutMs);
+      function cleanup(err,data){
+        clearTimeout(timer);
+        window.removeEventListener('message',onMessage);
+        iframe.remove();
+        err?reject(err):resolve(data);
+      }
+      function onMessage(event){
+        const data=event.data;
+        if(!data||data.type!=='FE_VISTA_SPONSORS'||data.nonce!==nonce)return;
+        cleanup(null,data.payload);
+      }
+      window.addEventListener('message',onMessage);
+      const sep=cfg.API_URL.includes('?')?'&':'?';
+      iframe.src=`${cfg.API_URL}${sep}action=sponsorBridge&nonce=${encodeURIComponent(nonce)}&origin=${encodeURIComponent(location.origin)}&_=${Date.now()}`;
+      iframe.onerror=()=>cleanup(new Error('Sponsor directory bridge could not be loaded.'));
+      document.body.appendChild(iframe);
+    });
+  }
+
+  function loadJsonp(url,timeoutMs=12000){
     return new Promise((resolve,reject)=>{
       const callback=`feVistaSponsorCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       const script=document.createElement('script');
-      const timer=setTimeout(()=>cleanup(new Error('Sponsor directory request timed out.')),timeoutMs);
+      const timer=setTimeout(()=>cleanup(new Error('Sponsor directory JSONP request timed out.')),timeoutMs);
       function cleanup(err,data){
         clearTimeout(timer);
         try{delete window[callback]}catch(_){window[callback]=undefined}
@@ -47,13 +74,12 @@
     search.disabled=true;
     try{
       let data;
-      const getUrl=`${cfg.API_URL}${cfg.API_URL.includes('?')?'&':'?'}action=listSponsors`;
       try{
+        data=await loadSponsorBridge();
+      }catch(bridgeError){
+        console.warn('VISTA sponsor iframe bridge failed; trying JSONP.',bridgeError);
+        const getUrl=`${cfg.API_URL}${cfg.API_URL.includes('?')?'&':'?'}action=listSponsors`;
         data=await loadJsonp(getUrl);
-      }catch(jsonpError){
-        console.warn('VISTA sponsor JSONP fallback failed; trying fetch.',jsonpError);
-        const res=await fetch(`${getUrl}&_=${Date.now()}`,{method:'GET',cache:'no-store',redirect:'follow'});
-        data=await res.json();
       }
       if(!data||!data.ok)throw new Error((data&&data.error)||'Sponsor directory unavailable.');
       sponsorDirectory=(Array.isArray(data.sponsors)?data.sponsors:[]).map(s=>({
