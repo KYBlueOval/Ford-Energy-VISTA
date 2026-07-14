@@ -10,4 +10,4 @@
   <div class="toolbar card"><input id="searchInput" placeholder="Search name, confirmation, sponsor, company, plate, badge UID"><select id="statusFilter"><option value="">All statuses</option><option>Submitted</option><option>Approved</option><option>Checked In</option><option>Checked Out</option><option>Denied</option><option>No Show</option></select><button id="searchBtn">Search</button></div>
   <div class="layout"><section class="card table-card"><table><thead><tr><th>Visitor</th><th>Visit</th><th>Sponsor</th><th>Status</th><th>Badge</th><th></th></tr></thead><tbody id="visitorRows"></tbody></table><div id="emptyState" class="empty hidden">No visitor records matched.</div></section><aside id="detailPanel" class="card detail"><h2>Visitor Record</h2><p>Select a visitor to view check-in and checkout controls.</p></aside></div>
 </section>
-</main><script src="config.js"></script><script src="app.js"></script></body></html>
+</main><div id="toast" class="toast hidden" role="status" aria-live="polite"></div><script src="config.js"></script><script src="app.js"></script></body></html>

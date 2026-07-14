@@ -94,11 +94,13 @@
         </div>
         <div class="photo-layout">
           <div>
-            <h3>Passport-style photograph *</h3>
-            <p class="muted">Use a clear, recent image facing the camera. Do not upload your full driver’s license or passport.</p>
+            <h3>Government ID / Passport-Style Photo *</h3>
+            <p class="muted"><strong>Upload or capture a clear photo that would be accepted for use on a government-issued ID or passport.</strong> Face the camera directly, remove hats and tinted glasses, use even lighting, and keep your head and shoulders fully visible. Do not upload an image of your actual driver’s license or passport.</p>
+            <div class="photo-guidance"><span>✓ Front-facing</span><span>✓ Neutral expression</span><span>✓ Head and shoulders</span><span>✓ Plain background</span></div>
             <div class="upload-actions">
-              <label class="btn btn-secondary">Choose Photo<input id="photoInput" type="file" accept="image/*" hidden /></label>
-              <button id="cameraBtn" class="btn btn-secondary" type="button">Use Camera</button>
+              <label class="btn btn-secondary">Upload Photo<input id="photoInput" type="file" accept="image/*" hidden /></label>
+              <button id="cameraBtn" class="btn btn-secondary" type="button">Capture Photo</button>
+              <button id="preparePhotoBtn" class="btn btn-secondary hidden" type="button">Prepare ID Photo</button>
               <button id="removePhotoBtn" class="btn btn-ghost hidden" type="button">Remove</button>
             </div>
             <div id="cameraArea" class="camera hidden"><video id="cameraVideo" autoplay playsinline></video><button id="captureBtn" class="btn btn-primary" type="button">Capture Photo</button></div>
@@ -109,16 +111,58 @@
 
       <section class="panel form-step" data-step="4">
         <div class="section-heading"><div><p class="eyebrow">REQUIRED ACKNOWLEDGEMENTS</p><h2>Agreements and Site Rules</h2></div><span>Open and acknowledge each tab</span></div>
+        <div class="agreement-progress"><span id="agreementProgressText">0 of 7 acknowledged</span><div class="progress"><i id="agreementProgressBar"></i></div></div>
         <div class="agreement-tabs" role="tablist">
-          <button type="button" class="agreement-tab active" data-agreement="security">Security</button>
-          <button type="button" class="agreement-tab" data-agreement="biometric">Biometric & Privacy</button>
-          <button type="button" class="agreement-tab" data-agreement="safety">Safety Golden Rules</button>
-          <button type="button" class="agreement-tab" data-agreement="conduct">Zero Tolerance</button>
+          <button type="button" class="agreement-tab active" data-agreement="security">1. Security</button>
+          <button type="button" class="agreement-tab" data-agreement="biometric">2. Biometric Consent</button>
+          <button type="button" class="agreement-tab" data-agreement="privacy">3. Privacy</button>
+          <button type="button" class="agreement-tab" data-agreement="safety">4. Safety Golden Rules</button>
+          <button type="button" class="agreement-tab" data-agreement="conduct">5. Zero Tolerance</button>
+          <button type="button" class="agreement-tab" data-agreement="training">6. Site Awareness</button>
+          <button type="button" class="agreement-tab" data-agreement="restricted">7. Restricted Items</button>
         </div>
-        <div class="agreement-content active" data-agreement="security"><h3>Security Agreement</h3><p>Visitors are subject to screening and must remain within approved areas. Photography, audio/video recording, weapons, unauthorized storage devices, and removal of Ford Energy property or information are prohibited unless specifically authorized.</p><p>Visitor badges remain Ford Energy property and must be returned before departure. Visitors must follow Security instructions and remain with their escort when required.</p><label class="check"><input name="agreeSecurity" type="checkbox" required /> I have read and agree to the Security Agreement.</label></div>
-        <div class="agreement-content" data-agreement="biometric"><h3>Biometric and Facial Recognition Consent / Privacy Agreement</h3><p>I understand that Ford Energy may use my submitted photograph and approved identity-verification technologies to support visitor identification, access control, safety, and security. Information will be handled according to Ford Energy privacy and retention requirements.</p><label class="check"><input name="agreeBiometric" type="checkbox" required /> I consent and acknowledge the Privacy Agreement.</label></div>
-        <div class="agreement-content" data-agreement="safety"><h3>Safety Golden Rules</h3><p>Follow energy-isolation requirements, wear assigned PPE and seatbelts, obey speed limits, do not operate equipment without authorization, report injuries and unsafe conditions, remain alert for industrial vehicles, and never bypass safety devices.</p><label class="check"><input name="agreeSafety" type="checkbox" required /> I acknowledge the Safety Golden Rules.</label></div>
-        <div class="agreement-content" data-agreement="conduct"><h3>Anti-Harassment and Zero-Tolerance Policy</h3><p>Bullying, harassment, threats, discrimination, retaliation, and disruptive behavior are prohibited. Visitors must treat employees, contractors, and other guests respectfully and comply with immediate direction from Ford Energy representatives.</p><label class="check"><input name="agreeConduct" type="checkbox" required /> I acknowledge the Anti-Harassment and Zero-Tolerance Policy.</label></div>
+        <div class="agreement-content active" data-agreement="security" data-title="Security Agreement">
+          <h3>Security Agreement</h3>
+          <p>Visitors are subject to security screening and must remain within approved areas. Visitor badges remain Ford Energy property, must be visibly displayed, and must be returned before departure. Visitors must follow all Security instructions and remain with their escort whenever escorting is required.</p>
+          <p>Unauthorized access, photography, audio/video recording, removal of property or information, and attempts to bypass access-control or screening processes are prohibited.</p>
+          <label class="check"><input name="agreeSecurity" type="checkbox" required data-agreement-id="SECURITY" /> I have read and agree to the Security Agreement.</label>
+        </div>
+        <div class="agreement-content" data-agreement="biometric" data-title="Biometric and Facial Recognition Consent">
+          <h3>Biometric and Facial Recognition Consent</h3>
+          <p>I understand that Ford Energy may use my submitted photograph and approved identity-verification technologies, including facial comparison where authorized, to support visitor identification, access control, safety, and security.</p>
+          <p>I acknowledge that this consent applies to the visit dates listed in this request and that access may be denied or restricted when required verification cannot be completed.</p>
+          <label class="check"><input name="agreeBiometric" type="checkbox" required data-agreement-id="BIOMETRIC" /> I consent to the described biometric and facial-recognition use.</label>
+        </div>
+        <div class="agreement-content" data-agreement="privacy" data-title="Privacy Agreement">
+          <h3>Privacy Agreement</h3>
+          <p>Visitor information will be collected and used for legitimate safety, security, access-control, emergency-accountability, compliance, and operational purposes. Information will be protected and retained according to Ford Energy requirements and applicable law.</p>
+          <p>I certify that the information supplied is accurate and understand that authorized personnel may review it for approval, check-in, investigation, audit, and reporting purposes.</p>
+          <label class="check"><input name="agreePrivacy" type="checkbox" required data-agreement-id="PRIVACY" /> I have read and acknowledge the Privacy Agreement.</label>
+        </div>
+        <div class="agreement-content" data-agreement="safety" data-title="Safety Golden Rules / SGR Compliance">
+          <h3>Safety Golden Rules / SGR Compliance</h3>
+          <p>Follow energy-isolation requirements, wear assigned PPE and seatbelts, obey posted speed limits, do not operate equipment without authorization, report injuries and unsafe conditions, remain alert for industrial vehicles, and never remove, bypass, or disable a safety device.</p>
+          <p>Visitors must follow emergency instructions, evacuation routes, muster procedures, and all directions issued by Ford Energy Safety, Security, or their host.</p>
+          <label class="check"><input name="agreeSafety" type="checkbox" required data-agreement-id="SAFETY" /> I acknowledge and agree to follow the Safety Golden Rules.</label>
+        </div>
+        <div class="agreement-content" data-agreement="conduct" data-title="Anti-Harassment and Zero-Tolerance Agreement">
+          <h3>Anti-Harassment and Zero-Tolerance Agreement</h3>
+          <p>Bullying, harassment, threats, discrimination, retaliation, violence, and disruptive behavior are prohibited. Visitors must treat employees, contractors, and other guests respectfully and comply with immediate direction from Ford Energy representatives.</p>
+          <p>Violations may result in removal from the property, cancellation of access, notification to the visitor’s employer, and additional action when appropriate.</p>
+          <label class="check"><input name="agreeConduct" type="checkbox" required data-agreement-id="CONDUCT" /> I acknowledge the Anti-Harassment and Zero-Tolerance Agreement.</label>
+        </div>
+        <div class="agreement-content" data-agreement="training" data-title="Site Awareness Training">
+          <h3>Site Awareness Training</h3>
+          <p>Watch the complete Ford Energy site-awareness and security briefing before acknowledging this section.</p>
+          <div id="trainingVideoContainer" class="training-video"><div class="video-placeholder">Training video has not yet been configured. Add <strong>TRAINING_VIDEO_URL</strong> in <code>public-registration/config.js</code> or the Apps Script Config sheet.</div></div>
+          <label class="check"><input name="agreeTraining" type="checkbox" required data-agreement-id="TRAINING" /> I watched the required briefing and understand the site-awareness requirements.</label>
+        </div>
+        <div class="agreement-content" data-agreement="restricted" data-title="Restricted Items and Electronic Device Rules">
+          <h3>Restricted Items and Electronic Device Rules</h3>
+          <p>Weapons, firearms, knives, unauthorized tools, removable storage devices, external drives, and any item prohibited by posted rules are not permitted. Laptops, cameras, recording devices, USB devices, and other secured items must be declared and approved before entry.</p>
+          <p>Electronic devices may be inspected, sealed, restricted, or denied entry. Any approved security sticker or seal must remain intact until Security completes the exit process.</p>
+          <label class="check"><input name="agreeRestricted" type="checkbox" required data-agreement-id="RESTRICTED_ITEMS" /> I understand and agree to the Restricted Items and Electronic Device Rules.</label>
+        </div>
         <div class="grid cols-2 agreement-signoff">
           <label>Typed legal name *<input name="acknowledgementName" required /></label>
           <label>Acknowledgement date *<input name="acknowledgementDate" type="date" required /></label>
@@ -136,7 +180,8 @@
     </form>
   </main>
 
-  <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><h2>Registration Submitted</h2><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><p>Keep this number and bring a valid government-issued photo ID to the Main Security Building.</p><button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></dialog>
+  <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><h2>Registration Submitted</h2><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><div id="confirmationQr" class="confirmation-qr" aria-label="Registration QR code"></div><div id="confirmationSummary" class="confirmation-summary"></div><div class="arrival-reminder"><strong>Arrival instructions</strong><p>Proceed to the Main Security Building, park in Ford Energy / Visitor Parking, and bring the original valid government-issued photo ID used to verify your identity.</p><p>Do not bring undeclared restricted items or electronic storage devices.</p></div><a id="vgsLink" class="btn btn-secondary hidden" target="_blank" rel="noopener">Open VGS Navigation</a> <button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></dialog>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="config.js"></script><script src="app.js"></script>
 </body>
 </html>
