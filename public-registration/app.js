@@ -19,28 +19,96 @@
   const agreementCheckboxes = [...document.querySelectorAll('[data-agreement-id]')];
   let sponsorDirectory = [];
 
+  let selectedSponsor = null;
+  let sponsorActiveIndex = -1;
+
   async function loadSponsorDirectory(){
-    const emailInput=$('#sponsorEmail'), list=$('#sponsorEmailOptions');
-    if(!emailInput||!list||!cfg.API_URL||cfg.API_URL.includes('PASTE_'))return;
+    const search=$('#sponsorSearch');
+    if(!search||!cfg.API_URL||cfg.API_URL.includes('PASTE_'))return;
+    search.placeholder='Loading sponsor directory…';
+    search.disabled=true;
     try{
       const res=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'listSponsors',payload:{}})});
       const data=await res.json();
       if(!data.ok)throw new Error(data.error||'Sponsor directory unavailable.');
-      sponsorDirectory=Array.isArray(data.sponsors)?data.sponsors:[];
-      list.innerHTML=sponsorDirectory.map(s=>`<option value="${escapeHtml(s.email)}">${escapeHtml([s.name,s.department].filter(Boolean).join(' — '))}</option>`).join('');
-      emailInput.placeholder=sponsorDirectory.length?'Search approved sponsors or enter an email':'Enter sponsor email';
+      sponsorDirectory=(Array.isArray(data.sponsors)?data.sponsors:[]).map(s=>({
+        sponsorId:String(s.sponsorId||''),name:String(s.name||'').trim(),email:String(s.email||'').trim(),department:String(s.department||'').trim(),keywords:String(s.keywords||'').trim()
+      })).filter(s=>s.name&&s.email);
+      search.placeholder=sponsorDirectory.length?'Search by sponsor name, email, department, or keyword':'No saved sponsors — use manual entry';
     }catch(err){
       console.warn('Sponsor directory could not be loaded:',err);
-      emailInput.placeholder='Enter sponsor email manually';
+      search.placeholder='Sponsor directory unavailable — use manual entry';
+    }finally{search.disabled=false}
+  }
+
+  function sponsorMatches(query){
+    const q=String(query||'').trim().toLowerCase();
+    if(!q)return sponsorDirectory.slice(0,12);
+    return sponsorDirectory.filter(s=>[s.name,s.email,s.department,s.keywords].join(' ').toLowerCase().includes(q)).slice(0,12);
+  }
+
+  function renderSponsorResults(){
+    const box=$('#sponsorResults'), search=$('#sponsorSearch');
+    if(!box||!search||$('#manualSponsorToggle')?.checked){box?.classList.add('hidden');return}
+    const matches=sponsorMatches(search.value);
+    sponsorActiveIndex=-1;
+    if(!matches.length){
+      box.innerHTML='<div class="sponsor-empty">No saved sponsor matched. Select “My sponsor is not listed” to enter one manually.</div>';
+    }else{
+      box.innerHTML=matches.map((s,i)=>`<button type="button" class="sponsor-result" role="option" data-index="${i}" data-email="${escapeHtml(s.email)}"><strong>${escapeHtml(s.name)}</strong><span>${escapeHtml(s.department||'Department not listed')}</span><small>${escapeHtml(s.email)}</small></button>`).join('');
+      box.querySelectorAll('.sponsor-result').forEach(btn=>btn.addEventListener('click',()=>selectSponsor(matches[Number(btn.dataset.index)])));
     }
+    box.classList.remove('hidden');
   }
-  function applySponsorSelection(){
-    const email=$('#sponsorEmail')?.value.trim().toLowerCase();
-    const match=sponsorDirectory.find(s=>String(s.email).trim().toLowerCase()===email);
-    if(!match)return;
-    if(match.name)$('#sponsorName').value=match.name;
-    if(match.department)$('#sponsorDepartment').value=match.department;
+
+  function selectSponsor(sponsor){
+    if(!sponsor)return;
+    selectedSponsor=sponsor;
+    $('#sponsorId').value=sponsor.sponsorId||'';
+    $('#sponsorSource').value='Directory';
+    $('#sponsorName').value=sponsor.name||'';
+    $('#sponsorEmail').value=sponsor.email||'';
+    $('#sponsorDepartment').value=sponsor.department||'';
+    $('#sponsorSearch').value=sponsor.name||'';
+    $('#sponsorResults').classList.add('hidden');
+    $('#sponsorPicker').classList.add('has-selection');
   }
+
+  function clearSponsorSelection(){
+    selectedSponsor=null;
+    $('#sponsorId').value='';
+    $('#sponsorName').value='';
+    $('#sponsorEmail').value='';
+    $('#sponsorDepartment').value='';
+    $('#sponsorPicker').classList.remove('has-selection');
+  }
+
+  function setManualSponsorMode(enabled){
+    const search=$('#sponsorSearch');
+    clearSponsorSelection();
+    $('#sponsorSource').value=enabled?'Manual':'Directory';
+    [$('#sponsorName'),$('#sponsorEmail'),$('#sponsorDepartment')].forEach(el=>{el.readOnly=!enabled;el.classList.toggle('manual-entry',enabled)});
+    search.disabled=enabled;
+    search.value='';
+    search.placeholder=enabled?'Manual sponsor entry enabled':'Search by sponsor name, email, department, or keyword';
+    $('#sponsorResults').classList.add('hidden');
+    if(enabled)$('#sponsorName').focus();
+  }
+
+  $('#sponsorSearch')?.addEventListener('input',()=>{if(selectedSponsor&&$('#sponsorSearch').value!==selectedSponsor.name)clearSponsorSelection();renderSponsorResults()});
+  $('#sponsorSearch')?.addEventListener('focus',renderSponsorResults);
+  $('#sponsorSearch')?.addEventListener('keydown',e=>{
+    const items=[...document.querySelectorAll('.sponsor-result')];
+    if(e.key==='Escape'){$('#sponsorResults').classList.add('hidden');return}
+    if(!items.length)return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();sponsorActiveIndex=(sponsorActiveIndex+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;
+      items.forEach((x,i)=>x.classList.toggle('active',i===sponsorActiveIndex));items[sponsorActiveIndex].scrollIntoView({block:'nearest'});
+    }else if(e.key==='Enter'&&sponsorActiveIndex>=0){e.preventDefault();items[sponsorActiveIndex].click()}
+  });
+  $('#manualSponsorToggle')?.addEventListener('change',e=>setManualSponsorMode(e.target.checked));
+  document.addEventListener('click',e=>{if(!e.target.closest('#sponsorPicker'))$('#sponsorResults')?.classList.add('hidden')});
+  loadSponsorDirectory();
 
   function nowIso(){ return new Date().toISOString(); }
   function markAgreementPresented(key){
@@ -70,6 +138,11 @@
     const fields = [...section.querySelectorAll('[required]')];
     for (const field of fields) {
       if (!field.checkValidity()) { field.reportValidity(); field.focus(); return false; }
+    }
+    if (n === 2 && !$('#manualSponsorToggle').checked && !$('#sponsorId').value) {
+      alert('Please search for and select a saved Ford Energy sponsor, or choose “My sponsor is not listed” for manual entry.');
+      $('#sponsorSearch').focus();
+      return false;
     }
     if (n === 3 && !photoDataUrl) { alert('Please upload or capture a government ID / passport-style visitor photograph.'); return false; }
     if (n === 4) {
@@ -144,9 +217,6 @@
     video.addEventListener('error',()=>fallback.classList.remove('hidden'));
   }
   loadTrainingVideo();
-  $('#sponsorEmail')?.addEventListener('input',applySponsorSelection);
-  $('#sponsorEmail')?.addEventListener('change',applySponsorSelection);
-  loadSponsorDirectory();
 
   async function fileToCompressedDataUrl(file) {
     const data = await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
@@ -228,7 +298,13 @@
 
   $('#saveDraftBtn').addEventListener('click',()=>{localStorage.setItem('feVisitorDraft',JSON.stringify(formObject()));alert('Draft saved on this device.')});
   function restoreDraft(){try{const d=JSON.parse(localStorage.getItem('feVisitorDraft')||'null');if(!d)return;Object.entries(d).forEach(([k,v])=>{const el=form.elements[k];if(!el)return;if(el.type==='checkbox')el.checked=v==='Yes'||v===true||v==='on';else el.value=v||''});if(d.photoDataUrl){originalPhotoDataUrl='';setPhoto(d.photoDataUrl)}$('#vehicleFields').classList.toggle('hidden',!$('#drivingToggle').checked);agreementCheckboxes.forEach(b=>b.dispatchEvent(new Event('change')))}catch{}}
-  restoreDraft(); updateAgreementProgress();
+  restoreDraft();
+  if ($('#sponsorSource').value === 'Manual') {
+    $('#manualSponsorToggle').checked=true;
+    $('#sponsorSearch').disabled=true;
+    [$('#sponsorName'),$('#sponsorEmail'),$('#sponsorDepartment')].forEach(el=>{el.readOnly=false;el.classList.add('manual-entry')});
+  }
+  updateAgreementProgress();
   const today=new Date().toISOString().slice(0,10);form.acknowledgementDate.value=form.acknowledgementDate.value||today;form.startDate.min=today;form.endDate.min=today;
 
   form.addEventListener('submit', async e=>{

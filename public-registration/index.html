@@ -67,13 +67,20 @@
       <section class="panel form-step" data-step="2">
         <div class="section-heading"><div><p class="eyebrow">VISIT REQUEST</p><h2>Visit Information</h2></div></div>
         <div class="grid cols-2">
-          <label>Ford Energy sponsor *<input name="sponsorName" id="sponsorName" required autocomplete="off" /></label>
-          <label>Sponsor email *
-            <input name="sponsorEmail" id="sponsorEmail" type="email" list="sponsorEmailOptions" required autocomplete="off" placeholder="Search approved sponsors or enter an email" />
-            <datalist id="sponsorEmailOptions"></datalist>
-            <span class="field-help">Begin typing a sponsor name, department, or email and select a match. An unlisted sponsor email may also be entered manually.</span>
-          </label>
-          <label>Sponsor department *<input name="department" id="sponsorDepartment" required /></label>
+          <div class="sponsor-picker span-2" id="sponsorPicker">
+            <label for="sponsorSearch">Ford Energy sponsor *</label>
+            <div class="sponsor-search-wrap">
+              <input id="sponsorSearch" type="search" autocomplete="off" placeholder="Search by sponsor name, email, department, or keyword" aria-autocomplete="list" aria-controls="sponsorResults" />
+              <div id="sponsorResults" class="sponsor-results hidden" role="listbox"></div>
+            </div>
+            <span class="field-help">Select a saved Ford Energy sponsor. Their email and department will populate automatically.</span>
+            <label class="manual-sponsor-toggle"><input id="manualSponsorToggle" type="checkbox" /> My sponsor is not listed</label>
+          </div>
+          <input type="hidden" name="sponsorId" id="sponsorId" />
+          <input type="hidden" name="sponsorSource" id="sponsorSource" value="Directory" />
+          <label>Ford Energy sponsor name *<input name="sponsorName" id="sponsorName" required readonly /></label>
+          <label>Sponsor email *<input name="sponsorEmail" id="sponsorEmail" type="email" required readonly autocomplete="off" /></label>
+          <label>Sponsor department *<input name="department" id="sponsorDepartment" required readonly /></label>
           <label>Secondary point of contact<input name="secondaryContact" /></label>
           <label class="span-2">Reason for visit *<textarea name="reason" required rows="3"></textarea></label>
           <label>Project / assignment<input name="project" /></label>
