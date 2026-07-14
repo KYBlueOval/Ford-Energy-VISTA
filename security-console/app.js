@@ -1,6 +1,6 @@
 (()=>{
   const cfg=window.FE_SECURITY_CONFIG||{};
-  let pin=sessionStorage.getItem('feSecurityPin')||'', records=[], selectedVisitId='';
+  let pin=sessionStorage.getItem('feSecurityPin')||'', records=[], selectedVisitId='', selectedPhotoDataUrl='', selectedPhotoFileName='visitor-photo.jpg';
   const $=s=>document.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
@@ -53,26 +53,39 @@
     try{
       const d=await api('getVisitPhoto',{visitId:r.visitId});
       if(selectedVisitId!==r.visitId)return;
-      if(d.hasPhoto&&d.dataUrl){host.outerHTML=`<img id="visitorPhoto" class="photo" src="${d.dataUrl}" alt="Visitor photograph">`}
+      if(d.hasPhoto&&d.dataUrl){
+        selectedPhotoDataUrl=d.dataUrl;selectedPhotoFileName=d.fileName||photoFileName(r);
+        host.outerHTML=`<img id="visitorPhoto" class="photo" src="${d.dataUrl}" alt="Visitor photograph" title="${esc(selectedPhotoFileName)}">`;
+        const download=$('#downloadPhotoBtn');if(download){download.disabled=false;download.textContent=`Download ${selectedPhotoFileName}`}
+      }
       else{host.classList.remove('loading');host.innerHTML='<span>👤</span><small>No photo</small>'}
     }catch(e){host.classList.remove('loading');host.innerHTML='<span>⚠</span><small>Photo unavailable</small>';notify(e.message,'error')}
   }
   function openRecord(r){
-    selectedVisitId=r.visitId;renderRows();
+    selectedVisitId=r.visitId;selectedPhotoDataUrl='';selectedPhotoFileName=r.photoFileName||photoFileName(r);renderRows();
     const checkedIn=r.status==='Checked In', checkedOut=r.status==='Checked Out', approved=r.status==='Approved';
     $('#detailPanel').innerHTML=`
-      <div class="detail-head">${photoPlaceholder()}<div><p class="record-id">${esc(r.visitId)}</p><h2>${esc(r.fullName)}</h2><p>${esc(r.company)}</p><span class="status ${statusClass(r.status)}">${esc(r.status)}</span></div></div>
+      <div class="detail-head"><div class="photo-stack">${photoPlaceholder()}${r.hasPhoto?'<button id="downloadPhotoBtn" class="photo-download" disabled>Loading photo…</button>':''}</div><div><p class="record-id">${esc(r.visitId)}</p><h2>${esc(r.fullName)}</h2><p>${esc(r.company)}</p><span class="status ${statusClass(r.status)}">${esc(r.status)}</span></div></div>
       <div class="detail-grid">${field('Confirmation',r.confirmationNumber)}${field('Sponsor',r.sponsorName)}${field('Department',r.department)}${field('Phone',r.phone)}${field('Visit period',`${r.startDate} ${r.arrivalTime} – ${r.endDate} ${r.departureTime}`)}${field('Access',r.accessScope)}${field('Reason',r.reason)}${field('Plate',[r.licensePlate,r.plateState].filter(Boolean).join(' · ')||'—')}${field('Check in',r.checkInTime||'—')}${field('Check out',r.checkOutTime||'—')}</div>
       <div class="actions">
         ${!checkedIn&&!checkedOut?`<div class="action-section"><h3>Arrival & Badge Assignment</h3><label>Badge UID<input id="badgeUid" placeholder="Scan or enter badge UID"></label><label>Officer name<input id="officerName" placeholder="Security officer"></label><label>Sponsor notification notes<textarea id="checkNotes" placeholder="Sponsor contacted, response, escort details..."></textarea></label><button id="checkInAction">Check In Visitor</button></div>`:''}
         ${checkedIn?`<div class="action-section"><h3>Visitor Checkout</h3><label>Returned badge UID<input id="returnBadgeUid" value="${esc(r.badgeUid||'')}"></label><label>Officer name<input id="outOfficerName" placeholder="Security officer"></label><label>Checkout notes<textarea id="outNotes" placeholder="Badge condition, ID returned, exceptions..."></textarea></label><button id="checkOutAction">Check Out Visitor</button></div>`:''}
         <div class="status-actions">${!approved&&!checkedIn&&!checkedOut?'<button id="approveAction" class="secondary">Mark Approved</button>':''}${!checkedIn&&!checkedOut&&r.status!=='No Show'?'<button id="noShowAction" class="danger">Mark No Show</button>':''}</div>
       </div>`;
+    $('#downloadPhotoBtn')?.addEventListener('click',()=>downloadPhoto(r));
     $('#checkInAction')?.addEventListener('click',()=>act('checkInVisit',r.visitId,{badgeUid:$('#badgeUid').value.trim(),officerName:$('#officerName').value.trim(),notes:$('#checkNotes').value.trim(),idRetained:true,sponsorNotified:true},'Visitor checked in successfully.'));
     $('#checkOutAction')?.addEventListener('click',()=>act('checkOutVisit',r.visitId,{badgeUid:$('#returnBadgeUid').value.trim(),officerName:$('#outOfficerName').value.trim(),notes:$('#outNotes').value.trim(),idReturned:true},'Visitor checked out successfully.'));
     $('#approveAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'Approved'},'Visit marked approved.'));
     $('#noShowAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'No Show'},'Visit marked as no show.'));
     loadPhoto(r);
+  }
+  function photoFileName(r){
+    const clean=v=>String(v||'').trim().replace(/[\\\/:*?"<>|#%{}~&]/g,' ').replace(/\s+/g,' ').replace(/[. ]+$/g,'').slice(0,100);
+    const name=clean(r.fullName)||'Visitor',company=clean(r.company)||'Unknown Company';return `${name}-${company}.jpg`;
+  }
+  function downloadPhoto(r){
+    if(!selectedPhotoDataUrl){notify('The visitor photo is still loading.','error');return}
+    const link=document.createElement('a');link.href=selectedPhotoDataUrl;link.download=selectedPhotoFileName||photoFileName(r);document.body.appendChild(link);link.click();link.remove();
   }
   function field(k,v){return`<div class="field"><b>${esc(k)}</b><span>${esc(v||'—')}</span></div>`}
   async function act(action,visitId,extra,message){
