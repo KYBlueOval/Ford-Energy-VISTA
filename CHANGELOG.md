@@ -63,3 +63,11 @@
 - Added requested visitor lifecycle status colors.
 - Fixed Security Console photo loading and canonical download filenames.
 - Added header-safe row writing and one-time VisitRequests header repair with backup.
+
+
+## v1.3.0 Sprint 1.8a
+- Added Ford Energy favicon branding to the landing page, Visitor Registration and Security Console.
+- Added 16x16, 32x32, 180x180, 192x192 and 512x512 branded icons.
+- Added a multi-resolution favicon.ico and site.webmanifest.
+- Added Ford blue browser/PWA theme metadata.
+- Preserved the GitHub Actions-owned sponsor directory.

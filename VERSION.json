@@ -1,7 +1,7 @@
 {
   "version": "1.3.0",
-  "sprint": "1.8.0",
-  "build": "130180",
-  "release": "Security Operations Lifecycle, Photo and Sheet Alignment Fix",
-  "summary": "Color-coded visitor lifecycle, reliable photo loading/download naming, and canonical VisitRequests header repair"
+  "sprint": "1.8a",
+  "build": "130181",
+  "release": "Ford Energy Favicon and Browser Branding",
+  "summary": "Ford Energy favicon, Apple touch icon, PWA icons and manifest applied across VISTA"
 }
