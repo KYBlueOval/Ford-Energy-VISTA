@@ -49,3 +49,12 @@
 - Added resilient automatic draft saving, restore notification, and discard control.
 - Replaced blocked Google Drive iframe training playback with a reliable secure launch workflow.
 - Included the verified Sprint 1.6.3 sponsor synchronization GitHub Action.
+
+
+## v1.3.0 Sprint 1.7.2
+- Restored the Google Drive embedded training-video player with a visible new-tab fallback.
+- Reworked registration submission to use hidden-form POST plus JSONP status polling.
+- Added Apps Script submission-result caching to prevent postMessage-only timeouts.
+- Extended the submission timeout to three minutes with duplicate-submission guidance.
+- Preserved automatic sponsor, visitor, and Security email notifications.
+- Release packages no longer include or overwrite the generated `public-registration/data/sponsors.json` file.

@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '1.3.0-sprint1.7.1',
+  VERSION: '1.3.0-sprint1.7.2',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -23,9 +23,14 @@ function doGet(e) {
   const callback = String((e && e.parameter && e.parameter.callback) || '');
   try {
     const action = String((e && e.parameter && e.parameter.action) || '');
-    const result = action === 'listSponsors'
-      ? listSponsors_({ query: (e.parameter && e.parameter.query) || '' })
-      : {ok:true, service:'Ford Energy VISTA API', version:FE.VERSION};
+    let result;
+    if (action === 'listSponsors') {
+      result = listSponsors_({ query: (e.parameter && e.parameter.query) || '' });
+    } else if (action === 'submissionStatus') {
+      result = getSubmissionStatus_((e.parameter && e.parameter.requestId) || '');
+    } else {
+      result = {ok:true, service:'Ford Energy VISTA API', version:FE.VERSION};
+    }
     return callback ? jsonp_(result, callback) : json_(result);
   } catch (err) {
     const result = {ok:false,error:String(err.message || err)};
@@ -60,9 +65,11 @@ function doPost(e) {
       else if (action === 'updateVisitStatus') result = updateVisitStatus_(req.payload || {});
       else throw new Error('Unknown action: ' + action);
     }
+    if (bridge && requestId) storeSubmissionResult_(requestId, result);
     return bridge ? bridgeResponse_(result, requestId, parentOrigin) : json_(result);
   } catch (err) {
     const result = {ok:false,error:String(err.message || err)};
+    if (bridge && requestId) storeSubmissionResult_(requestId, result);
     return bridge ? bridgeResponse_(result, requestId, parentOrigin) : json_(result);
   }
 }
@@ -85,9 +92,30 @@ function bridgeResponse_(data, requestId, targetOrigin) {
   }).replace(/</g, '\\u003c');
   const origin = JSON.stringify(String(targetOrigin || 'https://kyblueoval.github.io'));
   const html = '<!doctype html><html><head><meta charset="utf-8"><title>VISTA Submission</title></head><body>' +
-    '<script>window.parent.postMessage(' + message + ',' + origin + ');<\\/script>' +
+    '<script>(function(){try{window.top.postMessage(' + message + ',' + origin + ');}catch(e){}try{window.parent.postMessage(' + message + ',' + origin + ');}catch(e){}})();<\/script>' +
     '<noscript>VISTA registration processed. Return to the registration window.</noscript></body></html>';
   return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function submissionCacheKey_(requestId) {
+  return 'VISTA_SUBMISSION_' + String(requestId || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 180);
+}
+
+function storeSubmissionResult_(requestId, result) {
+  if (!requestId) return;
+  CacheService.getScriptCache().put(submissionCacheKey_(requestId), JSON.stringify(result), 600);
+}
+
+function getSubmissionStatus_(requestId) {
+  const id = String(requestId || '').trim();
+  if (!id) return {ok:false,error:'Missing requestId'};
+  const raw = CacheService.getScriptCache().get(submissionCacheKey_(id));
+  if (!raw) return {ok:true,pending:true};
+  try {
+    return {ok:true,pending:false,result:JSON.parse(raw)};
+  } catch (err) {
+    return {ok:false,error:'Stored submission result could not be parsed.'};
+  }
 }
 
 function setupVisitorManagement() {

@@ -1,5 +1,5 @@
 (() => {
-  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.7.1 loaded');
+  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.7.2 loaded');
   const cfg = window.FE_VISITOR_CONFIG || {};
   const form = document.querySelector('#registrationForm');
   const steps = [...document.querySelectorAll('.form-step')];
@@ -294,7 +294,20 @@
       return;
     }
     if (drive) {
-      box.innerHTML = `<div class="training-launch-card"><div class="training-play-icon">▶</div><h4>Ford Energy Site Awareness Training</h4><p>Google Drive prevents this training file from playing reliably inside the registration page.</p><a class="btn btn-primary" href="${escaped}" target="_blank" rel="noopener">Open Required Training Video</a><small>After watching the complete briefing, return to this page and acknowledge the training section.</small></div>`;
+      const previewUrl = rawUrl.includes('/preview')
+        ? rawUrl
+        : `https://drive.google.com/file/d/${encodeURIComponent(drive[1])}/preview`;
+      box.innerHTML = `
+        <iframe
+          src="${escapeHtml(previewUrl)}"
+          title="Ford Energy Site Awareness Training"
+          allow="autoplay; fullscreen"
+          allowfullscreen
+          loading="eager"></iframe>
+        <div class="video-fallback visible">
+          If the embedded player does not start,
+          <a href="${escaped}" target="_blank" rel="noopener">open the training video in a new tab</a>.
+        </div>`;
       return;
     }
     const video = document.createElement('video');
@@ -451,6 +464,33 @@
   const today=new Date().toISOString().slice(0,10);form.acknowledgementDate.value=form.acknowledgementDate.value||today;form.startDate.min=today;form.endDate.min=today;
 
 
+  function jsonpRequest(url, timeoutMs=15000){
+    return new Promise((resolve,reject)=>{
+      const callbackName=`__vistaJsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const script=document.createElement('script');
+      let settled=false;
+      const cleanup=()=>{
+        clearTimeout(timer);
+        script.remove();
+        try{delete window[callbackName]}catch{window[callbackName]=undefined}
+      };
+      const finish=(fn,value)=>{
+        if(settled)return;
+        settled=true;
+        cleanup();
+        fn(value);
+      };
+      window[callbackName]=data=>finish(resolve,data);
+      script.onerror=()=>finish(reject,new Error('Submission status check could not reach the VISTA service.'));
+      const u=new URL(url);
+      u.searchParams.set('callback',callbackName);
+      u.searchParams.set('_',String(Date.now()));
+      script.src=u.toString();
+      const timer=setTimeout(()=>finish(reject,new Error('Submission status check timed out.')),timeoutMs);
+      document.head.appendChild(script);
+    });
+  }
+
   function submitVisitThroughBridge(payload){
     return new Promise((resolve,reject)=>{
       const requestId=`VISTA-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -482,9 +522,12 @@
       addField('payload',JSON.stringify(payload));
 
       let settled=false;
+      let pollTimer=null;
+      let pollAttempts=0;
       const cleanup=()=>{
         window.removeEventListener('message',onMessage);
-        clearTimeout(timer);
+        clearTimeout(timeoutTimer);
+        if(pollTimer)clearTimeout(pollTimer);
         setTimeout(()=>{iframe.remove();bridgeForm.remove();},250);
       };
       const finish=(fn,value)=>{
@@ -493,20 +536,49 @@
         cleanup();
         fn(value);
       };
+      const handleResult=result=>{
+        if(!result)return;
+        if(result.ok)finish(resolve,result);
+        else finish(reject,new Error(result.error||'The registration could not be submitted.'));
+      };
       const onMessage=event=>{
         const message=event.data;
         if(!message||message.type!=='FE_VISTA_SUBMISSION_RESULT'||message.requestId!==requestId)return;
-        const allowedOrigins=['https://script.google.com','https://script.googleusercontent.com'];
-        if(!allowedOrigins.includes(event.origin))return;
-        if(message.data&&message.data.ok) finish(resolve,message.data);
-        else finish(reject,new Error(message.data?.error||'The registration could not be submitted.'));
+        const trusted = event.origin === 'https://script.google.com' ||
+          event.origin === 'https://script.googleusercontent.com' ||
+          event.origin.endsWith('.googleusercontent.com');
+        if(!trusted)return;
+        handleResult(message.data);
       };
-      const timer=setTimeout(()=>finish(reject,new Error('The registration submission timed out. Please verify your connection and try again.')),120000);
+      const pollStatus=async()=>{
+        if(settled)return;
+        pollAttempts+=1;
+        try{
+          const statusUrl=new URL(cfg.API_URL);
+          statusUrl.searchParams.set('action','submissionStatus');
+          statusUrl.searchParams.set('requestId',requestId);
+          const status=await jsonpRequest(statusUrl.toString(),15000);
+          if(status?.ok===false){
+            finish(reject,new Error(status.error||'Submission status could not be checked.'));
+            return;
+          }
+          if(status?.pending===false && status.result){
+            handleResult(status.result);
+            return;
+          }
+        }catch(err){
+          console.warn('VISTA submission status poll failed; retrying.',err);
+        }
+        const delay=pollAttempts<5?2000:4000;
+        pollTimer=setTimeout(pollStatus,delay);
+      };
+      const timeoutTimer=setTimeout(()=>finish(reject,new Error('The registration submission timed out after three minutes. Check the VisitRequests sheet before submitting again to avoid creating a duplicate.')),180000);
 
       window.addEventListener('message',onMessage);
       document.body.appendChild(iframe);
       document.body.appendChild(bridgeForm);
       bridgeForm.submit();
+      pollTimer=setTimeout(pollStatus,2000);
     });
   }
 
