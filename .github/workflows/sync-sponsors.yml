@@ -40,7 +40,7 @@ jobs:
 
       - name: Download and build sponsor directory
         env:
-          VISTA_SPONSOR_API_URL: "https://script.google.com/macros/s/AKfycbxJhQ9P6V8Un4oyZEy5JNp4ravCRbfKm1Dvbav87t_pydQmwNhOMJfxIBmA1BMNoMLQ/exec"
+          VISTA_SPONSOR_API_URL: "https://script.google.com/macros/s/AKfycbxJhQ9P6V8Un4oyZEy5JNp4ravCRbfKm1Dvbay87t_pydQmwNhOMJfxIBmAlBMNoMLQ/exec"
         run: |
           python - <<'PY'
           import json
@@ -65,7 +65,7 @@ jobs:
           request = urllib.request.Request(
               url,
               headers={
-                  "User-Agent": "Ford-Energy-VISTA-GitHub-Actions/1.6.2",
+                  "User-Agent": "Ford-Energy-VISTA-GitHub-Actions/1.6.3",
                   "Accept": "application/json,text/plain,*/*",
                   "Cache-Control": "no-cache",
               },
