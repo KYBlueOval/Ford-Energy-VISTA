@@ -1,13 +1,35 @@
 {
-  "generatedAt": "2026-07-14T16:55:00-04:00",
-  "source": "Ford Energy VISTA Sponsors Directory",
+  "generatedAt": "2026-07-15T15:18:03.817400+00:00",
+  "source": "Ford Energy VISTA Sponsors worksheet via Apps Script",
+  "count": 4,
   "sponsors": [
+    {
+      "sponsorId": "CDavi434",
+      "name": "Chasity Davis",
+      "email": "cdavi434@ford.com",
+      "department": "Security",
+      "keywords": "Security, Chasity"
+    },
+    {
+      "sponsorId": "jjbenando",
+      "name": "Jeremy Benando",
+      "email": "jbenando@ford.com",
+      "department": "Security",
+      "keywords": "Security, Team Lead, Global Security"
+    },
     {
       "sponsorId": "JYsunza",
       "name": "Justin Ysunza",
       "email": "jysunza@ford.com",
       "department": "Security",
-      "keywords": "Security, Justin, Ysunza, Ford Energy"
+      "keywords": "Security, Justin,"
+    },
+    {
+      "sponsorId": "MHayley",
+      "name": "Mark Hayley",
+      "email": "mhayley@ford.com",
+      "department": "Plant Manager",
+      "keywords": "Plant Manager, Leadership, Executive"
     }
   ]
 }
