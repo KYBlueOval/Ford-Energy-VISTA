@@ -1,12 +1,12 @@
 # Changelog
 
-## v1.3.0 Sprint 1.6.1
-- Added the previously missing `.github/workflows/sync-sponsors.yml` workflow.
-- Added scheduled and manual sponsor synchronization from the Google Sheets-backed Apps Script endpoint.
-- Added GitHub contents write permissions, validation, concurrency protection, and change-only commits.
-- Updated the sync script so unchanged sponsor data does not create a new timestamp or unnecessary commit.
-- Preserved the production `public-registration/config.js` exactly.
+## v1.3.0 Sprint 1.7.1
+- Replaced CORS-blocked registration fetch with an Apps Script iframe submission bridge.
+- Added richer registration confirmation screen and notification delivery status.
+- Added automatic sponsor, visitor, and optional Security email notifications.
+- Returns stored photo filename and email outcomes after submission.
 
+# Changelog
 
 ## v1.3.0 Sprint 1.1
 - Fixed sponsor directory loading from GitHub Pages by adding a public GET endpoint with POST fallback.
@@ -42,3 +42,10 @@
 - Added server-side sponsor JSON validation and change-only commits.
 - Registration now uses the same-origin generated sponsor directory with local browser cache fallback.
 - Preserved the production `public-registration/config.js` unchanged.
+
+## v1.3.0 Sprint 1.7
+- Added sponsor directory freshness/status display and manual refresh.
+- Added tokenized relevance-ranked sponsor search.
+- Added resilient automatic draft saving, restore notification, and discard control.
+- Replaced blocked Google Drive iframe training playback with a reliable secure launch workflow.
+- Included the verified Sprint 1.6.3 sponsor synchronization GitHub Action.

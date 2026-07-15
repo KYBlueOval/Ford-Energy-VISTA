@@ -1,5 +1,5 @@
 (() => {
-  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.6 loaded');
+  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.7.1 loaded');
   const cfg = window.FE_VISITOR_CONFIG || {};
   const form = document.querySelector('#registrationForm');
   const steps = [...document.querySelectorAll('.form-step')];
@@ -19,11 +19,37 @@
   const nextBtn = $('#nextBtn'), backBtn = $('#backBtn'), submitBtn = $('#submitBtn');
   const agreementCheckboxes = [...document.querySelectorAll('[data-agreement-id]')];
   let sponsorDirectory = [];
+  let sponsorDirectoryMetadata = {};
+  const SPONSOR_CACHE_KEY = 'feVistaSponsorDirectoryV17';
+  const DRAFT_KEY = 'feVisitorDraftV17';
+  let draftTimer = null;
 
   let selectedSponsor = null;
   let sponsorActiveIndex = -1;
 
-  async function loadSponsorDirectory(){
+  function formatSyncAge(iso){
+    if(!iso) return 'Sync time unavailable';
+    const when = new Date(iso);
+    if(Number.isNaN(when.getTime())) return 'Sync time unavailable';
+    const mins = Math.max(0, Math.round((Date.now()-when.getTime())/60000));
+    if(mins < 1) return 'Synced just now';
+    if(mins < 60) return `Synced ${mins} minute${mins===1?'':'s'} ago`;
+    const hours = Math.round(mins/60);
+    return `Synced ${hours} hour${hours===1?'':'s'} ago`;
+  }
+
+  function updateSponsorSyncStatus(source='live'){
+    const status=$('#sponsorSyncStatus');
+    if(!status) return;
+    const generatedAt=sponsorDirectoryMetadata.generatedAt||'';
+    const ageText=formatSyncAge(generatedAt);
+    const stale=generatedAt && (Date.now()-new Date(generatedAt).getTime()) > 30*60*1000;
+    status.className=`sponsor-sync-status ${stale?'stale':''}`;
+    status.innerHTML=`<span><strong>${sponsorDirectory.length}</strong> active sponsor${sponsorDirectory.length===1?'':'s'} · ${escapeHtml(ageText)}${source==='cache'?' · cached copy':''}</span><button id="refreshSponsorsBtn" type="button" class="link-button">Refresh</button>`;
+    $('#refreshSponsorsBtn')?.addEventListener('click',()=>loadSponsorDirectory(true));
+  }
+
+  async function loadSponsorDirectory(forceRefresh=false){
     const search = $('#sponsorSearch');
     if (!search) return;
 
@@ -32,20 +58,23 @@
 
     try {
       const directoryUrl = new URL('./data/sponsors.json', window.location.href);
-      directoryUrl.searchParams.set('v', '13016');
+      directoryUrl.searchParams.set('v', forceRefresh ? String(Date.now()) : '13017');
       const response = await fetch(directoryUrl.toString(), {
         method: 'GET',
         cache: 'no-store',
         credentials: 'same-origin'
       });
 
-      if (!response.ok) {
-        throw new Error(`Sponsor directory HTTP ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Sponsor directory HTTP ${response.status}`);
 
       const data = await response.json();
       const rows = Array.isArray(data) ? data : (Array.isArray(data.sponsors) ? data.sponsors : []);
-      localStorage.setItem('feVistaSponsorDirectory', JSON.stringify({ savedAt: Date.now(), data }));
+      sponsorDirectoryMetadata = {
+        generatedAt: data.generatedAt || '',
+        source: data.source || 'GitHub sponsor directory',
+        count: Number(data.count || rows.length)
+      };
+      localStorage.setItem(SPONSOR_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data }));
 
       sponsorDirectory = rows.map(s => ({
         sponsorId: String(s.sponsorId || s.SponsorID || '').trim(),
@@ -60,12 +89,14 @@
         : 'No saved sponsors are configured — use manual entry';
       search.dataset.directoryCount = String(sponsorDirectory.length);
       delete search.dataset.directoryError;
-      console.info('VISTA sponsor directory loaded from same-origin JSON:', sponsorDirectory.length, data.generatedAt || '');
+      updateSponsorSyncStatus('live');
+      console.info('VISTA sponsor directory loaded from same-origin JSON:', sponsorDirectory.length, sponsorDirectoryMetadata.generatedAt);
     } catch (err) {
       console.error('Sponsor directory could not be loaded:', err);
       try {
-        const cached = JSON.parse(localStorage.getItem('feVistaSponsorDirectory') || 'null');
+        const cached = JSON.parse(localStorage.getItem(SPONSOR_CACHE_KEY) || 'null');
         const rows = cached && cached.data && Array.isArray(cached.data.sponsors) ? cached.data.sponsors : [];
+        sponsorDirectoryMetadata = cached?.data || {};
         sponsorDirectory = rows.map(s => ({
           sponsorId: String(s.sponsorId || s.SponsorID || '').trim(),
           name: String(s.name || s.SponsorName || '').trim(),
@@ -75,9 +106,11 @@
         })).filter(s => s.name && s.email);
         if (sponsorDirectory.length) {
           search.placeholder = `Search ${sponsorDirectory.length} cached sponsor${sponsorDirectory.length === 1 ? '' : 's'}`;
+          updateSponsorSyncStatus('cache');
           console.warn('Using cached VISTA sponsor directory:', sponsorDirectory.length);
         } else {
           search.placeholder = 'Sponsor directory unavailable — use manual entry';
+          updateSponsorSyncStatus('error');
         }
       } catch (cacheErr) {
         sponsorDirectory = [];
@@ -91,8 +124,22 @@
 
   function sponsorMatches(query){
     const q=String(query||'').trim().toLowerCase();
-    if(!q)return sponsorDirectory.slice(0,12);
-    return sponsorDirectory.filter(s=>[s.name,s.email,s.department,s.keywords].join(' ').toLowerCase().includes(q)).slice(0,12);
+    if(!q) return sponsorDirectory.slice(0,12);
+    const tokens=q.split(/\s+/).filter(Boolean);
+    return sponsorDirectory.map(s=>{
+      const fields=[s.name,s.email,s.department,s.keywords].map(v=>String(v||'').toLowerCase());
+      const haystack=fields.join(' ');
+      if(!tokens.every(token=>haystack.includes(token))) return null;
+      let score=0;
+      for(const token of tokens){
+        if(fields[0]===token) score+=100;
+        if(fields[0].startsWith(token)) score+=50;
+        if(fields[1].startsWith(token)) score+=40;
+        if(fields[2].startsWith(token)) score+=30;
+        if(haystack.includes(token)) score+=10;
+      }
+      return {s,score};
+    }).filter(Boolean).sort((a,b)=>b.score-a.score||a.s.name.localeCompare(b.s.name)).slice(0,12).map(x=>x.s);
   }
 
   function renderSponsorResults(){
@@ -247,7 +294,7 @@
       return;
     }
     if (drive) {
-      box.innerHTML = `<iframe src="https://drive.google.com/file/d/${encodeURIComponent(drive[1])}/preview" title="Ford Energy Site Awareness Training" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      box.innerHTML = `<div class="training-launch-card"><div class="training-play-icon">▶</div><h4>Ford Energy Site Awareness Training</h4><p>Google Drive prevents this training file from playing reliably inside the registration page.</p><a class="btn btn-primary" href="${escaped}" target="_blank" rel="noopener">Open Required Training Video</a><small>After watching the complete briefing, return to this page and acknowledge the training section.</small></div>`;
       return;
     }
     const video = document.createElement('video');
@@ -344,8 +391,56 @@
   function renderReview(){const d=formObject();const fields={Visitor:`${d.firstName||''} ${d.middleName||''} ${d.lastName||''}`.replace(/\s+/g,' ').trim(),Company:d.company,Email:d.email,Phone:d.phone,Sponsor:d.sponsorName,Department:d.department,'Visit period':`${d.startDate} ${d.arrivalTime} through ${d.endDate} ${d.departureTime}`,'Reason for visit':d.reason,'Requested access':d.accessScope,Vehicle:d.driving==='Yes'?`${d.vehicleYear||''} ${d.vehicleMake||''} ${d.vehicleModel||''} — ${d.licensePlate||''}`:'Not driving',Agreements:`${agreementCheckboxes.filter(x=>x.checked).length} of ${agreementCheckboxes.length} completed`};$('#reviewSummary').innerHTML=Object.entries(fields).map(([k,v])=>`<div class="review-card"><b>${k}</b>${escapeHtml(v||'—')}</div>`).join('')}
   function escapeHtml(v){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
-  $('#saveDraftBtn').addEventListener('click',()=>{localStorage.setItem('feVisitorDraft',JSON.stringify(formObject()));alert('Draft saved on this device.')});
-  function restoreDraft(){try{const d=JSON.parse(localStorage.getItem('feVisitorDraft')||'null');if(!d)return;Object.entries(d).forEach(([k,v])=>{const el=form.elements[k];if(!el)return;if(el.type==='checkbox')el.checked=v==='Yes'||v===true||v==='on';else el.value=v||''});if(d.photoDataUrl){originalPhotoDataUrl='';setPhoto(d.photoDataUrl)}$('#vehicleFields').classList.toggle('hidden',!$('#drivingToggle').checked);agreementCheckboxes.forEach(b=>b.dispatchEvent(new Event('change')))}catch{}}
+  function saveDraft(showNotice=false){
+    try{
+      const draft=formObject();
+      draft.savedAt=nowIso();
+      try{ localStorage.setItem(DRAFT_KEY,JSON.stringify(draft)); }
+      catch(quotaErr){
+        draft.photoDataUrl='';
+        localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
+      }
+      const indicator=$('#draftStatus');
+      if(indicator){indicator.textContent=`Draft saved ${new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;indicator.classList.add('visible')}
+      if(showNotice) alert('Draft saved on this device.');
+    }catch(err){console.warn('Draft could not be saved:',err);if(showNotice)alert('Draft could not be saved on this device.')}
+  }
+
+  function scheduleDraftSave(){
+    clearTimeout(draftTimer);
+    draftTimer=setTimeout(()=>saveDraft(false),900);
+  }
+
+  $('#saveDraftBtn').addEventListener('click',()=>saveDraft(true));
+  form.addEventListener('input',scheduleDraftSave);
+  form.addEventListener('change',scheduleDraftSave);
+
+  function clearDraft(){
+    localStorage.removeItem(DRAFT_KEY);
+    $('#draftRestoreBanner')?.classList.add('hidden');
+    const indicator=$('#draftStatus'); if(indicator){indicator.textContent='';indicator.classList.remove('visible')}
+  }
+
+  function restoreDraft(){
+    try{
+      const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
+      if(!d)return;
+      Object.entries(d).forEach(([k,v])=>{
+        const el=form.elements[k];if(!el)return;
+        if(el.type==='checkbox')el.checked=v==='Yes'||v===true||v==='on';else if(typeof v!=='object')el.value=v||'';
+      });
+      if(d.photoDataUrl){originalPhotoDataUrl='';setPhoto(d.photoDataUrl)}
+      $('#vehicleFields').classList.toggle('hidden',!$('#drivingToggle').checked);
+      agreementCheckboxes.forEach(b=>b.dispatchEvent(new Event('change')));
+      const banner=$('#draftRestoreBanner');
+      if(banner){
+        const saved=d.savedAt?new Date(d.savedAt).toLocaleString():'an earlier session';
+        banner.querySelector('span').textContent=`A saved registration draft from ${saved} was restored on this device.`;
+        banner.classList.remove('hidden');
+      }
+    }catch(err){console.warn('Saved draft could not be restored:',err)}
+  }
+  $('#clearDraftBtn')?.addEventListener('click',clearDraft);
   restoreDraft();
   if ($('#sponsorSource').value === 'Manual') {
     $('#manualSponsorToggle').checked=true;
@@ -355,20 +450,124 @@
   updateAgreementProgress();
   const today=new Date().toISOString().slice(0,10);form.acknowledgementDate.value=form.acknowledgementDate.value||today;form.startDate.min=today;form.endDate.min=today;
 
+
+  function submitVisitThroughBridge(payload){
+    return new Promise((resolve,reject)=>{
+      const requestId=`VISTA-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const iframeName=`vista-submit-${requestId.replace(/[^a-zA-Z0-9_-]/g,'')}`;
+      const iframe=document.createElement('iframe');
+      iframe.name=iframeName;
+      iframe.title='VISTA registration submission';
+      iframe.style.display='none';
+
+      const bridgeForm=document.createElement('form');
+      bridgeForm.method='POST';
+      bridgeForm.action=cfg.API_URL;
+      bridgeForm.target=iframeName;
+      bridgeForm.enctype='application/x-www-form-urlencoded';
+      bridgeForm.style.display='none';
+
+      const addField=(name,value)=>{
+        const input=document.createElement('input');
+        input.type='hidden';
+        input.name=name;
+        input.value=value;
+        bridgeForm.appendChild(input);
+      };
+
+      addField('transport','iframe');
+      addField('action','createVisit');
+      addField('requestId',requestId);
+      addField('parentOrigin',window.location.origin);
+      addField('payload',JSON.stringify(payload));
+
+      let settled=false;
+      const cleanup=()=>{
+        window.removeEventListener('message',onMessage);
+        clearTimeout(timer);
+        setTimeout(()=>{iframe.remove();bridgeForm.remove();},250);
+      };
+      const finish=(fn,value)=>{
+        if(settled)return;
+        settled=true;
+        cleanup();
+        fn(value);
+      };
+      const onMessage=event=>{
+        const message=event.data;
+        if(!message||message.type!=='FE_VISTA_SUBMISSION_RESULT'||message.requestId!==requestId)return;
+        const allowedOrigins=['https://script.google.com','https://script.googleusercontent.com'];
+        if(!allowedOrigins.includes(event.origin))return;
+        if(message.data&&message.data.ok) finish(resolve,message.data);
+        else finish(reject,new Error(message.data?.error||'The registration could not be submitted.'));
+      };
+      const timer=setTimeout(()=>finish(reject,new Error('The registration submission timed out. Please verify your connection and try again.')),120000);
+
+      window.addEventListener('message',onMessage);
+      document.body.appendChild(iframe);
+      document.body.appendChild(bridgeForm);
+      bridgeForm.submit();
+    });
+  }
+
+  function renderConfirmation(data,payload){
+    $('#confirmationNumber').textContent=data.confirmationNumber||'—';
+    const qrPayload=data.qrPayload||JSON.stringify({confirmationNumber:data.confirmationNumber,visitId:data.visitId});
+    $('#confirmationQr').innerHTML='';
+    if(window.QRCode)new QRCode($('#confirmationQr'),{text:qrPayload,width:180,height:180,correctLevel:QRCode.CorrectLevel.H});
+
+    const notifications=data.notifications||{};
+    const emailState=(sent,label)=>sent
+      ? `<span class="notice-ok">✓ ${escapeHtml(label)}</span>`
+      : `<span class="notice-warn">⚠ ${escapeHtml(label)} could not be confirmed</span>`;
+
+    $('#confirmationSummary').innerHTML=[
+      ['Visitor',data.fullName||`${payload.firstName||''} ${payload.lastName||''}`.trim()],
+      ['Visit dates',`${payload.startDate} – ${payload.endDate}`],
+      ['Sponsor',payload.sponsorName],
+      ['Department',payload.department],
+      ['Status',data.status||'Submitted – Pending Sponsor/Security Review'],
+      ['Photo',data.photoFileName||'Visitor photo stored securely']
+    ].map(([k,v])=>`<div><b>${k}</b>${escapeHtml(v||'—')}</div>`).join('');
+
+    const notice=$('#confirmationNotifications');
+    if(notice){
+      notice.innerHTML=`
+        <strong>Notification status</strong>
+        ${emailState(Boolean(notifications.sponsorSent),'Sponsor notification sent')}
+        ${emailState(Boolean(notifications.visitorSent),'Visitor confirmation email sent')}
+        ${notifications.securityConfigured?emailState(Boolean(notifications.securitySent),'Security notification sent'):''}
+      `;
+    }
+
+    if(cfg.VGS_NAVIGATION_URL){$('#vgsLink').href=cfg.VGS_NAVIGATION_URL;$('#vgsLink').classList.remove('hidden')}
+    $('#confirmationDialog').showModal();
+  }
+
   form.addEventListener('submit', async e=>{
-    e.preventDefault(); if(!validateStep(5))return;
-    const msg=$('#submitMessage');msg.className='message';msg.textContent='Submitting registration…';msg.classList.remove('hidden');submitBtn.disabled=true;
+    e.preventDefault();
+    if(!validateStep(5))return;
+    const msg=$('#submitMessage');
+    msg.className='message';
+    msg.textContent='Submitting registration and securely uploading the visitor photograph…';
+    msg.classList.remove('hidden');
+    submitBtn.disabled=true;
+    submitBtn.textContent='Submitting…';
     try{
       if(!cfg.API_URL||cfg.API_URL.includes('PASTE_')) throw new Error('The API URL has not been configured. Update public-registration/config.js.');
       const payload=formObject();
-      const res=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'createVisit',payload})});
-      const data=await res.json();if(!data.ok)throw new Error(data.error||'Submission failed.');
-      localStorage.removeItem('feVisitorDraft');$('#confirmationNumber').textContent=data.confirmationNumber;
-      const qrPayload=data.qrPayload||JSON.stringify({confirmationNumber:data.confirmationNumber,visitId:data.visitId});
-      $('#confirmationQr').innerHTML=''; if(window.QRCode)new QRCode($('#confirmationQr'),{text:qrPayload,width:180,height:180,correctLevel:QRCode.CorrectLevel.H});
-      $('#confirmationSummary').innerHTML=[['Visitor',data.fullName||payload.firstName+' '+payload.lastName],['Visit dates',`${payload.startDate} – ${payload.endDate}`],['Sponsor',payload.sponsorName],['Status',data.status||'Submitted – Pending Review']].map(([k,v])=>`<div><b>${k}</b>${escapeHtml(v)}</div>`).join('');
-      if(cfg.VGS_NAVIGATION_URL){$('#vgsLink').href=cfg.VGS_NAVIGATION_URL;$('#vgsLink').classList.remove('hidden')}
-      $('#confirmationDialog').showModal();msg.classList.add('hidden');
-    }catch(err){msg.className='message error';msg.textContent=err.message;submitBtn.disabled=false}
+      const data=await submitVisitThroughBridge(payload);
+      clearDraft();
+      renderConfirmation(data,payload);
+      msg.className='message success';
+      msg.textContent='Registration submitted successfully.';
+      msg.classList.add('hidden');
+    }catch(err){
+      console.error('VISTA registration submission failed:',err);
+      msg.className='message error';
+      msg.textContent=err?.message||'Registration submission failed. Please try again.';
+      submitBtn.disabled=false;
+      submitBtn.textContent='Submit Visit Request';
+    }
   });
 })();

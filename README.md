@@ -1,7 +1,3 @@
-
-## Sprint 1.6.1 sponsor synchronization
-
-The repository now includes `.github/workflows/sync-sponsors.yml`. The workflow reads active sponsors from the Apps Script `listSponsors` endpoint every five minutes and updates `public-registration/data/sponsors.json` only when the sponsor list changes. See `documentation/V1.3.0-SPRINT-1.6.1-GITHUB-ACTIONS-FIX.md` for setup and verification.
 # Ford Energy VISTA v1.3.0 Sprint 1.6
 
 

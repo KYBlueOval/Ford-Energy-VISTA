@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '1.3.0-sprint1.2',
+  VERSION: '1.3.0-sprint1.7.1',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -33,20 +33,61 @@ function doGet(e) {
   }
 }
 function doPost(e) {
+  const bridge = String((e && e.parameter && e.parameter.transport) || '') === 'iframe';
+  const requestId = String((e && e.parameter && e.parameter.requestId) || '');
+  const parentOrigin = safeParentOrigin_((e && e.parameter && e.parameter.parentOrigin) || '');
   try {
-    const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    let req;
+    if (bridge) {
+      req = {
+        action: String((e.parameter && e.parameter.action) || ''),
+        payload: JSON.parse(String((e.parameter && e.parameter.payload) || '{}'))
+      };
+    } else {
+      req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    }
     const action = req.action || '';
-    if (action === 'createVisit') return json_(createVisit_(req.payload || {}));
-    if (action === 'listSponsors') return json_(listSponsors_(req.payload || {}));
-    requireSecurity_(req.pin);
-    if (action === 'securityLogin') return json_({ok:true});
-    if (action === 'listVisits') return json_(listVisits_(req.payload || {}));
-    if (action === 'getVisitPhoto') return json_(getVisitPhoto_(req.payload || {}));
-    if (action === 'checkInVisit') return json_(checkInVisit_(req.payload || {}));
-    if (action === 'checkOutVisit') return json_(checkOutVisit_(req.payload || {}));
-    if (action === 'updateVisitStatus') return json_(updateVisitStatus_(req.payload || {}));
-    throw new Error('Unknown action: ' + action);
-  } catch (err) { return json_({ok:false,error:String(err.message || err)}); }
+    let result;
+    if (action === 'createVisit') result = createVisit_(req.payload || {});
+    else if (action === 'listSponsors') result = listSponsors_(req.payload || {});
+    else {
+      requireSecurity_(req.pin);
+      if (action === 'securityLogin') result = {ok:true};
+      else if (action === 'listVisits') result = listVisits_(req.payload || {});
+      else if (action === 'getVisitPhoto') result = getVisitPhoto_(req.payload || {});
+      else if (action === 'checkInVisit') result = checkInVisit_(req.payload || {});
+      else if (action === 'checkOutVisit') result = checkOutVisit_(req.payload || {});
+      else if (action === 'updateVisitStatus') result = updateVisitStatus_(req.payload || {});
+      else throw new Error('Unknown action: ' + action);
+    }
+    return bridge ? bridgeResponse_(result, requestId, parentOrigin) : json_(result);
+  } catch (err) {
+    const result = {ok:false,error:String(err.message || err)};
+    return bridge ? bridgeResponse_(result, requestId, parentOrigin) : json_(result);
+  }
+}
+
+function safeParentOrigin_(origin) {
+  const value = String(origin || '').trim();
+  const allowed = [
+    'https://kyblueoval.github.io',
+    'http://localhost',
+    'http://127.0.0.1'
+  ];
+  return allowed.some(x => value === x || value.indexOf(x + ':') === 0) ? value : 'https://kyblueoval.github.io';
+}
+
+function bridgeResponse_(data, requestId, targetOrigin) {
+  const message = JSON.stringify({
+    type:'FE_VISTA_SUBMISSION_RESULT',
+    requestId:String(requestId || ''),
+    data:data
+  }).replace(/</g, '\\u003c');
+  const origin = JSON.stringify(String(targetOrigin || 'https://kyblueoval.github.io'));
+  const html = '<!doctype html><html><head><meta charset="utf-8"><title>VISTA Submission</title></head><body>' +
+    '<script>window.parent.postMessage(' + message + ',' + origin + ');<\\/script>' +
+    '<noscript>VISTA registration processed. Return to the registration window.</noscript></body></html>';
+  return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function setupVisitorManagement() {
@@ -137,8 +178,8 @@ function createVisit_(p) {
   sheet.appendRow(FE.VISIT_HEADERS.map(h=>record[h]??''));
   saveAcknowledgements_(record,submitted,now);
   logActivity_(visitId,'REGISTRATION_SUBMITTED','Visitor','',`Confirmation ${confirmation}; agreements ${completionCount}/${requiredAgreementIds.length}`);
-  notifySubmission_(record);
-  return {ok:true,visitId,confirmationNumber:confirmation,fullName,status:'Submitted – Pending Sponsor/Security Review',qrPayload:`FORD-ENERGY-VISTA|${confirmation}|${visitId}`};
+  const notifications=notifySubmission_(record);
+  return {ok:true,visitId,confirmationNumber:confirmation,fullName,status:'Submitted – Pending Sponsor/Security Review',qrPayload:`FORD-ENERGY-VISTA|${confirmation}|${visitId}`,photoFileName:photoFileName,notifications:notifications};
 }
 
 function saveAcknowledgements_(record,submitted,acceptedAt){
@@ -183,7 +224,33 @@ function savePhoto_(dataUrl,fullName,company,visitId){
   return{id:file.getId(),name:fileName,url:`https://drive.google.com/uc?export=view&id=${file.getId()}`}
 }
 function safeFilePart_(value){return String(value||'').trim().replace(/[\\\/:*?"<>|#%{}~&]/g,' ').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').replace(/[. ]+$/g,'').slice(0,100)}
-function notifySubmission_(r){try{const cfg=config_(),internal=[r.SponsorEmail,cfg.NOTIFICATION_EMAIL].filter(Boolean).join(','),reviewUrl=cfg.SECURITY_CONSOLE_URL||'';if(internal)MailApp.sendEmail({to:internal,subject:`Visitor request ${r.ConfirmationNumber}: ${r.FullName}`,htmlBody:`<h2>New Ford Energy visitor request</h2><p><b>Visitor:</b> ${html_(r.FullName)} (${html_(r.Company)})</p><p><b>Dates:</b> ${html_(r.StartDate)} through ${html_(r.EndDate)}</p><p><b>Sponsor:</b> ${html_(r.SponsorName)} / ${html_(r.Department)}</p><p><b>Reason:</b> ${html_(r.Reason)}</p><p><b>Access:</b> ${html_(r.AccessScope)}</p><p><b>Confirmation:</b> ${html_(r.ConfirmationNumber)}</p>${reviewUrl?`<p><a href="${html_(reviewUrl)}">Open VISTA Security Console</a></p>`:''}`});if(r.Email)MailApp.sendEmail({to:r.Email,subject:`Ford Energy visitor registration ${r.ConfirmationNumber}`,htmlBody:`<h2>Your Ford Energy visitor registration was submitted</h2><p><b>Confirmation:</b> ${html_(r.ConfirmationNumber)}</p><p><b>Visit:</b> ${html_(r.StartDate)} through ${html_(r.EndDate)}</p><p><b>Sponsor:</b> ${html_(r.SponsorName)}</p><p>Status: Submitted and pending review. Bring a valid government-issued photo ID to the Main Security Building and use designated visitor parking.</p><p>${html_(cfg.ARRIVAL_INSTRUCTIONS||'')}</p><p>${html_(cfg.PARKING_INSTRUCTIONS||'')}</p>${cfg.VGS_NAVIGATION_URL?`<p><a href="${html_(cfg.VGS_NAVIGATION_URL)}">Open visitor navigation</a></p>`:''}`})}catch(err){console.log(err)}}
+function notifySubmission_(r){
+  const cfg=config_(), reviewUrl=cfg.SECURITY_CONSOLE_URL||'', result={sponsorSent:false,visitorSent:false,securitySent:false,securityConfigured:Boolean(cfg.NOTIFICATION_EMAIL),errors:[]};
+  const visitPeriod=[r.StartDate,r.ArrivalTime].filter(Boolean).join(' ')+' through '+[r.EndDate,r.DepartureTime].filter(Boolean).join(' ');
+  const vehicle=r.Driving==='Yes'?[r.VehicleYear,r.VehicleMake,r.VehicleModel,r.VehicleColor,r.LicensePlate,r.PlateState].filter(Boolean).join(' '):'Not driving';
+  const wrapper=body=>`<div style="font-family:Arial,sans-serif;background:#eef4fb;padding:24px"><div style="max-width:680px;margin:auto;background:white;border-radius:16px;overflow:hidden;border:1px solid #d8e0e8"><div style="background:linear-gradient(135deg,#003478,#0b67b2);color:white;padding:22px 28px"><div style="font-size:13px;letter-spacing:1.2px;font-weight:bold">FORD ENERGY · VISTA</div><h2 style="margin:8px 0 0">Visitor Registration</h2></div><div style="padding:26px;color:#16283d;line-height:1.55">${body}</div></div></div>`;
+  const details=`<table style="width:100%;border-collapse:collapse"><tr><td style="padding:7px 0;color:#667587">Visitor</td><td style="padding:7px 0"><b>${html_(r.FullName)}</b> · ${html_(r.Company)}</td></tr><tr><td style="padding:7px 0;color:#667587">Visit</td><td style="padding:7px 0">${html_(visitPeriod)}</td></tr><tr><td style="padding:7px 0;color:#667587">Department</td><td style="padding:7px 0">${html_(r.Department)}</td></tr><tr><td style="padding:7px 0;color:#667587">Reason</td><td style="padding:7px 0">${html_(r.Reason)}</td></tr><tr><td style="padding:7px 0;color:#667587">Access</td><td style="padding:7px 0">${html_(r.AccessScope)}</td></tr><tr><td style="padding:7px 0;color:#667587">Vehicle</td><td style="padding:7px 0">${html_(vehicle)}</td></tr><tr><td style="padding:7px 0;color:#667587">Confirmation</td><td style="padding:7px 0"><b>${html_(r.ConfirmationNumber)}</b></td></tr></table>`;
+  try{
+    if(r.SponsorEmail){
+      MailApp.sendEmail({to:r.SponsorEmail,subject:`Action requested: Visitor request ${r.ConfirmationNumber} for ${r.FullName}`,htmlBody:wrapper(`<p>Hello ${html_(r.SponsorName)},</p><p>A visitor identified you as the Ford Energy sponsor for the request below.</p>${details}<p style="background:#fff4d6;border-left:4px solid #ff7a00;padding:12px">Please review the request and coordinate with Security Operations. Submission does not automatically authorize access.</p>${reviewUrl?`<p><a style="display:inline-block;background:#003478;color:white;text-decoration:none;padding:11px 16px;border-radius:8px" href="${html_(reviewUrl)}">Open VISTA Security Console</a></p>`:''}`)});
+      result.sponsorSent=true;
+    }
+  }catch(err){result.errors.push('Sponsor email: '+String(err.message||err));}
+  try{
+    if(cfg.NOTIFICATION_EMAIL){
+      MailApp.sendEmail({to:cfg.NOTIFICATION_EMAIL,subject:`VISTA visitor request ${r.ConfirmationNumber}: ${r.FullName}`,htmlBody:wrapper(`<p>A new visitor registration has been submitted.</p>${details}${reviewUrl?`<p><a style="display:inline-block;background:#003478;color:white;text-decoration:none;padding:11px 16px;border-radius:8px" href="${html_(reviewUrl)}">Review in Security Console</a></p>`:''}`)});
+      result.securitySent=true;
+    }
+  }catch(err){result.errors.push('Security email: '+String(err.message||err));}
+  try{
+    if(r.Email){
+      MailApp.sendEmail({to:r.Email,subject:`Ford Energy visitor registration ${r.ConfirmationNumber}`,htmlBody:wrapper(`<p>Hello ${html_(r.FullName)},</p><p>Your Ford Energy visitor registration has been received.</p>${details}<p><b>Status:</b> Submitted – Pending Sponsor/Security Review</p><div style="background:#eaf4ff;border-left:4px solid #003478;padding:12px"><b>Arrival reminder</b><br>${html_(cfg.ARRIVAL_INSTRUCTIONS||'Proceed to the Main Security Building and bring a valid government-issued photo ID.')}<br>${html_(cfg.PARKING_INSTRUCTIONS||'Use designated visitor parking.')}</div>${cfg.VGS_NAVIGATION_URL?`<p><a style="display:inline-block;background:#003478;color:white;text-decoration:none;padding:11px 16px;border-radius:8px" href="${html_(cfg.VGS_NAVIGATION_URL)}">Open Visitor Navigation</a></p>`:''}<p>Keep confirmation number <b>${html_(r.ConfirmationNumber)}</b> for check-in.</p>`)});
+      result.visitorSent=true;
+    }
+  }catch(err){result.errors.push('Visitor email: '+String(err.message||err));}
+  if(result.errors.length) console.log('VISTA notification errors: '+result.errors.join(' | '));
+  return result;
+}
 function ensureBadgeAvailable_(uid,visitId){const s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.BADGES),rows=readObjects_(FE.SHEETS.BADGES),b=rows.find(x=>String(x.BadgeUID)===String(uid));if(b&&b.Status==='Issued'&&String(b.CurrentVisitID)!==String(visitId))throw new Error('Badge is already issued to another visitor.');if(!b)s.appendRow([uid,'','Available','','','','Auto-created']);}
 function assignBadge_(uid,visitId,now){upsertBadge_(uid,{Status:'Issued',CurrentVisitID:visitId,IssuedAt:now,ReturnedAt:''})}
 function returnBadge_(uid,now){upsertBadge_(uid,{Status:'Available',CurrentVisitID:'',ReturnedAt:now})}

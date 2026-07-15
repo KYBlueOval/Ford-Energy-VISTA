@@ -13,7 +13,7 @@
       <img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy" />
       <div><strong>VISTA</strong><span>Visitor Registration - Site Access Reservation System</span></div>
     </div>
-    <button id="saveDraftBtn" class="btn btn-ghost" type="button">Save Draft</button>
+    <div class="draft-controls"><span id="draftStatus" class="draft-status"></span><button id="saveDraftBtn" class="btn btn-ghost" type="button">Save Draft</button></div>
   </header>
 
   <main class="shell">
@@ -25,6 +25,8 @@
       </div>
       <div class="status-card"><span id="progressText">Step 1 of 5</span><div class="progress"><i id="progressBar"></i></div></div>
     </section>
+
+    <div id="draftRestoreBanner" class="draft-restore-banner hidden"><span></span><button id="clearDraftBtn" type="button" class="link-button">Discard saved draft</button></div>
 
     <nav class="steps" aria-label="Registration steps">
       <button class="step active" data-step="1">1<span>Visitor</span></button>
@@ -73,7 +75,7 @@
               <input id="sponsorSearch" type="search" autocomplete="off" placeholder="Search by sponsor name, email, department, or keyword" aria-autocomplete="list" aria-controls="sponsorResults" />
               <div id="sponsorResults" class="sponsor-results hidden" role="listbox"></div>
             </div>
-            <span class="field-help">Select a saved Ford Energy sponsor. Their email and department will populate automatically.</span>
+            <span class="field-help">Select a saved Ford Energy sponsor. Their email and department will populate automatically.</span><div id="sponsorSyncStatus" class="sponsor-sync-status"><span>Loading sponsor directory status…</span></div>
             <label class="manual-sponsor-toggle"><input id="manualSponsorToggle" type="checkbox" /> My sponsor is not listed</label>
           </div>
           <input type="hidden" name="sponsorId" id="sponsorId" />
@@ -191,9 +193,9 @@
     </form>
   </main>
 
-  <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><h2>Registration Submitted</h2><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><div id="confirmationQr" class="confirmation-qr" aria-label="Registration QR code"></div><div id="confirmationSummary" class="confirmation-summary"></div><div class="arrival-reminder"><strong>Arrival instructions</strong><p>Proceed to the Main Security Building, park in Ford Energy / Visitor Parking, and bring the original valid government-issued photo ID used to verify your identity.</p><p>Do not bring undeclared restricted items or electronic storage devices.</p></div><a id="vgsLink" class="btn btn-secondary hidden" target="_blank" rel="noopener">Open VGS Navigation</a> <button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></dialog>
+  <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><p class="eyebrow">REQUEST RECEIVED</p><h2>Visitor Registration Submitted</h2><p>Your request has been recorded and sent to the selected Ford Energy sponsor for review.</p><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><div id="confirmationQr" class="confirmation-qr" aria-label="Registration QR code"></div><div id="confirmationSummary" class="confirmation-summary"></div><div id="confirmationNotifications" class="confirmation-notifications"></div><div class="arrival-reminder"><strong>What happens next</strong><p>Your sponsor and Security Operations will review the request. Submission does not guarantee approval or site access.</p><p>Upon arrival, proceed to the Main Security Building, park in Ford Energy / Visitor Parking, and bring a valid government-issued photo ID.</p><p>Do not bring undeclared restricted items or electronic storage devices.</p></div><div class="confirmation-actions"><a id="vgsLink" class="btn btn-secondary hidden" target="_blank" rel="noopener">Open VGS Navigation</a><button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></div></dialog>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="config.js"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
-  <script src="app.js?v=13016"></script>
+  <script src="app.js?v=130171"></script>
 </body>
 </html>
