@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.3.0 Sprint 1.7.3
+## v1.3.0 Sprint 1.7.1
 - Replaced CORS-blocked registration fetch with an Apps Script iframe submission bridge.
 - Added richer registration confirmation screen and notification delivery status.
 - Added automatic sponsor, visitor, and optional Security email notifications.
@@ -58,3 +58,8 @@
 - Extended the submission timeout to three minutes with duplicate-submission guidance.
 - Preserved automatic sponsor, visitor, and Security email notifications.
 - Release packages no longer include or overwrite the generated `public-registration/data/sponsors.json` file.
+
+## v1.3.0 Sprint 1.8.0
+- Added requested visitor lifecycle status colors.
+- Fixed Security Console photo loading and canonical download filenames.
+- Added header-safe row writing and one-time VisitRequests header repair with backup.

@@ -40,11 +40,12 @@
   function renderKpis(k){$('#kExpected').textContent=k.expectedToday||0;$('#kOnsite').textContent=k.onsite||0;$('#kOut').textContent=k.checkedOutToday||0;$('#kOverdue').textContent=k.overdue||0}
   function renderRows(){
     const body=$('#visitorRows');
-    body.innerHTML=records.map((r,i)=>`<tr class="${r.visitId===selectedVisitId?'selected':''}"><td><b>${esc(r.fullName)}</b><br><small>${esc(r.company)}</small></td><td>${esc(r.startDate)} ${esc(r.arrivalTime)}<br><small>${esc(r.confirmationNumber)}</small></td><td>${esc(r.sponsorName)}<br><small>${esc(r.department)}</small></td><td><span class="status ${statusClass(r.status)}">${esc(r.status)}</span></td><td>${esc(r.badgeUid||'—')}</td><td><button class="row-btn" data-i="${i}">Open</button></td></tr>`).join('');
+    body.innerHTML=records.map((r,i)=>`<tr class="${r.visitId===selectedVisitId?'selected ':''}${rowStatusClass(r.status)}"><td><b>${esc(r.fullName)}</b><br><small>${esc(r.company)}</small></td><td>${esc(r.startDate)} ${esc(r.arrivalTime)}<br><small>${esc(r.confirmationNumber)}</small></td><td>${esc(r.sponsorName)}<br><small>${esc(r.department)}</small></td><td><span class="status ${statusClass(r.status)}">${esc(r.status)}</span></td><td>${esc(r.badgeUid||'—')}</td><td><button class="row-btn" data-i="${i}">Open</button></td></tr>`).join('');
     $('#emptyState').classList.toggle('hidden',records.length>0);
     document.querySelectorAll('.row-btn').forEach(b=>b.onclick=()=>openRecord(records[Number(b.dataset.i)]));
   }
-  function statusClass(status){return String(status||'').toLowerCase().replaceAll(' ','-')}
+  function statusClass(status){return 'status-'+String(status||'submitted').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+  function rowStatusClass(status){return 'row-'+String(status||'submitted').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
   function photoPlaceholder(){return `<div class="photo photo-placeholder" id="visitorPhoto"><span>👤</span><small>No photo</small></div>`}
   async function loadPhoto(r){
     if(!r.hasPhoto)return;
@@ -54,7 +55,7 @@
       const d=await api('getVisitPhoto',{visitId:r.visitId});
       if(selectedVisitId!==r.visitId)return;
       if(d.hasPhoto&&d.dataUrl){
-        selectedPhotoDataUrl=d.dataUrl;selectedPhotoFileName=d.fileName||photoFileName(r);
+        selectedPhotoDataUrl=d.dataUrl;selectedPhotoFileName=validDownloadName(d.fileName)?d.fileName:photoFileName(r,d.mimeType);
         host.outerHTML=`<img id="visitorPhoto" class="photo" src="${d.dataUrl}" alt="Visitor photograph" title="${esc(selectedPhotoFileName)}">`;
         const download=$('#downloadPhotoBtn');if(download){download.disabled=false;download.textContent=`Download ${selectedPhotoFileName}`}
       }
@@ -76,12 +77,14 @@
     $('#checkInAction')?.addEventListener('click',()=>act('checkInVisit',r.visitId,{badgeUid:$('#badgeUid').value.trim(),officerName:$('#officerName').value.trim(),notes:$('#checkNotes').value.trim(),idRetained:true,sponsorNotified:true},'Visitor checked in successfully.'));
     $('#checkOutAction')?.addEventListener('click',()=>act('checkOutVisit',r.visitId,{badgeUid:$('#returnBadgeUid').value.trim(),officerName:$('#outOfficerName').value.trim(),notes:$('#outNotes').value.trim(),idReturned:true},'Visitor checked out successfully.'));
     $('#approveAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'Approved'},'Visit marked approved.'));
+    $('#denyAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'Denied'},'Visit denied/rejected.'));
     $('#noShowAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'No Show'},'Visit marked as no show.'));
     loadPhoto(r);
   }
-  function photoFileName(r){
+  function validDownloadName(name){return /.+-.+\.(?:jpe?g|png|webp)$/i.test(String(name||''))}
+  function photoFileName(r,mimeType){
     const clean=v=>String(v||'').trim().replace(/[\\\/:*?"<>|#%{}~&]/g,' ').replace(/\s+/g,' ').replace(/[. ]+$/g,'').slice(0,100);
-    const name=clean(r.fullName)||'Visitor',company=clean(r.company)||'Unknown Company';return `${name}-${company}.jpg`;
+    const name=clean(r.fullName)||'Visitor',company=clean(r.company)||'Unknown Company';const ext=String(mimeType||'').includes('png')?'png':String(mimeType||'').includes('webp')?'webp':'jpg';return `${name}-${company}.${ext}`;
   }
   function downloadPhoto(r){
     if(!selectedPhotoDataUrl){notify('The visitor photo is still loading.','error');return}
