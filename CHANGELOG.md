@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.3.0 Sprint 1.7.1
+## v1.3.0 Sprint 1.7.3
 - Replaced CORS-blocked registration fetch with an Apps Script iframe submission bridge.
 - Added richer registration confirmation screen and notification delivery status.
 - Added automatic sponsor, visitor, and optional Security email notifications.

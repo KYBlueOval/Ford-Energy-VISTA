@@ -1,5 +1,5 @@
 (() => {
-  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.7.2 loaded');
+  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.7.3 loaded');
   const cfg = window.FE_VISITOR_CONFIG || {};
   const form = document.querySelector('#registrationForm');
   const steps = [...document.querySelectorAll('.form-step')];
