@@ -29,42 +29,196 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Synchronize sponsor directory
-        env:
-          VISTA_SPONSOR_API_URL: ${{ vars.VISTA_SPONSOR_API_URL }}
-          DEFAULT_VISTA_SPONSOR_API_URL: https://script.google.com/macros/s/AKfycbxJhQ9P6V8Un4oyZEy5JNp4ravCRbfKm1Dvbav87t_pydQmwNhOMJfxIBmA1BMNoMLQ/exec
+      - name: Show workflow environment
         run: |
-          ENDPOINT="${VISTA_SPONSOR_API_URL:-$DEFAULT_VISTA_SPONSOR_API_URL}"
-          python scripts/sync_sponsors.py \
-            --endpoint "$ENDPOINT" \
-            --output public-registration/data/sponsors.json
+          set -euxo pipefail
+          python --version
+          git --version
+          pwd
+          test -d public-registration/data
+          ls -la public-registration/data
+
+      - name: Download and build sponsor directory
+        env:
+          VISTA_SPONSOR_API_URL: "https://script.google.com/macros/s/AKfycbxJhQ9P6V8Un4oyZEy5JNp4ravCRbfKm1Dvbav87t_pydQmwNhOMJfxIBmA1BMNoMLQ/exec"
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          endpoint = os.environ["VISTA_SPONSOR_API_URL"].strip()
+          query = urllib.parse.urlencode({
+              "action": "listSponsors",
+              "_": str(int(time.time()))
+          })
+          url = endpoint + ("&" if "?" in endpoint else "?") + query
+
+          print(f"Requesting sponsor directory from: {url}")
+
+          request = urllib.request.Request(
+              url,
+              headers={
+                  "User-Agent": "Ford-Energy-VISTA-GitHub-Actions/1.6.2",
+                  "Accept": "application/json,text/plain,*/*",
+                  "Cache-Control": "no-cache",
+              },
+              method="GET",
+          )
+
+          try:
+              with urllib.request.urlopen(request, timeout=45) as response:
+                  status = getattr(response, "status", response.getcode())
+                  final_url = response.geturl()
+                  content_type = response.headers.get("Content-Type", "")
+                  raw = response.read().decode("utf-8", errors="replace")
+          except urllib.error.HTTPError as exc:
+              body = exc.read().decode("utf-8", errors="replace")
+              print(f"HTTP error {exc.code} from {exc.geturl()}", file=sys.stderr)
+              print(body[:2000], file=sys.stderr)
+              raise
+          except Exception:
+              print("Sponsor API request failed.", file=sys.stderr)
+              raise
+
+          print(f"HTTP status: {status}")
+          print(f"Final URL: {final_url}")
+          print(f"Content-Type: {content_type}")
+          print(f"Response preview: {raw[:500]}")
+
+          if status != 200:
+              raise RuntimeError(f"Sponsor API returned HTTP {status}")
+
+          try:
+              payload = json.loads(raw)
+          except json.JSONDecodeError as exc:
+              raise RuntimeError(
+                  "Sponsor API did not return valid JSON. "
+                  f"Response began with: {raw[:500]!r}"
+              ) from exc
+
+          if payload.get("ok") is not True:
+              raise RuntimeError(
+                  "Sponsor API returned an unsuccessful response: "
+                  + json.dumps(payload, ensure_ascii=False)[:1000]
+              )
+
+          source_sponsors = payload.get("sponsors")
+          if not isinstance(source_sponsors, list):
+              raise RuntimeError("Sponsor API response does not contain a sponsors list.")
+
+          sponsors = []
+          for row in source_sponsors:
+              if not isinstance(row, dict):
+                  continue
+
+              sponsor = {
+                  "sponsorId": str(
+                      row.get("sponsorId")
+                      or row.get("SponsorID")
+                      or row.get("id")
+                      or ""
+                  ).strip(),
+                  "name": str(
+                      row.get("name")
+                      or row.get("SponsorName")
+                      or row.get("sponsorName")
+                      or ""
+                  ).strip(),
+                  "email": str(
+                      row.get("email")
+                      or row.get("SponsorEmail")
+                      or row.get("sponsorEmail")
+                      or ""
+                  ).strip(),
+                  "department": str(
+                      row.get("department")
+                      or row.get("Department")
+                      or ""
+                  ).strip(),
+                  "keywords": str(
+                      row.get("keywords")
+                      or row.get("SearchKeywords")
+                      or row.get("searchKeywords")
+                      or ""
+                  ).strip(),
+              }
+
+              if not sponsor["name"] or not sponsor["email"]:
+                  print(f"Skipping invalid sponsor row: {row!r}")
+                  continue
+
+              sponsors.append(sponsor)
+
+          sponsors.sort(key=lambda item: (
+              item["name"].casefold(),
+              item["email"].casefold()
+          ))
+
+          if not sponsors:
+              raise RuntimeError(
+                  "Sponsor directory contained zero valid active sponsors. "
+                  "The existing sponsors.json was not overwritten."
+              )
+
+          output = {
+              "generatedAt": datetime.now(timezone.utc).isoformat(),
+              "source": "Ford Energy VISTA Sponsors worksheet via Apps Script",
+              "count": len(sponsors),
+              "sponsors": sponsors,
+          }
+
+          output_path = Path("public-registration/data/sponsors.json")
+          output_path.parent.mkdir(parents=True, exist_ok=True)
+          output_path.write_text(
+              json.dumps(output, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          print(f"Wrote {len(sponsors)} active sponsor(s) to {output_path}")
+          PY
 
       - name: Validate generated sponsor directory
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
+
           path = Path("public-registration/data/sponsors.json")
           data = json.loads(path.read_text(encoding="utf-8"))
           sponsors = data.get("sponsors", [])
+
+          assert data.get("count") == len(sponsors), "Count does not match sponsor list length"
           assert isinstance(sponsors, list) and sponsors, "Sponsor directory must contain at least one active sponsor"
+
           for index, sponsor in enumerate(sponsors, start=1):
               assert sponsor.get("name"), f"Sponsor {index} is missing name"
               assert sponsor.get("email"), f"Sponsor {index} is missing email"
+              assert "@" in sponsor["email"], f"Sponsor {index} has an invalid email"
+
           print(f"Validated {len(sponsors)} active sponsor(s).")
+          print(path.read_text(encoding="utf-8"))
           PY
 
       - name: Commit sponsor directory changes
         run: |
-          if git diff --quiet -- public-registration/data/sponsors.json; then
-            echo "Sponsor directory is already current."
-            exit 0
-          fi
+          set -euxo pipefail
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add public-registration/data/sponsors.json
+
+          if git diff --cached --quiet; then
+            echo "Sponsor directory is already current. Nothing to commit."
+            exit 0
+          fi
+
           git commit -m "chore: sync VISTA sponsors from Google Sheets"
           git push origin HEAD:main
-
-# Sprint v. 1.6.2
