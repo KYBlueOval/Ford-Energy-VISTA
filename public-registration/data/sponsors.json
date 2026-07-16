@@ -1,17 +1,19 @@
 {
-  "generatedAt": "2026-07-16T21:36:28.714587+00:00",
+  "generatedAt": "2026-07-16T22:47:20.469011+00:00",
   "source": "Ford Energy VISTA Sponsors worksheet via Apps Script",
   "count": 2,
   "sponsors": [
     {
       "sponsorId": "KY-Glendale",
       "name": "FE-BO-Glendale Security",
+      "email": "FordEnergyGlobalSecurity@groups.ford.com",
       "department": "KY-Security Team",
       "keywords": "Kentucky, Security, Global Security"
     },
     {
       "sponsorId": "JYsunza",
       "name": "Justin Ysunza",
+      "email": "jysunza@ford.com",
       "department": "Security",
       "keywords": "Security, Justin,"
     }
