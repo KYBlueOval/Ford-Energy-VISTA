@@ -1,5 +1,5 @@
 (() => {
-  console.info('Ford Energy VISTA public registration v1.3.0 Sprint 1.7.3 loaded');
+  console.info('Ford Energy VISTA public registration v2.0A loaded');
   const cfg = window.FE_VISITOR_CONFIG || {};
   const form = document.querySelector('#registrationForm');
   const steps = [...document.querySelectorAll('.form-step')];
@@ -79,10 +79,9 @@
       sponsorDirectory = rows.map(s => ({
         sponsorId: String(s.sponsorId || s.SponsorID || '').trim(),
         name: String(s.name || s.SponsorName || '').trim(),
-        email: String(s.email || s.SponsorEmail || '').trim(),
         department: String(s.department || s.Department || '').trim(),
         keywords: String(s.keywords || s.SearchKeywords || '').trim()
-      })).filter(s => s.name && s.email);
+      })).filter(s => s.sponsorId && s.name);
 
       search.placeholder = sponsorDirectory.length
         ? `Search ${sponsorDirectory.length} saved sponsor${sponsorDirectory.length === 1 ? '' : 's'} by name, email, department, or keyword`
@@ -100,10 +99,9 @@
         sponsorDirectory = rows.map(s => ({
           sponsorId: String(s.sponsorId || s.SponsorID || '').trim(),
           name: String(s.name || s.SponsorName || '').trim(),
-          email: String(s.email || s.SponsorEmail || '').trim(),
           department: String(s.department || s.Department || '').trim(),
           keywords: String(s.keywords || s.SearchKeywords || '').trim()
-        })).filter(s => s.name && s.email);
+        })).filter(s => s.sponsorId && s.name);
         if (sponsorDirectory.length) {
           search.placeholder = `Search ${sponsorDirectory.length} cached sponsor${sponsorDirectory.length === 1 ? '' : 's'}`;
           updateSponsorSyncStatus('cache');

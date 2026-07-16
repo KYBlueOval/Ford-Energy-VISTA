@@ -71,3 +71,9 @@
 - Added a multi-resolution favicon.ico and site.webmanifest.
 - Added Ford blue browser/PWA theme metadata.
 - Preserved the GitHub Actions-owned sponsor directory.
+
+
+## VISTA 2.0A — Identity & Security Core
+- Added badge-first login with PIN fallback.
+- Added hardened sessions and login lockout.
+- Removed sponsor emails from public registration data.

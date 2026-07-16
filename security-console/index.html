@@ -6,15 +6,33 @@
   <link rel="apple-touch-icon" href="/Ford-Energy-VISTA/apple-touch-icon.png">
   <link rel="manifest" href="/Ford-Energy-VISTA/site.webmanifest">
   <meta name="msapplication-TileColor" content="#003478">
-  <meta name="apple-mobile-web-app-capable" content="yes"><link rel="stylesheet" href="styles.css?v=130190"></head>
+  <meta name="apple-mobile-web-app-capable" content="yes"><link rel="stylesheet" href="styles.css?v=20001"></head>
 <body>
 <header><div class="brand"><img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy"><span><strong>VISTA</strong><small>Visitor Security Console</small></span></div><div><span id="userRole" class="user-role"></span><span id="apiStatus" class="pill">Not connected</span><button id="logoutBtn" class="link hidden">Sign out</button></div></header>
 <main>
-<section id="loginView" class="login card"><h1>VISTA Security Console</h1><p>Sign in with your assigned VISTA username and PIN.</p><label>Username<input id="usernameInput" autocomplete="username" placeholder="name or employee username"></label><label>PIN<input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password"></label><button id="loginBtn">Sign In</button><div id="loginMsg" class="msg"></div></section>
+<section id="loginView" class="login card">
+  <p class="eyebrow">FORD ENERGY SECURITY OPERATIONS</p>
+  <h1>VISTA Security Console</h1>
+  <p class="login-intro">Scan your assigned Ford Energy badge to sign in. Username and PIN remain available as a backup.</p>
+  <div id="badgeLoginPanel" class="login-method primary-login">
+    <div class="method-heading"><div class="login-method-icon">▣</div><div><h2>Scan Ford Energy Badge</h2><p>Use the connected USB/HID badge reader. Press Enter if the reader does not submit automatically.</p></div></div>
+    <label>Badge UID<input id="loginBadgeUid" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Waiting for badge scan…"></label>
+    <button id="badgeLoginBtn">Sign In with Badge</button>
+  </div>
+  <button id="showPinLoginBtn" class="login-switch" type="button">Use username and PIN backup</button>
+  <div id="pinLoginPanel" class="login-method backup-login hidden">
+    <h2>Backup PIN Access</h2>
+    <label>Username<input id="usernameInput" autocomplete="username" placeholder="Assigned VISTA username"></label>
+    <label>PIN<input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" placeholder="PIN"></label>
+    <button id="loginBtn">Sign In with PIN</button>
+    <button id="showBadgeLoginBtn" class="login-switch" type="button">Return to badge scan</button>
+  </div>
+  <div id="loginMsg" class="msg" role="alert"></div>
+</section>
 <section id="appView" class="hidden">
   <div class="title-row"><div><p class="eyebrow">MAIN SECURITY BUILDING</p><h1>VISTA Visitor Operations</h1></div><button id="refreshBtn">Refresh</button></div>
   <div class="kpis"><div class="kpi"><span>Expected Today</span><b id="kExpected">0</b></div><div class="kpi"><span>Currently Onsite</span><b id="kOnsite">0</b></div><div class="kpi"><span>Checked Out Today</span><b id="kOut">0</b></div><div class="kpi"><span>Overdue</span><b id="kOverdue">0</b></div></div>
   <div class="toolbar card"><input id="searchInput" placeholder="Search name, confirmation, sponsor, company, plate, badge UID"><select id="statusFilter"><option value="">All statuses</option><option>Submitted</option><option>Approved</option><option>Checked In</option><option>Checked Out</option><option>Denied</option><option>No Show</option></select><button id="searchBtn">Search</button></div>
   <div class="layout"><section class="card table-card"><table><thead><tr><th>Visitor</th><th>Visit</th><th>Sponsor</th><th>Status</th><th>Badge</th><th></th></tr></thead><tbody id="visitorRows"></tbody></table><div id="emptyState" class="empty hidden">No visitor records matched.</div></section><aside id="detailPanel" class="card detail"><h2>Visitor Record</h2><p>Select a visitor to view check-in and checkout controls.</p></aside></div>
 </section>
-</main><div id="toast" class="toast hidden" role="status" aria-live="polite"></div><script src="config.js?v=130190"></script><script src="app.js?v=130190"></script></body></html>
+</main><div id="toast" class="toast hidden" role="status" aria-live="polite"></div><script src="config.js?v=130190"></script><script src="app.js?v=20001"></script></body></html>

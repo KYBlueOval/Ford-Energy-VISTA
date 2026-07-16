@@ -20,13 +20,26 @@
     notify.timer=setTimeout(()=>toast.classList.add('hidden'),3800);
   }
 
-  async function login(){
-    const username=$('#usernameInput').value.trim(), pin=$('#pinInput').value.trim();
+  function normalizeBadgeUid(value){return String(value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');}
+  async function completeLogin(action,payload){
+    const msg=$('#loginMsg');msg.textContent='Signing in…';
     try{
-      const r=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'login',payload:{username,pin,userAgent:navigator.userAgent}})});
+      const r=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,payload:Object.assign({},payload,{userAgent:navigator.userAgent})})});
       const d=await r.json();if(!d.ok)throw new Error(d.error||'Login failed');
-      token=d.token;currentUser=d.user;permissions=d.permissions||{};sessionStorage.setItem('feVistaToken',token);sessionStorage.setItem('feVistaUser',JSON.stringify(currentUser));sessionStorage.setItem('feVistaPermissions',JSON.stringify(permissions));showApp();await load();
-    }catch(e){$('#loginMsg').textContent=e.message}
+      token=d.token;currentUser=d.user;permissions=d.permissions||{};
+      sessionStorage.setItem('feVistaToken',token);sessionStorage.setItem('feVistaUser',JSON.stringify(currentUser));sessionStorage.setItem('feVistaPermissions',JSON.stringify(permissions));
+      msg.textContent='';showApp();await load();
+    }catch(e){msg.textContent=e.message;if(action==='badgeLogin'){const input=$('#loginBadgeUid');if(input){input.value='';input.focus();}}}
+  }
+  async function login(){
+    const username=$('#usernameInput').value.trim(),pin=$('#pinInput').value.trim();
+    if(!username||!pin){$('#loginMsg').textContent='Enter your username and PIN.';return;}
+    await completeLogin('pinLogin',{username,pin});
+  }
+  async function badgeLogin(){
+    const badgeUid=normalizeBadgeUid($('#loginBadgeUid').value);
+    if(!badgeUid){$('#loginMsg').textContent='Scan or enter a Ford Energy badge UID.';return;}
+    await completeLogin('badgeLogin',{badgeUid});
   }
   function showApp(){ $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');$('#apiStatus').textContent='Connected';$('#apiStatus').classList.add('online'); const label=$('#userRole');if(label)label.textContent=`${currentUser?.fullName||currentUser?.username||''} · ${currentUser?.role||''}`; }
   async function load(){
@@ -101,9 +114,15 @@
     catch(e){notify(e.message,'error')}
   }
 
-  $('#loginBtn').onclick=login;$('#pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+  $('#loginBtn').onclick=login;
+  $('#badgeLoginBtn').onclick=badgeLogin;
+  $('#loginBadgeUid').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();badgeLogin();}});
+  $('#pinInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();login();}});
+  $('#showPinLoginBtn').onclick=()=>{$('#badgeLoginPanel').classList.add('hidden');$('#pinLoginPanel').classList.remove('hidden');$('#showPinLoginBtn').classList.add('hidden');$('#usernameInput').focus();};
+  $('#showBadgeLoginBtn').onclick=()=>{$('#pinLoginPanel').classList.add('hidden');$('#badgeLoginPanel').classList.remove('hidden');$('#showPinLoginBtn').classList.remove('hidden');$('#loginBadgeUid').focus();};
   $('#refreshBtn').onclick=load;$('#searchBtn').onclick=load;$('#statusFilter').onchange=load;
   $('#searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
   $('#logoutBtn').onclick=async()=>{try{await api('logout')}catch(e){}sessionStorage.clear();location.reload()};
+  if(!token)setTimeout(()=>$('#loginBadgeUid')?.focus(),100);
   if(token){try{currentUser=JSON.parse(sessionStorage.getItem('feVistaUser')||'null');permissions=JSON.parse(sessionStorage.getItem('feVistaPermissions')||'{}');showApp();load().catch(()=>{sessionStorage.clear();location.reload()})}catch(e){sessionStorage.clear()}}
 })();

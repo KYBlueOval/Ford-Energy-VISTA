@@ -47,7 +47,6 @@ def normalize(data: dict) -> list[dict[str, str]]:
         sponsor = {
             "sponsorId": str(item.get("sponsorId") or item.get("SponsorID") or "").strip(),
             "name": str(item.get("name") or item.get("SponsorName") or "").strip(),
-            "email": str(item.get("email") or item.get("SponsorEmail") or "").strip(),
             "department": str(item.get("department") or item.get("Department") or "").strip(),
             "keywords": str(item.get("keywords") or item.get("SearchKeywords") or "").strip(),
         }
