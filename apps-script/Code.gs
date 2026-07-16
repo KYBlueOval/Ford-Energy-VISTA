@@ -1,6 +1,6 @@
 const FE = {
-  VERSION: '1.3.0-sprint1.8.0',
-  SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors' },
+  VERSION: '1.3.0-sprint1.9.0',
+  SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
   BADGE_HEADERS: ['BadgeUID','BadgeNumber','Status','CurrentVisitID','IssuedAt','ReturnedAt','Notes'],
@@ -8,6 +8,12 @@ const FE = {
   ACK_HEADERS: ['AcknowledgementID','VisitID','ConfirmationNumber','VisitorName','VisitorEmail','AgreementID','AgreementTitle','AgreementVersion','DatePresented','TimePresented','PresentedTimestamp','DateAccepted','TimeAccepted','AcceptedTimestamp','VisitorEnteredAcceptanceDate','TypedElectronicSignature','CheckboxAcknowledged','SessionID','ClientIP','UserAgent','ClientLanguage','ClientTimeZone','ClientTimestamp','Referrer','AgreementContentHash','CompletionStatus'],
   CONFIG_HEADERS: ['Key','Value'],
   SPONSOR_HEADERS: ['SponsorID','SponsorName','SponsorEmail','Department','Active','SearchKeywords','LastUpdatedAt'],
+  USER_HEADERS: ['UserID','EmployeeID','FullName','Email','Department','Company','BadgeUID','Username','PINHash','Role','ApprovalScope','Active','CreatedAt','LastLoginAt','FailedLoginCount','Notes'],
+  FRONTDESK_HEADERS: ['EmployeeID','FullName','Email','Department','Company','BadgeUID','Shift','Location','Active','LastUpdatedAt'],
+  SECURITY_HEADERS: ['EmployeeID','FullName','Email','Department','Company','BadgeUID','SecurityLevel','Active','LastUpdatedAt'],
+  SESSION_HEADERS: ['SessionToken','UserID','Username','Role','CreatedAt','ExpiresAt','LastSeenAt','UserAgent'],
+  AUDIT_HEADERS: ['AuditID','Timestamp','UserID','Username','Role','Action','VisitID','ConfirmationNumber','Result','Details'],
+
   AGREEMENT_DEFINITIONS: [
     {id:'SECURITY',title:'Security Agreement',body:'Visitors are subject to screening, access restrictions, badge-control requirements, escort requirements, and Ford Energy Security direction. Unauthorized access, recording, removal of property or information, and bypass of security controls are prohibited.'},
     {id:'BIOMETRIC',title:'Biometric and Facial Recognition Consent',body:'The submitted photograph and approved identity-verification technologies may be used to support visitor identification, access control, safety, and security where authorized.'},
@@ -44,33 +50,32 @@ function doPost(e) {
   try {
     let req;
     if (bridge) {
-      req = {
-        action: String((e.parameter && e.parameter.action) || ''),
-        payload: JSON.parse(String((e.parameter && e.parameter.payload) || '{}'))
-      };
+      req = { action:String((e.parameter && e.parameter.action)||''), payload:JSON.parse(String((e.parameter && e.parameter.payload)||'{}')) };
     } else {
       req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     }
-    const action = req.action || '';
+    const action=String(req.action||'');
     let result;
-    if (action === 'createVisit') result = createVisit_(req.payload || {});
-    else if (action === 'listSponsors') result = listSponsors_(req.payload || {});
+    if(action==='createVisit') result=createVisit_(req.payload||{});
+    else if(action==='listSponsors') result=listSponsors_(req.payload||{});
+    else if(action==='login') result=loginUser_(req.payload||{}, e);
     else {
-      requireSecurity_(req.pin);
-      if (action === 'securityLogin') result = {ok:true};
-      else if (action === 'listVisits') result = listVisits_(req.payload || {});
-      else if (action === 'getVisitPhoto') result = getVisitPhoto_(req.payload || {});
-      else if (action === 'checkInVisit') result = checkInVisit_(req.payload || {});
-      else if (action === 'checkOutVisit') result = checkOutVisit_(req.payload || {});
-      else if (action === 'updateVisitStatus') result = updateVisitStatus_(req.payload || {});
-      else throw new Error('Unknown action: ' + action);
+      const session=requireSession_(req.token||'');
+      if(action==='logout') result=logoutUser_(session,req.token||'');
+      else if(action==='whoAmI') result={ok:true,user:publicSessionUser_(session),permissions:permissionsForRole_(session.Role)};
+      else if(action==='listVisits') result=listVisitsForSession_(req.payload||{},session);
+      else if(action==='getVisitPhoto') { requirePermission_(session,'viewPhoto'); result=getVisitPhoto_(req.payload||{}); }
+      else if(action==='checkInVisit') { requirePermission_(session,'checkIn'); result=checkInVisitAuthorized_(req.payload||{},session); }
+      else if(action==='checkOutVisit') { requirePermission_(session,'checkOut'); result=checkOutVisitAuthorized_(req.payload||{},session); }
+      else if(action==='updateVisitStatus') result=updateVisitStatusAuthorized_(req.payload||{},session);
+      else throw new Error('Unknown action: '+action);
     }
-    if (bridge && requestId) storeSubmissionResult_(requestId, result);
-    return bridge ? bridgeResponse_(result, requestId, parentOrigin) : json_(result);
-  } catch (err) {
-    const result = {ok:false,error:String(err.message || err)};
-    if (bridge && requestId) storeSubmissionResult_(requestId, result);
-    return bridge ? bridgeResponse_(result, requestId, parentOrigin) : json_(result);
+    if(bridge&&requestId)storeSubmissionResult_(requestId,result);
+    return bridge?bridgeResponse_(result,requestId,parentOrigin):json_(result);
+  } catch(err) {
+    const result={ok:false,error:String(err.message||err)};
+    if(bridge&&requestId)storeSubmissionResult_(requestId,result);
+    return bridge?bridgeResponse_(result,requestId,parentOrigin):json_(result);
   }
 }
 
@@ -126,6 +131,11 @@ function setupVisitorManagement() {
   ensureSheet_(ss, FE.SHEETS.AGREEMENTS, FE.AGREEMENT_HEADERS);
   ensureSheet_(ss, FE.SHEETS.ACKS, FE.ACK_HEADERS);
   ensureSheet_(ss, FE.SHEETS.SPONSORS, FE.SPONSOR_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.USERS, FE.USER_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.FRONTDESK, FE.FRONTDESK_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.SECURITY, FE.SECURITY_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.SESSIONS, FE.SESSION_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.AUDIT, FE.AUDIT_HEADERS);
   const config = ensureSheet_(ss, FE.SHEETS.CONFIG, FE.CONFIG_HEADERS);
   const defaults = {
     SECURITY_PIN:'1937', PHOTO_FOLDER_ID:'', SITE_TIMEZONE:'America/New_York', NOTIFICATION_EMAIL:'',
@@ -133,13 +143,15 @@ function setupVisitorManagement() {
     PUBLIC_REGISTRATION_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/public-registration/',
     VGS_NAVIGATION_URL:'', TRAINING_VIDEO_URL:'', AGREEMENT_VERSION:'2026.2',
     ARRIVAL_INSTRUCTIONS:'Proceed to the Main Security Building and park in Ford Energy / Visitor Parking.',
-    PARKING_INSTRUCTIONS:'Use designated Ford Energy / Visitor Parking and follow posted VGS or site signage.'
+    PARKING_INSTRUCTIONS:'Use designated Ford Energy / Visitor Parking and follow posted VGS or site signage.',
+    AUTH_SESSION_HOURS:'8', AUTH_SALT:'FORD-ENERGY-VISTA-CHANGE-ME'
   };
   const existing = config.getDataRange().getValues().slice(1).reduce((o,r)=>(o[String(r[0])]=r[1],o),{});
   Object.keys(defaults).forEach(k=>{ if (existing[k] === undefined || existing[k] === '') config.appendRow([k,defaults[k]]); });
   seedAgreements_();
-  [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA v1.3.0 Sprint 1 setup complete. Searchable sponsor picker and SponsorID/source tracking are enabled.';
+  seedInitialAdmin_();
+  [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
+  return 'VISTA v1.3.0 Sprint 1.9 setup complete. Users, FrontDesk, Security, AuthSessions and AuditLog tabs are ready.';
 }
 
 function seedAgreements_(){
@@ -230,6 +242,7 @@ function listVisits_(p) {
 
 function checkInVisit_(p) {
   validateRequired_(p,['visitId','badgeUid','officerName']); const row=findVisitRow_(p.visitId), rec=row.obj;
+  if(String(rec.Status)!=='Approved')throw new Error('Check-in prohibited: the reservation must be Approved before a badge UID can be assigned.');
   if(rec.Status==='Checked In')throw new Error('Visitor is already checked in.'); if(rec.Status==='Checked Out')throw new Error('Visitor is already checked out.');
   ensureBadgeAvailable_(p.badgeUid,p.visitId); const now=new Date();
   updateVisitRow_(row.row,{Status:'Checked In',CheckInTime:now,BadgeUID:p.badgeUid,CheckInOfficer:p.officerName,SponsorNotified:p.sponsorNotified?'Yes':'No',IDRetained:p.idRetained?'Yes':'No',LastUpdatedAt:now});
@@ -322,6 +335,97 @@ function dateTime_(v){if(!v)return'';if(v instanceof Date)return Utilities.forma
 function parseDateSafe_(v){if(!v)return null;const d=new Date(v);return isNaN(d.getTime())?null:d}
 function validateRequired_(o,keys){keys.forEach(k=>{if(o[k]===undefined||o[k]===null||String(o[k]).trim()==='')throw new Error('Missing required field: '+k)})}
 function truthy_(v){return v===true||v==='true'||v==='on'||v==='Yes'}
+
+function setupVistaIdentityAndRoles(){
+  const result=setupVisitorManagement();
+  syncRosterUsers_();
+  return result+' Initial admin username: vistaadmin. PIN uses Config SECURITY_PIN until changed.';
+}
+function syncVistaRoleRosters(){syncRosterUsers_();return 'FrontDesk and Security roster users synchronized into Users.';}
+function createVistaUser(employeeId,fullName,email,role,pin,department,company,badgeUID){
+  const allowed=['Sponsor','Approver','FrontDesk','Security','Admin'];if(!allowed.includes(String(role)))throw new Error('Role must be Sponsor, Approver, FrontDesk, Security, or Admin.');
+  if(!email)throw new Error('Email is required.');const username=String(email).split('@')[0].toLowerCase();
+  try{findUserRow_(username);throw new Error('A user with this username already exists.');}catch(err){if(String(err.message).indexOf('not found')<0)throw err;}
+  const rec={UserID:'USR-'+Utilities.getUuid().slice(0,10).toUpperCase(),EmployeeID:employeeId||'',FullName:fullName||username,Email:email,Department:department||'',Company:company||'Ford Energy',BadgeUID:badgeUID||'',Username:username,PINHash:pinHash_(username,pin),Role:role,ApprovalScope:role==='Sponsor'||role==='Approver'?'OWN_SPONSORED_VISITS':'ALL',Active:'Yes',CreatedAt:new Date(),LastLoginAt:'',FailedLoginCount:0,Notes:'Created with createVistaUser.'};
+  appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.USERS),rec,FE.USER_HEADERS);return 'Created '+role+' user '+username;
+}
+function seedInitialAdmin_(){
+  const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.USERS); if(!sheet)return;
+  const rows=readObjects_(FE.SHEETS.USERS); if(rows.some(r=>String(r.Username).toLowerCase()==='vistaadmin'))return;
+  const pin=config_().SECURITY_PIN||'1937', now=new Date();
+  const rec={UserID:'USR-'+Utilities.getUuid().slice(0,10).toUpperCase(),EmployeeID:'',FullName:'VISTA Administrator',Email:'',Department:'Global Security',Company:'Ford Energy',BadgeUID:'',Username:'vistaadmin',PINHash:pinHash_('vistaadmin',pin),Role:'Admin',ApprovalScope:'ALL',Active:'Yes',CreatedAt:now,LastLoginAt:'',FailedLoginCount:0,Notes:'Initial account created by setupVistaIdentityAndRoles. Change PIN immediately.'};
+  appendObjectRow_(sheet,rec,FE.USER_HEADERS);
+}
+function syncRosterUsers_(){
+  syncRoleRoster_(FE.SHEETS.FRONTDESK,'FrontDesk');
+  syncRoleRoster_(FE.SHEETS.SECURITY,'Security');
+}
+function syncRoleRoster_(sheetName,role){
+  const rows=readObjects_(sheetName), users=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.USERS), existing=readObjects_(FE.SHEETS.USERS);
+  rows.forEach(r=>{
+    if(!truthyActive_(r.Active)||!r.Email)return;
+    const username=String(r.Email).split('@')[0].toLowerCase();
+    if(existing.some(u=>String(u.Username).toLowerCase()===username))return;
+    const rec={UserID:'USR-'+Utilities.getUuid().slice(0,10).toUpperCase(),EmployeeID:r.EmployeeID||'',FullName:r.FullName||'',Email:r.Email||'',Department:r.Department||'',Company:r.Company||'Ford Energy',BadgeUID:r.BadgeUID||'',Username:username,PINHash:'',Role:role,ApprovalScope:'',Active:'Yes',CreatedAt:new Date(),LastLoginAt:'',FailedLoginCount:0,Notes:'PIN not set. Run setVistaUserPin.'};
+    appendObjectRow_(users,rec,FE.USER_HEADERS);
+  });
+}
+function setVistaUserPin(username,pin){
+  if(String(pin||'').length<4)throw new Error('PIN must be at least 4 characters.');
+  const row=findUserRow_(username); updateObjectRow_(FE.SHEETS.USERS,row.row,{PINHash:pinHash_(String(row.obj.Username).toLowerCase(),pin),FailedLoginCount:0});
+  return 'PIN updated for '+row.obj.Username;
+}
+function pinHash_(username,pin){return sha256_(String(username).toLowerCase()+'|'+String(pin)+'|'+(config_().AUTH_SALT||'FORD-ENERGY-VISTA'));}
+function loginUser_(p,e){
+  validateRequired_(p,['username','pin']); const username=String(p.username).trim().toLowerCase(), row=findUserRow_(username), user=row.obj;
+  if(!truthyActive_(user.Active))throw new Error('This VISTA account is disabled.');
+  if(!user.PINHash||String(user.PINHash)!==pinHash_(username,p.pin)){
+    updateObjectRow_(FE.SHEETS.USERS,row.row,{FailedLoginCount:Number(user.FailedLoginCount||0)+1});
+    audit_(user,'LOGIN','', '', 'Denied','Invalid PIN'); throw new Error('Invalid username or PIN.');
+  }
+  const token=Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,''), now=new Date(), hours=Number(config_().AUTH_SESSION_HOURS||8), expires=new Date(now.getTime()+hours*3600000);
+  const session={SessionToken:token,UserID:user.UserID,Username:user.Username,Role:user.Role,CreatedAt:now,ExpiresAt:expires,LastSeenAt:now,UserAgent:String((p&&p.userAgent)||'')};
+  appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.SESSIONS),session,FE.SESSION_HEADERS);
+  updateObjectRow_(FE.SHEETS.USERS,row.row,{LastLoginAt:now,FailedLoginCount:0}); audit_(user,'LOGIN','','','Success','');
+  return {ok:true,token,user:publicSessionUser_(user),permissions:permissionsForRole_(user.Role)};
+}
+function logoutUser_(session,token){deleteSession_(token);audit_(session,'LOGOUT','','','Success','');return{ok:true};}
+function requireSession_(token){
+  if(!token)throw new Error('Your VISTA session is not signed in.');
+  const rows=readObjects_(FE.SHEETS.SESSIONS), s=rows.find(r=>String(r.SessionToken)===String(token)); if(!s)throw new Error('Your VISTA session has expired. Sign in again.');
+  if(new Date(s.ExpiresAt)<new Date()){deleteSession_(token);throw new Error('Your VISTA session has expired. Sign in again.');}
+  const user=findUserRow_(s.Username).obj; if(!truthyActive_(user.Active))throw new Error('This VISTA account is disabled.');
+  return Object.assign({},user,{SessionToken:token});
+}
+function deleteSession_(token){const s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.SESSIONS),data=s.getDataRange().getValues(),h=data[0],idx=h.indexOf('SessionToken');for(let i=data.length-1;i>=1;i--)if(String(data[i][idx])===String(token))s.deleteRow(i+1);}
+function findUserRow_(username){const s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.USERS),data=s.getDataRange().getValues(),h=data[0],idx=h.indexOf('Username');for(let i=1;i<data.length;i++)if(String(data[i][idx]).trim().toLowerCase()===String(username).trim().toLowerCase())return{row:i+1,obj:h.reduce((o,k,j)=>(o[k]=data[i][j],o),{})};throw new Error('VISTA user account not found.');}
+function updateObjectRow_(sheetName,row,updates){const s=SpreadsheetApp.getActive().getSheetByName(sheetName),h=s.getRange(1,1,1,s.getLastColumn()).getValues()[0];Object.entries(updates).forEach(([k,v])=>{const c=h.indexOf(k);if(c>=0)s.getRange(row,c+1).setValue(v)});}
+function truthyActive_(v){return !['no','false','0','inactive','disabled',''].includes(String(v||'Yes').trim().toLowerCase());}
+function permissionsForRole_(role){
+  const r=String(role||'').toLowerCase();
+  const all={viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true};
+  if(r==='admin')return all;
+  if(r==='security')return Object.assign({},all,{admin:false});
+  if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false};
+  if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false};
+  return {viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false};
+}
+function requirePermission_(session,key){if(!permissionsForRole_(session.Role)[key])throw new Error('Your '+session.Role+' role is not authorized to perform this action.');}
+function publicSessionUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||u.Username||''),email:String(u.Email||''),department:String(u.Department||''),username:String(u.Username||''),role:String(u.Role||'')};}
+function listVisitsForSession_(p,session){requirePermission_(session,'viewVisits');let result=listVisits_(p);if(String(session.Role).toLowerCase()==='sponsor'||String(session.Role).toLowerCase()==='approver'){const email=String(session.Email||'').toLowerCase();result.visits=result.visits.filter(v=>String(v.sponsorEmail||'').toLowerCase()===email);result.kpis={expectedToday:result.visits.length,onsite:result.visits.filter(v=>v.status==='Checked In').length,checkedOutToday:result.visits.filter(v=>v.status==='Checked Out').length,overdue:0};}return result;}
+function checkInVisitAuthorized_(p,session){requirePermission_(session,'checkIn');p.officerName=p.officerName||session.FullName||session.Username;const result=checkInVisit_(p);auditVisit_(session,'CHECK_IN',p.visitId,'Success','Badge '+p.badgeUid);return result;}
+function checkOutVisitAuthorized_(p,session){requirePermission_(session,'checkOut');p.officerName=p.officerName||session.FullName||session.Username;const result=checkOutVisit_(p);auditVisit_(session,'CHECK_OUT',p.visitId,'Success','Badge '+p.badgeUid);return result;}
+function updateVisitStatusAuthorized_(p,session){
+  validateRequired_(p,['visitId','status']);const status=String(p.status),role=String(session.Role).toLowerCase(),rec=findVisitRow_(p.visitId).obj;
+  if(status==='Approved'){requirePermission_(session,'approve');if((role==='sponsor'||role==='approver')&&String(rec.SponsorEmail).toLowerCase()!==String(session.Email).toLowerCase())throw new Error('Sponsors may only approve visits assigned to their own email address.');}
+  else if(status==='Denied'||status==='Rejected'){requirePermission_(session,'deny');if((role==='sponsor'||role==='approver')&&String(rec.SponsorEmail).toLowerCase()!==String(session.Email).toLowerCase())throw new Error('Sponsors may only deny visits assigned to their own email address.');}
+  else if(status==='No Show')requirePermission_(session,'noShow');
+  else throw new Error('This status transition is not permitted through the Security Console.');
+  const result=updateVisitStatus_(p);auditVisit_(session,'STATUS_'+status.toUpperCase().replace(/\s+/g,'_'),p.visitId,'Success','');return result;
+}
+function auditVisit_(session,action,visitId,result,details){let confirmation='';try{confirmation=findVisitRow_(visitId).obj.ConfirmationNumber||''}catch(e){}audit_(session,action,visitId,confirmation,result,details);}
+function audit_(u,action,visitId,confirmation,result,details){const rec={AuditID:'AUD-'+Utilities.getUuid().slice(0,12).toUpperCase(),Timestamp:new Date(),UserID:u.UserID||'',Username:u.Username||'',Role:u.Role||'',Action:action,VisitID:visitId||'',ConfirmationNumber:confirmation||'',Result:result||'',Details:details||''};appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.AUDIT),rec,FE.AUDIT_HEADERS);}
+
 function appendObjectRow_(sheet, record, canonicalHeaders){
   if(!sheet)throw new Error('Destination sheet is unavailable.');
   const lastColumn=Math.max(sheet.getLastColumn(),canonicalHeaders.length);

@@ -1,12 +1,12 @@
 (()=>{
   const cfg=window.FE_SECURITY_CONFIG||{};
-  let pin=sessionStorage.getItem('feSecurityPin')||'', records=[], selectedVisitId='', selectedPhotoDataUrl='', selectedPhotoFileName='visitor-photo.jpg';
+  let token=sessionStorage.getItem('feVistaToken')||'', currentUser=null, permissions={}, records=[], selectedVisitId='', selectedPhotoDataUrl='', selectedPhotoFileName='visitor-photo.jpg';
   const $=s=>document.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
   async function api(action,payload={}){
     if(!cfg.API_URL||cfg.API_URL.includes('PASTE_')) throw new Error('Configure security-console/config.js with the Apps Script URL.');
-    const r=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,pin,payload})});
+    const r=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token,payload})});
     const d=await r.json();
     if(!d.ok) throw new Error(d.error||'Request failed');
     return d;
@@ -21,14 +21,14 @@
   }
 
   async function login(){
-    pin=$('#pinInput').value.trim();
-    try{await api('securityLogin');sessionStorage.setItem('feSecurityPin',pin);showApp();await load()}
-    catch(e){$('#loginMsg').textContent=e.message}
+    const username=$('#usernameInput').value.trim(), pin=$('#pinInput').value.trim();
+    try{
+      const r=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'login',payload:{username,pin,userAgent:navigator.userAgent}})});
+      const d=await r.json();if(!d.ok)throw new Error(d.error||'Login failed');
+      token=d.token;currentUser=d.user;permissions=d.permissions||{};sessionStorage.setItem('feVistaToken',token);sessionStorage.setItem('feVistaUser',JSON.stringify(currentUser));sessionStorage.setItem('feVistaPermissions',JSON.stringify(permissions));showApp();await load();
+    }catch(e){$('#loginMsg').textContent=e.message}
   }
-  function showApp(){
-    $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');
-    $('#apiStatus').textContent='Connected';$('#apiStatus').classList.add('online');
-  }
+  function showApp(){ $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');$('#apiStatus').textContent='Connected';$('#apiStatus').classList.add('online'); const label=$('#userRole');if(label)label.textContent=`${currentUser?.fullName||currentUser?.username||''} · ${currentUser?.role||''}`; }
   async function load(){
     $('#refreshBtn').disabled=true;
     try{
@@ -65,21 +65,25 @@
   function openRecord(r){
     selectedVisitId=r.visitId;selectedPhotoDataUrl='';selectedPhotoFileName=r.photoFileName||photoFileName(r);renderRows();
     const checkedIn=r.status==='Checked In', checkedOut=r.status==='Checked Out', approved=r.status==='Approved';
+    const terminal=['Denied','Rejected','No Show','Cancelled'].includes(r.status);
+    const canCheckIn=approved&&!checkedIn&&!checkedOut&&permissions.checkIn;
+    const showLocked=!checkedIn&&!checkedOut&&!canCheckIn&&permissions.checkIn;
     $('#detailPanel').innerHTML=`
       <div class="detail-head"><div class="photo-stack">${photoPlaceholder()}${r.hasPhoto?'<button id="downloadPhotoBtn" class="photo-download" disabled>Loading photo…</button>':''}</div><div><p class="record-id">${esc(r.visitId)}</p><h2>${esc(r.fullName)}</h2><p>${esc(r.company)}</p><span class="status ${statusClass(r.status)}">${esc(r.status)}</span></div></div>
       <div class="detail-grid">${field('Confirmation',r.confirmationNumber)}${field('Sponsor',r.sponsorName)}${field('Department',r.department)}${field('Phone',r.phone)}${field('Visit period',`${r.startDate} ${r.arrivalTime} – ${r.endDate} ${r.departureTime}`)}${field('Access',r.accessScope)}${field('Reason',r.reason)}${field('Plate',[r.licensePlate,r.plateState].filter(Boolean).join(' · ')||'—')}${field('Check in',r.checkInTime||'—')}${field('Check out',r.checkOutTime||'—')}</div>
       <div class="actions">
-        ${!checkedIn&&!checkedOut?`<div class="action-section"><h3>Arrival & Badge Assignment</h3><label>Badge UID<input id="badgeUid" placeholder="Scan or enter badge UID"></label><label>Officer name<input id="officerName" placeholder="Security officer"></label><label>Sponsor notification notes<textarea id="checkNotes" placeholder="Sponsor contacted, response, escort details..."></textarea></label><button id="checkInAction">Check In Visitor</button></div>`:''}
-        ${checkedIn?`<div class="action-section"><h3>Visitor Checkout</h3><label>Returned badge UID<input id="returnBadgeUid" value="${esc(r.badgeUid||'')}"></label><label>Officer name<input id="outOfficerName" placeholder="Security officer"></label><label>Checkout notes<textarea id="outNotes" placeholder="Badge condition, ID returned, exceptions..."></textarea></label><button id="checkOutAction">Check Out Visitor</button></div>`:''}
-        <div class="status-actions">${!approved&&!checkedIn&&!checkedOut?'<button id="approveAction" class="secondary">Mark Approved</button>':''}${!checkedIn&&!checkedOut&&r.status!=='No Show'?'<button id="noShowAction" class="danger">Mark No Show</button>':''}</div>
+        ${canCheckIn?`<div class="action-section approval-ready"><h3>Arrival & Badge Assignment</h3><div class="approval-banner allowed">Approved reservation — badge assignment and check-in are authorized.</div><label>Badge UID<input id="badgeUid" placeholder="Scan or enter badge UID"></label><label>Officer name<input id="officerName" value="${esc(currentUser?.fullName||'')}"></label><label>Sponsor notification notes<textarea id="checkNotes" placeholder="Sponsor contacted, response, escort details..."></textarea></label><button id="checkInAction">Check In Visitor</button></div>`:''}
+        ${showLocked?`<div class="action-section approval-locked"><h3>Arrival & Badge Assignment</h3><div class="approval-banner blocked"><strong>Check-in prohibited.</strong><span>Status is ${esc(r.status)}. Badge assignment remains locked until the visit is Approved.</span></div><label>Badge UID<input disabled placeholder="Approval required before badge scan"></label><label>Officer name<input disabled placeholder="Approval required"></label><button disabled>Check In Visitor — Approval Required</button></div>`:''}
+        ${checkedIn&&permissions.checkOut?`<div class="action-section"><h3>Visitor Checkout</h3><label>Returned badge UID<input id="returnBadgeUid" value="${esc(r.badgeUid||'')}"></label><label>Officer name<input id="outOfficerName" value="${esc(currentUser?.fullName||'')}"></label><label>Checkout notes<textarea id="outNotes"></textarea></label><button id="checkOutAction">Check Out Visitor</button></div>`:''}
+        <div class="status-actions">${permissions.approve&&!approved&&!checkedIn&&!checkedOut&&!terminal?'<button id="approveAction" class="approved-button">Approve</button>':''}${permissions.deny&&!checkedIn&&!checkedOut&&!terminal?'<button id="denyAction" class="danger">Deny / Reject</button>':''}${permissions.noShow&&!checkedIn&&!checkedOut&&!terminal?'<button id="noShowAction" class="no-show-button">Mark No Show</button>':''}</div>
       </div>`;
     $('#downloadPhotoBtn')?.addEventListener('click',()=>downloadPhoto(r));
     $('#checkInAction')?.addEventListener('click',()=>act('checkInVisit',r.visitId,{badgeUid:$('#badgeUid').value.trim(),officerName:$('#officerName').value.trim(),notes:$('#checkNotes').value.trim(),idRetained:true,sponsorNotified:true},'Visitor checked in successfully.'));
     $('#checkOutAction')?.addEventListener('click',()=>act('checkOutVisit',r.visitId,{badgeUid:$('#returnBadgeUid').value.trim(),officerName:$('#outOfficerName').value.trim(),notes:$('#outNotes').value.trim(),idReturned:true},'Visitor checked out successfully.'));
-    $('#approveAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'Approved'},'Visit marked approved.'));
+    $('#approveAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'Approved'},'Visit approved.'));
     $('#denyAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'Denied'},'Visit denied/rejected.'));
     $('#noShowAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'No Show'},'Visit marked as no show.'));
-    loadPhoto(r);
+    if(permissions.viewPhoto)loadPhoto(r);
   }
   function validDownloadName(name){return /.+-.+\.(?:jpe?g|png|webp)$/i.test(String(name||''))}
   function photoFileName(r,mimeType){
@@ -100,6 +104,6 @@
   $('#loginBtn').onclick=login;$('#pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
   $('#refreshBtn').onclick=load;$('#searchBtn').onclick=load;$('#statusFilter').onchange=load;
   $('#searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
-  $('#logoutBtn').onclick=()=>{sessionStorage.clear();location.reload()};
-  if(pin){showApp();load().catch(()=>{sessionStorage.clear();location.reload()})}
+  $('#logoutBtn').onclick=async()=>{try{await api('logout')}catch(e){}sessionStorage.clear();location.reload()};
+  if(token){try{currentUser=JSON.parse(sessionStorage.getItem('feVistaUser')||'null');permissions=JSON.parse(sessionStorage.getItem('feVistaPermissions')||'{}');showApp();load().catch(()=>{sessionStorage.clear();location.reload()})}catch(e){sessionStorage.clear()}}
 })();

@@ -32,3 +32,6 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
 .photo-stack{width:150px;flex-basis:150px}
 .detail .photo-download{font-size:11px}
 @media(max-width:700px){.status-actions{grid-template-columns:1fr}}
+
+/* Sprint 1.9 identity and approval-gated operations */
+.user-role{color:#d8ebff;font-size:12px;font-weight:700;margin-right:10px}.approval-banner{display:grid;gap:5px;padding:11px 12px;border-radius:8px;font-size:12px;line-height:1.35}.approval-banner.allowed{background:#dcfae6;color:#087443;border:1px solid #69c98d}.approval-banner.blocked{background:#fff3bf;color:#694100;border:1px solid #f2c94c}.approval-locked input:disabled,.approval-locked textarea:disabled{background:#eef1f4;color:#7b8794}.approval-locked button:disabled{background:#98a2b3;cursor:not-allowed;opacity:1}.login label{margin:14px 0}.login input{width:100%;margin-top:6px}
