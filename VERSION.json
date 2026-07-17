@@ -1,6 +1,6 @@
 {
   "version": "2.1B",
-  "build": "Operational RBAC & Workflow Reliability",
+  "build": "Operational RBAC, Workflow Reliability & Unified Badge Login",
   "releaseDate": "2026-07-17",
   "appsScriptRedeployRequired": true,
   "features": [
@@ -9,6 +9,9 @@
     "Legacy Visit ID payload normalization",
     "Protected status transitions",
     "Visitor photo filename fallback",
-    "Security action confirmations and busy-state protection"
+    "Security action confirmations and busy-state protection",
+    "Home hero action cleanup",
+    "Badge-first Administration login with PIN fallback",
+    "Administration role selector cleanup"
   ]
 }

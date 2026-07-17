@@ -131,3 +131,11 @@
 - Added user create, edit, enable/disable, delete, role, badge UID, and PIN reset workflows.
 - Added protected Apps Script administration endpoints and audit logging.
 - Added Administration workspace to the VISTA Home Dashboard.
+
+
+## 2.1B Revision 1 — Unified Access Interface
+- Removed the duplicate Visitor Registration and Security Operations buttons from the Home Dashboard hero panel.
+- Rebuilt Administration authentication to match Security Operations: badge UID first, username/PIN backup.
+- Enforced Administrator or Super Administrator authorization after both badge and PIN login.
+- Removed duplicate role options from the Administration user editor.
+- Added Administration module footer and cache-busted assets.
