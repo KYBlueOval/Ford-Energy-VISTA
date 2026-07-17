@@ -1,3 +1,14 @@
+# Ford Energy VISTA Changelog
+
+## 2.1B — Operational RBAC & Workflow Reliability
+- Added explicit Security Supervisor approval and denial authority.
+- Removed approval and denial permissions from ordinary Security and Front Desk users while retaining check-in, checkout, badge, and no-show operations.
+- Normalized legacy Visit ID payload keys (`VisitID`, `visitID`, and `visitid`) to prevent missing-required-field failures.
+- Added server-side status-transition validation to prevent invalid approvals, denials, and no-show changes.
+- Added visitor-photo lookup fallback by `PhotoFileName` for older records missing a usable Drive file ID or URL.
+- Added confirmation prompts and temporary action locking for Security Console status changes.
+- Updated Administration role filtering and module version identifiers.
+
 # Sprint 2.0A Build 2.1
 
 - Fixed the missing `Visitor • Information • Security • Tracking • Analytics` lockup on the Visitor Pre-Arrival Registration page.

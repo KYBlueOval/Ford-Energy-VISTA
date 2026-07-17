@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.1A-admin-users',
+  VERSION: '2.1B-operational-workflow',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -55,6 +55,7 @@ function doPost(e) {
       req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     }
     const action=String(req.action||'');
+    req.payload=normalizeRequestPayload_(req.payload||{});
     let result;
     if(action==='createVisit') result=createVisit_(req.payload||{});
     else if(action==='listSponsors') result=listSponsors_(req.payload||{});
@@ -84,6 +85,16 @@ function doPost(e) {
     if(bridge&&requestId)storeSubmissionResult_(requestId,result);
     return bridge?bridgeResponse_(result,requestId,parentOrigin):json_(result);
   }
+}
+
+
+function normalizeRequestPayload_(payload){
+  const p=payload&&typeof payload==='object'?payload:{};
+  if(!p.visitId)p.visitId=p.VisitID||p.visitID||p.visitid||p.id||'';
+  if(!p.badgeUid)p.badgeUid=p.BadgeUID||p.badgeUID||p.badgeuid||'';
+  if(!p.officerName)p.officerName=p.OfficerName||p.officer||'';
+  if(!p.status)p.status=p.Status||'';
+  return p;
 }
 
 function safeParentOrigin_(origin) {
@@ -284,14 +295,23 @@ function updateVisitStatus_(p) { validateRequired_(p,['visitId','status']); cons
 function getVisitPhoto_(p) {
   validateRequired_(p,['visitId']);
   const rec=findVisitRow_(p.visitId).obj;
-  const fileId=extractDriveFileId_(rec.PhotoFileId||rec.PhotoUrl||'');
-  if(!fileId)return{ok:true,hasPhoto:false,dataUrl:'',fileName:''};
   try{
-    const file=DriveApp.getFileById(fileId),blob=file.getBlob(),mime=blob.getContentType()||'image/jpeg';
+    const file=resolveVisitPhotoFile_(rec);
+    if(!file)return{ok:true,hasPhoto:false,dataUrl:'',fileName:''};
+    const blob=file.getBlob(),mime=blob.getContentType()||'image/jpeg';
     const ext=mime.indexOf('png')>=0?'png':mime.indexOf('webp')>=0?'webp':'jpg';
     const fileName=`${safeFilePart_(rec.FullName)||'Visitor'}-${safeFilePart_(rec.Company)||'Unknown Company'}.${ext}`;
     return{ok:true,hasPhoto:true,dataUrl:`data:${mime};base64,${Utilities.base64Encode(blob.getBytes())}`,fileName:fileName,mimeType:mime,sourceFileName:file.getName()};
-  }catch(err){throw new Error('Visitor photograph could not be loaded. Confirm the PhotoFileId/PhotoUrl value and Apps Script access to the configured photo folder.');}
+  }catch(err){throw new Error('Visitor photograph could not be loaded. Confirm Apps Script can access the configured photo folder and that the record contains a valid PhotoFileId, PhotoUrl, or PhotoFileName.');}
+}
+function resolveVisitPhotoFile_(rec){
+  const fileId=extractDriveFileId_(rec.PhotoFileId||rec.PhotoUrl||'');
+  if(fileId)return DriveApp.getFileById(fileId);
+  const fileName=String(rec.PhotoFileName||'').trim();
+  if(!fileName)return null;
+  const cfg=config_(),folder=cfg.PHOTO_FOLDER_ID?DriveApp.getFolderById(cfg.PHOTO_FOLDER_ID):DriveApp.getRootFolder();
+  const files=folder.getFilesByName(fileName);
+  return files.hasNext()?files.next():null;
 }
 function extractDriveFileId_(value){
   const text=String(value||'').trim();
@@ -531,7 +551,8 @@ function permissionsForRole_(role){
   const r=String(role||'').trim().toLowerCase();
   const none={viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false};
   if(r==='admin'||r==='super administrator'||r==='superadmin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true};
-  if(r==='security')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true};
+  if(r==='security supervisor')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true};
+  if(r==='security')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true};
   if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:false};
   if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false};
   return none;
@@ -542,12 +563,23 @@ function listVisitsForSession_(p,session){requirePermission_(session,'viewVisits
 function checkInVisitAuthorized_(p,session){requirePermission_(session,'checkIn');p.officerName=p.officerName||session.FullName||session.Username;const result=checkInVisit_(p);auditVisit_(session,'CHECK_IN',p.visitId,'Success','Badge '+p.badgeUid);return result;}
 function checkOutVisitAuthorized_(p,session){requirePermission_(session,'checkOut');p.officerName=p.officerName||session.FullName||session.Username;const result=checkOutVisit_(p);auditVisit_(session,'CHECK_OUT',p.visitId,'Success','Badge '+p.badgeUid);return result;}
 function updateVisitStatusAuthorized_(p,session){
-  validateRequired_(p,['visitId','status']);const status=String(p.status),role=String(session.Role).toLowerCase(),rec=findVisitRow_(p.visitId).obj;
-  if(status==='Approved'){requirePermission_(session,'approve');if((role==='sponsor'||role==='approver')&&String(rec.SponsorEmail).toLowerCase()!==String(session.Email).toLowerCase())throw new Error('Sponsors may only approve visits assigned to their own email address.');}
-  else if(status==='Denied'||status==='Rejected'){requirePermission_(session,'deny');if((role==='sponsor'||role==='approver')&&String(rec.SponsorEmail).toLowerCase()!==String(session.Email).toLowerCase())throw new Error('Sponsors may only deny visits assigned to their own email address.');}
-  else if(status==='No Show')requirePermission_(session,'noShow');
-  else throw new Error('This status transition is not permitted through the Security Console.');
-  const result=updateVisitStatus_(p);auditVisit_(session,'STATUS_'+status.toUpperCase().replace(/\s+/g,'_'),p.visitId,'Success','');return result;
+  validateRequired_(p,['visitId','status']);
+  const status=String(p.status),role=String(session.Role).toLowerCase(),rec=findVisitRow_(p.visitId).obj,current=String(rec.Status||'Submitted');
+  const reviewable=['Submitted','Pending Review','Pending Sponsor Review'];
+  if(status==='Approved'){
+    requirePermission_(session,'approve');
+    if(!reviewable.includes(current))throw new Error('Only a submitted or pending reservation can be approved. Current status: '+current+'.');
+    if((role==='sponsor'||role==='approver')&&String(rec.SponsorEmail).toLowerCase()!==String(session.Email).toLowerCase())throw new Error('Sponsors may only approve visits assigned to their own email address.');
+  } else if(status==='Denied'||status==='Rejected'){
+    requirePermission_(session,'deny');
+    if(!reviewable.includes(current))throw new Error('Only a submitted or pending reservation can be denied. Current status: '+current+'.');
+    if((role==='sponsor'||role==='approver')&&String(rec.SponsorEmail).toLowerCase()!==String(session.Email).toLowerCase())throw new Error('Sponsors may only deny visits assigned to their own email address.');
+  } else if(status==='No Show'){
+    requirePermission_(session,'noShow');
+    if(!['Submitted','Pending Review','Pending Sponsor Review','Approved'].includes(current))throw new Error('This reservation cannot be marked No Show from status '+current+'.');
+  } else throw new Error('This status transition is not permitted through the Security Console.');
+  p.officerName=p.officerName||session.FullName||session.Username;
+  const result=updateVisitStatus_(p);auditVisit_(session,'STATUS_'+status.toUpperCase().replace(/\s+/g,'_'),p.visitId,'Success','From '+current);return result;
 }
 function auditVisit_(session,action,visitId,result,details){let confirmation='';try{confirmation=findVisitRow_(visitId).obj.ConfirmationNumber||''}catch(e){}audit_(session,action,visitId,confirmation,result,details);}
 function audit_(u,action,visitId,confirmation,result,details){const rec={AuditID:'AUD-'+Utilities.getUuid().slice(0,12).toUpperCase(),Timestamp:new Date(),UserID:u.UserID||'',Username:u.Username||'',Role:u.Role||'',Action:action,VisitID:visitId||'',ConfirmationNumber:confirmation||'',Result:result||'',Details:details||''};appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.AUDIT),rec,FE.AUDIT_HEADERS);}

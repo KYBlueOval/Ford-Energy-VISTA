@@ -93,9 +93,9 @@
     $('#downloadPhotoBtn')?.addEventListener('click',()=>downloadPhoto(r));
     $('#checkInAction')?.addEventListener('click',()=>act('checkInVisit',r.visitId,{badgeUid:$('#badgeUid').value.trim(),officerName:$('#officerName').value.trim(),notes:$('#checkNotes').value.trim(),idRetained:true,sponsorNotified:true},'Visitor checked in successfully.'));
     $('#checkOutAction')?.addEventListener('click',()=>act('checkOutVisit',r.visitId,{badgeUid:$('#returnBadgeUid').value.trim(),officerName:$('#outOfficerName').value.trim(),notes:$('#outNotes').value.trim(),idReturned:true},'Visitor checked out successfully.'));
-    $('#approveAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'Approved'},'Visit approved.'));
-    $('#denyAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'Denied'},'Visit denied/rejected.'));
-    $('#noShowAction')?.addEventListener('click',()=>act('updateVisitStatus',r.visitId,{status:'No Show'},'Visit marked as no show.'));
+    $('#approveAction')?.addEventListener('click',()=>confirmAct('Approve this visitor reservation?', 'updateVisitStatus',r.visitId,{status:'Approved'},'Visit approved.'));
+    $('#denyAction')?.addEventListener('click',()=>confirmAct('Deny this visitor reservation?', 'updateVisitStatus',r.visitId,{status:'Denied'},'Visit denied/rejected.'));
+    $('#noShowAction')?.addEventListener('click',()=>confirmAct('Mark this visitor as a no-show?', 'updateVisitStatus',r.visitId,{status:'No Show'},'Visit marked as no show.'));
     if(permissions.viewPhoto)loadPhoto(r);
   }
   function validDownloadName(name){return /.+-.+\.(?:jpe?g|png|webp)$/i.test(String(name||''))}
@@ -108,10 +108,13 @@
     const link=document.createElement('a');link.href=selectedPhotoDataUrl;link.download=selectedPhotoFileName||photoFileName(r);document.body.appendChild(link);link.click();link.remove();
   }
   function field(k,v){return`<div class="field"><b>${esc(k)}</b><span>${esc(v||'—')}</span></div>`}
+  async function confirmAct(question,action,visitId,extra,message){if(window.confirm(question))await act(action,visitId,extra,message)}
   async function act(action,visitId,extra,message){
     if(!visitId){notify('This record is missing its Visit ID. Refresh after deploying the updated Apps Script.','error');return}
+    const buttons=[...document.querySelectorAll('.actions button')];buttons.forEach(b=>b.disabled=true);
     try{await api(action,{visitId,...extra});notify(message);await load()}
     catch(e){notify(e.message,'error')}
+    finally{buttons.forEach(b=>b.disabled=false)}
   }
 
   $('#loginBtn').onclick=login;

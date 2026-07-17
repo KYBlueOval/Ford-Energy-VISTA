@@ -1,14 +1,14 @@
 {
-  "version": "2.1A",
-  "build": "Administration Users",
+  "version": "2.1B",
+  "build": "Operational RBAC & Workflow Reliability",
   "releaseDate": "2026-07-17",
   "appsScriptRedeployRequired": true,
   "features": [
-    "Administration console",
-    "User CRUD",
-    "Super Administrator support",
-    "Role and badge management",
-    "PIN resets",
-    "Administration audit viewer"
+    "Security Supervisor approval authority",
+    "Security/Front Desk operational role separation",
+    "Legacy Visit ID payload normalization",
+    "Protected status transitions",
+    "Visitor photo filename fallback",
+    "Security action confirmations and busy-state protection"
   ]
 }
