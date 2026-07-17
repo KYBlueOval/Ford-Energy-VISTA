@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.1C-user-profile-photos',
+  VERSION: '2.2.1-visitor-operations-dialogs',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -68,6 +68,7 @@ function doPost(e) {
       else if(action==='listVisits') result=listVisitsForSession_(req.payload||{},session);
       else if(action==='getVisitPhoto') { requirePermission_(session,'viewPhoto'); result=getVisitPhoto_(req.payload||{}); }
       else if(action==='getUserPhoto') result=getUserPhotoAuthorized_(req.payload||{},session);
+      else if(action==='listVisitActivity') { requirePermission_(session,'viewVisits'); result=listVisitActivityAuthorized_(req.payload||{},session); }
       else if(action==='checkInVisit') { requirePermission_(session,'checkIn'); result=checkInVisitAuthorized_(req.payload||{},session); }
       else if(action==='checkOutVisit') { requirePermission_(session,'checkOut'); result=checkOutVisitAuthorized_(req.payload||{},session); }
       else if(action==='updateVisitStatus') result=updateVisitStatusAuthorized_(req.payload||{},session);
@@ -589,6 +590,21 @@ function updateVisitStatusAuthorized_(p,session){
   p.officerName=p.officerName||session.FullName||session.Username;
   const result=updateVisitStatus_(p);auditVisit_(session,'STATUS_'+status.toUpperCase().replace(/\s+/g,'_'),p.visitId,'Success','From '+current);return result;
 }
+function listVisitActivityAuthorized_(p,session){
+  validateRequired_(p,['visitId']);
+  const visit=findVisitRow_(p.visitId).obj;
+  const role=String(session.Role||'').toLowerCase();
+  if((role==='sponsor'||role==='approver')&&String(visit.SponsorEmail||'').toLowerCase()!==String(session.Email||'').toLowerCase())throw new Error('You are not authorized to view this visitor activity.');
+  const badgeUid=String(p.badgeUid||visit.BadgeUID||'').trim();
+  let events=readObjects_(FE.SHEETS.ACTIVITY).filter(r=>String(r.VisitID||'')===String(p.visitId));
+  if(badgeUid){
+    const related=readObjects_(FE.SHEETS.ACTIVITY).filter(r=>String(r.BadgeUID||'').trim()===badgeUid&&String(r.VisitID||'')!==String(p.visitId));
+    events=events.concat(related);
+  }
+  events.sort((a,b)=>new Date(b.EventTime||0)-new Date(a.EventTime||0));
+  return{ok:true,visitId:String(p.visitId),badgeUid:badgeUid,events:events.slice(0,100).map(r=>({activityId:String(r.ActivityID||''),visitId:String(r.VisitID||''),eventType:String(r.EventType||''),eventTime:dateText_(r.EventTime),performedBy:String(r.PerformedBy||''),badgeUid:String(r.BadgeUID||''),details:String(r.Details||''),currentVisit:String(r.VisitID||'')===String(p.visitId)}))};
+}
+
 function auditVisit_(session,action,visitId,result,details){let confirmation='';try{confirmation=findVisitRow_(visitId).obj.ConfirmationNumber||''}catch(e){}audit_(session,action,visitId,confirmation,result,details);}
 function audit_(u,action,visitId,confirmation,result,details){const rec={AuditID:'AUD-'+Utilities.getUuid().slice(0,12).toUpperCase(),Timestamp:new Date(),UserID:u.UserID||'',Username:u.Username||'',Role:u.Role||'',Action:action,VisitID:visitId||'',ConfirmationNumber:confirmation||'',Result:result||'',Details:details||''};appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.AUDIT),rec,FE.AUDIT_HEADERS);}
 

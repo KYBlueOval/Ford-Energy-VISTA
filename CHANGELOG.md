@@ -1,5 +1,13 @@
 # Ford Energy VISTA Changelog
 
+## 2.2.1 — Operational Badge and Checkout Dialogs
+- Added guided badge-assignment and visitor check-in dialog with a review-and-confirm step.
+- Added guided badge-return and visitor checkout dialog with badge verification.
+- Added authenticated visitor activity and badge-history timeline to the Visitor Record workspace.
+- Added related history for a badge UID across prior visitor assignments.
+- Preserved server-side approval, badge-availability, and returned-badge validation.
+- Added responsive modal and timeline styling for desktop and mobile operations.
+
 ## 2.1D — Lazy-Loaded User and Visitor Thumbnails
 - Added authenticated profile-photo thumbnails to Identity & Access Management user rows.
 - Added authenticated visitor-photo thumbnails to Security Operations visitor rows.
