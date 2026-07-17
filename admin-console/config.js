@@ -1,1 +1,3 @@
-window.FE_ADMIN_CONFIG={API_URL:'https://script.google.com/macros/s/AKfycbxxDL4RKnTJ7VesY9D7qkTCSMFPZAT8fV_uoFShJXgU5HNK1oQG1uhmfwzO9vIUdxxz/exec'};
+window.FE_ADMIN_CONFIG = {
+    API_URL: 'https://script.google.com/macros/s/AKfycbxJhQ9P6V8Un4oyZEy5JNp4ravCRbfKm1Dvbay87t_pydQmwNhOMJfxIBmAlBMNoMLQ/exec'
+};
