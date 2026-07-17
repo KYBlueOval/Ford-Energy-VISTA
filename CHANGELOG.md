@@ -1,3 +1,15 @@
+# Sprint 2.0A Build 1 — Enterprise Registration & Email Branding
+
+- Redesigned the public-registration hero with a large VISTA wordmark and smaller Visitor Pre-Arrival Registration subtitle.
+- Added Ford Energy enterprise styling, improved spacing, responsive typography, and registration feature badges.
+- Replaced the oversized Save Draft control with a compact pill-style button.
+- Added a shared Apps Script branded email framework for VISTA notifications.
+- Added the Ford Energy primary logo to every email header.
+- Added BWRDO branding and the Glendale visitor administration footer to every email.
+- Rebuilt sponsor, visitor, and Security emails with Outlook-compatible table layouts and inline CSS.
+- Added clearer status, action-required, arrival, confirmation, and visit-detail sections.
+- Updated VERSION.json to build 20002.
+
 # Changelog
 
 ## v1.3.0 Sprint 1.7.1

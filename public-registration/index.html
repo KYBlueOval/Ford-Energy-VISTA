@@ -18,17 +18,21 @@
   <header class="topbar">
     <div class="brand">
       <img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy" />
-      <div><strong>VISTA</strong><span>Visitor Registration - Site Access Reservation System</span></div>
+      <div class="brand-copy"><strong>VISTA</strong><span>Visitor Pre-Arrival Registration</span></div>
     </div>
-    <div class="draft-controls"><span id="draftStatus" class="draft-status"></span><button id="saveDraftBtn" class="btn btn-ghost" type="button">Save Draft</button></div>
+    <div class="draft-controls"><span id="draftStatus" class="draft-status"></span><button id="saveDraftBtn" class="btn btn-ghost btn-save-draft" type="button" aria-label="Save registration draft"><span aria-hidden="true">&#128190;</span> Save Draft</button></div>
   </header>
 
   <main class="shell">
     <section class="hero">
-      <div>
-        <p class="eyebrow">BLUEOVAL GLENDALE KY</p>
-        <h1>VISTA Visitor Pre-Arrival Registration</h1>
-        <p>Complete each section before arriving at the Main Security Building. Bring a valid government-issued photo ID.</p>
+      <div class="hero-copy">
+        <p class="eyebrow">FORD ENERGY &bull; BLUEOVAL GLENDALE KENTUCKY</p>
+        <div class="hero-title-lockup">
+          <h1>VISTA</h1>
+          <p class="hero-subtitle">Visitor Pre-Arrival Registration</p>
+        </div>
+        <p class="hero-description">Complete each section before arriving at the Main Security Building. Bring a valid government-issued photo ID for check-in.</p>
+        <div class="hero-badges" aria-label="Registration features"><span>Secure registration</span><span>Sponsor review</span><span>Faster arrival</span></div>
       </div>
       <div class="status-card"><span id="progressText">Step 1 of 5</span><div class="progress"><i id="progressBar"></i></div></div>
     </section>
