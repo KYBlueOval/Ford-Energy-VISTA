@@ -105,3 +105,10 @@
 - Added badge-first login with PIN fallback.
 - Added hardened sessions and login lockout.
 - Removed sponsor emails from public registration data.
+
+## Sprint 2.0A Build 2.2 — Unified Navigation and Application Identity
+- Made the complete Ford Energy/VISTA header brand lockup a Home Dashboard link on all current pages.
+- Standardized browser titles as `VISTA | <Module>`.
+- Preserved Ford Energy favicon and manifest references across all pages.
+- Added accessible module breadcrumbs.
+- Added visible Version 2.0A Build 2.2 identifiers to page footers.

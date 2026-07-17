@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#061f4a">
   <meta name="description" content="Ford Energy VISTA — Visitor Information, Security, Tracking and Analytics for BlueOval Glendale, Kentucky.">
-  <title>Ford Energy VISTA | BlueOval Glendale</title>
+  <title>VISTA | Home Dashboard</title>
   <link rel="icon" href="/Ford-Energy-VISTA/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/Ford-Energy-VISTA/favicon-32x32.png">
   <link rel="apple-touch-icon" href="/Ford-Energy-VISTA/apple-touch-icon.png">
@@ -15,10 +15,10 @@
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:radial-gradient(circle at 92% 4%,rgba(89,184,242,.25),transparent 31%),radial-gradient(circle at 7% 92%,rgba(0,52,120,.09),transparent 30%),linear-gradient(180deg,#f8fbfe 0%,#edf4fa 100%)}
     .vista-header{min-height:92px;background:linear-gradient(120deg,var(--navy),var(--ford) 56%,var(--blue));display:grid;grid-template-columns:minmax(245px,1fr) minmax(420px,2.2fr) minmax(220px,1fr);align-items:center;gap:22px;padding:13px 30px;color:#fff;box-shadow:0 10px 28px rgba(0,35,79,.26);position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.15)}
     .vista-header:after{content:"";position:absolute;width:290px;height:290px;border-radius:50%;right:-120px;top:-195px;background:rgba(255,255,255,.055)}
-    .header-brand{display:flex;align-items:center;gap:15px;position:relative;z-index:1}.header-brand img{height:43px;width:auto;filter:drop-shadow(0 4px 9px rgba(0,0,0,.2))}.vista-wordmark{font-size:25px;font-weight:900;letter-spacing:.16em;line-height:1}
+    .header-brand{display:flex;align-items:center;gap:15px;position:relative;z-index:1}.vista-home-link{text-decoration:none;color:inherit;cursor:pointer;border-radius:10px;transition:opacity .2s ease,transform .2s ease}.vista-home-link:hover{opacity:.9;transform:translateY(-1px)}.vista-home-link:focus-visible{outline:2px solid #fff;outline-offset:5px}.header-brand img{height:43px;width:auto;filter:drop-shadow(0 4px 9px rgba(0,0,0,.2))}.vista-wordmark{font-size:25px;font-weight:900;letter-spacing:.16em;line-height:1}
     .header-center{text-align:center;position:relative;z-index:1}.vista-expansion{font-size:clamp(14px,1.35vw,20px);font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:rgba(255,255,255,.38);white-space:nowrap}.page-description{font-size:13px;color:#d8eeff;font-weight:700;letter-spacing:.055em;margin-top:8px;text-transform:uppercase}
     .header-meta{position:relative;z-index:1;text-align:right;color:#d7edff;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;line-height:1.45}
-    .wrap{max-width:1180px;margin:44px auto 0;padding:22px}
+    .wrap{max-width:1180px;margin:30px auto 0;padding:22px}.breadcrumb{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 15px}.breadcrumb span{color:var(--ford)}
     .hero{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--navy),var(--ford) 50%,var(--blue));color:#fff;padding:54px;border-radius:28px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.12)}.hero:before,.hero:after{content:"";position:absolute;border-radius:50%;pointer-events:none}.hero:before{width:440px;height:440px;right:-140px;top:-205px;background:rgba(255,255,255,.075)}.hero:after{width:240px;height:240px;right:100px;bottom:-180px;background:rgba(80,181,235,.15)}
     .hero-content{position:relative;z-index:1}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.2em;color:#a8dcff}.hero h1{font-size:clamp(52px,7vw,86px);line-height:.92;margin:12px 0 14px;letter-spacing:.035em}.hero h2{font-size:clamp(20px,2.5vw,30px);font-weight:600;color:#dff2ff;margin:0 0 18px}.hero p{font-size:17px;line-height:1.65;max-width:780px;margin:0;color:#f3f9ff}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}.hero-actions a{display:inline-flex;align-items:center;gap:9px;padding:13px 18px;border-radius:11px;text-decoration:none;font-weight:800}.primary{background:#fff;color:var(--ford);box-shadow:0 10px 24px rgba(0,0,0,.18)}.secondary{color:#fff;border:1px solid rgba(255,255,255,.36);background:rgba(255,255,255,.10)}
     .section-label{text-align:center;margin:34px 0 18px}.section-label span{font-size:11px;font-weight:900;letter-spacing:.18em;color:var(--blue);text-transform:uppercase}.section-label h2{margin:7px 0 0;font-size:29px}
@@ -31,12 +31,13 @@
 </head>
 <body>
   <header class="vista-header">
-    <div class="header-brand"><img src="shared/assets/ford-energy-primary-logo.png" alt="Ford Energy"><span class="vista-wordmark">VISTA</span></div>
+    <a class="header-brand vista-home-link" href="https://kyblueoval.github.io/Ford-Energy-VISTA/" aria-label="Return to VISTA Home Dashboard"><img src="shared/assets/ford-energy-primary-logo.png" alt="Ford Energy"><span class="vista-wordmark">VISTA</span></a>
     <div class="header-center"><div class="vista-expansion">Visitor • Information • Security • Tracking • Analytics</div><div class="page-description">Visitor Management Platform</div></div>
     <div class="header-meta">Ford Energy<br>BlueOval Glendale Kentucky</div>
   </header>
 
   <main class="wrap">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><span aria-current="page">Home Dashboard</span></nav>
     <section class="hero">
       <div class="hero-content">
         <div class="eyebrow">FORD ENERGY VISITOR MANAGEMENT</div>
@@ -55,7 +56,7 @@
 
     <section class="capabilities" aria-label="VISTA capabilities"><div class="capability">PRE-REGISTER</div><div class="capability">APPROVE</div><div class="capability">VERIFY</div><div class="capability">CHECK IN</div><div class="capability">TRACK</div><div class="capability">CHECK OUT</div></section>
 
-    <footer><img src="shared/assets/ford-energy-bwrdo.png" alt="BlueOval Rechargeable Development Operations"><div class="footer-title">Ford Energy · BlueOval Glendale Kentucky</div><div class="footer-copy">2022 Battery Park Drive, Glendale, KY 42740 USA<br>Visitor Administration · Main Security Building · +1 (270) 949-7262</div><div class="footer-meta">FORD ENERGY VISTA · VISITOR INFORMATION, SECURITY, TRACKING &amp; ANALYTICS</div></footer>
+    <footer><img src="shared/assets/ford-energy-bwrdo.png" alt="BlueOval Rechargeable Development Operations"><div class="footer-title">Ford Energy · BlueOval Glendale Kentucky</div><div class="footer-copy">2022 Battery Park Drive, Glendale, KY 42740 USA<br>Visitor Administration · Main Security Building · +1 (270) 949-7262</div><div class="footer-meta">FORD ENERGY VISTA · VISITOR INFORMATION, SECURITY, TRACKING &amp; ANALYTICS · VERSION 2.0A BUILD 2.2</div></footer>
   </main>
 </body>
 </html>

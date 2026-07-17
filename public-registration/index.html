@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#003478" />
-  <title>Ford Energy VISTA | Visitor Pre-Arrival Registration</title>
+  <title>VISTA | Visitor Pre-Arrival Registration</title>
   <link rel="icon" href="/Ford-Energy-VISTA/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/Ford-Energy-VISTA/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/Ford-Energy-VISTA/favicon-16x16.png">
@@ -16,10 +16,10 @@
 </head>
 <body>
   <header class="topbar vista-global-header">
-    <div class="brand header-brand">
+    <a class="brand header-brand vista-home-link" href="https://kyblueoval.github.io/Ford-Energy-VISTA/" aria-label="Return to VISTA Home Dashboard">
       <img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy" />
       <div class="brand-copy"><strong>VISTA</strong></div>
-    </div>
+    </a>
     <div class="header-center">
       <div class="vista-expansion">Visitor • Information • Security • Tracking • Analytics</div>
       <div class="page-description">Visitor Pre-Arrival Registration</div>
@@ -28,6 +28,7 @@
   </header>
 
   <main class="shell">
+    <nav class="vista-breadcrumb" aria-label="Breadcrumb"><a href="https://kyblueoval.github.io/Ford-Energy-VISTA/">Home</a><span aria-hidden="true">›</span><span aria-current="page">Visitor Pre-Arrival Registration</span></nav>
     <section class="hero">
       <div class="hero-copy">
         <p class="eyebrow">FORD ENERGY &bull; BLUEOVAL GLENDALE KENTUCKY</p>
@@ -207,6 +208,7 @@
       <div class="form-actions"><button id="backBtn" class="btn btn-secondary" type="button" disabled>Back</button><button id="nextBtn" class="btn btn-primary" type="button">Continue</button><button id="submitBtn" class="btn btn-primary hidden" type="submit">Submit Visit Request</button></div>
     </form>
   </main>
+  <footer class="vista-module-footer"><span>Ford Energy VISTA</span><span>Visitor Pre-Arrival Registration</span><span>Version 2.0A Build 2.2</span></footer>
 
   <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><p class="eyebrow">REQUEST RECEIVED</p><h2>Visitor Registration Submitted</h2><p>Your request has been recorded and sent to the selected Ford Energy sponsor for review.</p><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><div id="confirmationQr" class="confirmation-qr" aria-label="Registration QR code"></div><div id="confirmationSummary" class="confirmation-summary"></div><div id="confirmationNotifications" class="confirmation-notifications"></div><div class="arrival-reminder"><strong>What happens next</strong><p>Your sponsor and Security Operations will review the request. Submission does not guarantee approval or site access.</p><p>Upon arrival, proceed to the Main Security Building, park in Ford Energy / Visitor Parking, and bring a valid government-issued photo ID.</p><p>Do not bring undeclared restricted items or electronic storage devices.</p></div><div class="confirmation-actions"><a id="vgsLink" class="btn btn-secondary hidden" target="_blank" rel="noopener">Open VGS Navigation</a><button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></div></dialog>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

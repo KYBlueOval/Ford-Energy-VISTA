@@ -1,11 +1,12 @@
 {
   "version": "2.0A",
-  "build": "2.1",
-  "release": "Registration Header Visibility Hotfix",
+  "build": "2.2",
+  "release": "Unified Navigation and Application Identity",
   "date": "2026-07-16",
   "notes": [
-    "Forces the VISTA acronym expansion to render centered in the Visitor Registration header",
-    "Preserves the Save Draft control at the upper-right",
-    "Adds robust desktop visibility rules to prevent inherited CSS from hiding the header center"
+    "Makes the Ford Energy/VISTA brand lockup clickable on Home, Registration, and Security pages",
+    "Returns users to the VISTA Home Dashboard from every current module",
+    "Standardizes browser titles and Ford Energy favicon metadata",
+    "Adds accessible breadcrumbs and visible build identification across the platform"
   ]
 }

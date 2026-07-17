@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ford Energy VISTA | Security Console</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VISTA | Security Operations Console</title>
   <link rel="icon" href="/Ford-Energy-VISTA/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/Ford-Energy-VISTA/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/Ford-Energy-VISTA/favicon-16x16.png">
@@ -8,8 +8,8 @@
   <meta name="msapplication-TileColor" content="#003478">
   <meta name="apple-mobile-web-app-capable" content="yes"><link rel="stylesheet" href="styles.css?v=20001"></head>
 <body>
-<header class="vista-global-header"><div class="brand header-brand"><img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy"><span><strong>VISTA</strong></span></div><div class="header-center"><div class="vista-expansion">Visitor • Information • Security • Tracking • Analytics</div><div class="page-description">Security Operations Console</div></div><div class="header-actions"><span id="userRole" class="user-role"></span><span id="apiStatus" class="pill">Not connected</span><button id="logoutBtn" class="link hidden">Sign out</button></div></header>
-<main>
+<header class="vista-global-header"><a class="brand header-brand vista-home-link" href="https://kyblueoval.github.io/Ford-Energy-VISTA/" aria-label="Return to VISTA Home Dashboard"><img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy"><span><strong>VISTA</strong></span></a><div class="header-center"><div class="vista-expansion">Visitor • Information • Security • Tracking • Analytics</div><div class="page-description">Security Operations Console</div></div><div class="header-actions"><span id="userRole" class="user-role"></span><span id="apiStatus" class="pill">Not connected</span><button id="logoutBtn" class="link hidden">Sign out</button></div></header>
+<nav class="vista-breadcrumb" aria-label="Breadcrumb"><a href="https://kyblueoval.github.io/Ford-Energy-VISTA/">Home</a><span aria-hidden="true">›</span><span aria-current="page">Security Operations Console</span></nav><main>
 <section id="loginView" class="login card">
   <p class="eyebrow">FORD ENERGY SECURITY OPERATIONS</p>
   <h1>VISTA Security Console</h1>
@@ -35,4 +35,4 @@
   <div class="toolbar card"><input id="searchInput" placeholder="Search name, confirmation, sponsor, company, plate, badge UID"><select id="statusFilter"><option value="">All statuses</option><option>Submitted</option><option>Approved</option><option>Checked In</option><option>Checked Out</option><option>Denied</option><option>No Show</option></select><button id="searchBtn">Search</button></div>
   <div class="layout"><section class="card table-card"><table><thead><tr><th>Visitor</th><th>Visit</th><th>Sponsor</th><th>Status</th><th>Badge</th><th></th></tr></thead><tbody id="visitorRows"></tbody></table><div id="emptyState" class="empty hidden">No visitor records matched.</div></section><aside id="detailPanel" class="card detail"><h2>Visitor Record</h2><p>Select a visitor to view check-in and checkout controls.</p></aside></div>
 </section>
-</main><div id="toast" class="toast hidden" role="status" aria-live="polite"></div><script src="config.js?v=130190"></script><script src="app.js?v=20001"></script></body></html>
+</main><footer class="vista-module-footer"><span>Ford Energy VISTA</span><span>Security Operations Console</span><span>Version 2.0A Build 2.2</span></footer><div id="toast" class="toast hidden" role="status" aria-live="polite"></div><script src="config.js?v=130190"></script><script src="app.js?v=20001"></script></body></html>
