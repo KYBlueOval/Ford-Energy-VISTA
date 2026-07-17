@@ -112,3 +112,11 @@
 - Preserved Ford Energy favicon and manifest references across all pages.
 - Added accessible module breadcrumbs.
 - Added visible Version 2.0A Build 2.2 identifiers to page footers.
+
+
+## 2.1A — Administration & User Management
+- Added Ford-styled Administration Console.
+- Added Super Administrator role support.
+- Added user create, edit, enable/disable, delete, role, badge UID, and PIN reset workflows.
+- Added protected Apps Script administration endpoints and audit logging.
+- Added Administration workspace to the VISTA Home Dashboard.

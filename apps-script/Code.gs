@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.0A-identity-security-core',
+  VERSION: '2.1A-admin-users',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -69,6 +69,12 @@ function doPost(e) {
       else if(action==='checkInVisit') { requirePermission_(session,'checkIn'); result=checkInVisitAuthorized_(req.payload||{},session); }
       else if(action==='checkOutVisit') { requirePermission_(session,'checkOut'); result=checkOutVisitAuthorized_(req.payload||{},session); }
       else if(action==='updateVisitStatus') result=updateVisitStatusAuthorized_(req.payload||{},session);
+      else if(action==='listUsers') { requirePermission_(session,'manageUsers'); result=listVistaUsers_(req.payload||{},session); }
+      else if(action==='saveUser') { requirePermission_(session,'manageUsers'); result=saveVistaUser_(req.payload||{},session); }
+      else if(action==='setUserActive') { requirePermission_(session,'manageUsers'); result=setVistaUserActive_(req.payload||{},session); }
+      else if(action==='resetUserPin') { requirePermission_(session,'manageUsers'); result=resetVistaUserPin_(req.payload||{},session); }
+      else if(action==='deleteUser') { requirePermission_(session,'manageUsers'); result=deleteVistaUser_(req.payload||{},session); }
+      else if(action==='listAudit') { requirePermission_(session,'viewAudit'); result=listVistaAudit_(req.payload||{},session); }
       else throw new Error('Unknown action: '+action);
     }
     if(bridge&&requestId)storeSubmissionResult_(requestId,result);
@@ -524,7 +530,7 @@ function truthyActive_(v){return !['no','false','0','inactive','disabled',''].in
 function permissionsForRole_(role){
   const r=String(role||'').trim().toLowerCase();
   const none={viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false};
-  if(r==='admin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true};
+  if(r==='admin'||r==='super administrator'||r==='superadmin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true};
   if(r==='security')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true};
   if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:false};
   if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false};
@@ -545,6 +551,48 @@ function updateVisitStatusAuthorized_(p,session){
 }
 function auditVisit_(session,action,visitId,result,details){let confirmation='';try{confirmation=findVisitRow_(visitId).obj.ConfirmationNumber||''}catch(e){}audit_(session,action,visitId,confirmation,result,details);}
 function audit_(u,action,visitId,confirmation,result,details){const rec={AuditID:'AUD-'+Utilities.getUuid().slice(0,12).toUpperCase(),Timestamp:new Date(),UserID:u.UserID||'',Username:u.Username||'',Role:u.Role||'',Action:action,VisitID:visitId||'',ConfirmationNumber:confirmation||'',Result:result||'',Details:details||''};appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.AUDIT),rec,FE.AUDIT_HEADERS);}
+
+
+/* ===== VISTA 2.1A ADMINISTRATION API ===== */
+function listVistaUsers_(p,session){
+  const query=String(p.query||'').trim().toLowerCase();
+  const role=String(p.role||'').trim().toLowerCase();
+  const active=String(p.active||'').trim().toLowerCase();
+  let rows=readObjects_(FE.SHEETS.USERS).map(publicAdminUser_);
+  if(query)rows=rows.filter(u=>[u.userId,u.employeeId,u.fullName,u.email,u.username,u.department,u.company,u.badgeUid,u.role].join(' ').toLowerCase().includes(query));
+  if(role)rows=rows.filter(u=>u.role.toLowerCase()===role);
+  if(active)rows=rows.filter(u=>(u.active?'active':'disabled')===active);
+  rows.sort((a,b)=>a.fullName.localeCompare(b.fullName));
+  return {ok:true,users:rows,summary:{total:rows.length,active:rows.filter(x=>x.active).length,admins:rows.filter(x=>isAdminRole_(x.role)).length,disabled:rows.filter(x=>!x.active).length}};
+}
+function publicAdminUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||''),email:String(u.Email||''),department:String(u.Department||''),company:String(u.Company||''),badgeUid:String(u.BadgeUID||''),username:String(u.Username||''),role:String(u.Role||''),approvalScope:String(u.ApprovalScope||''),active:truthyActive_(u.Active),createdAt:dateText_(u.CreatedAt),lastLoginAt:dateText_(u.LastLoginAt),failedLoginCount:Number(u.FailedLoginCount||0),notes:String(u.Notes||'')};}
+function isAdminRole_(role){const r=String(role||'').trim().toLowerCase();return r==='admin'||r==='super administrator'||r==='superadmin';}
+function normalizeVistaRole_(role){
+  const value=String(role||'').trim(); const key=value.toLowerCase().replace(/[^a-z]/g,'');
+  const roles={superadministrator:'Super Administrator',superadmin:'Super Administrator',admin:'Admin',securitysupervisor:'Security Supervisor',security:'Security',securityofficer:'Security',frontdesk:'FrontDesk',sponsor:'Sponsor',approver:'Approver',reporting:'Reporting',readonly:'Read Only'};
+  if(!roles[key])throw new Error('Select a valid VISTA role.'); return roles[key];
+}
+function saveVistaUser_(p,session){
+  validateRequired_(p,['fullName','role']);
+  const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.USERS); if(!sheet)throw new Error('Users sheet is unavailable.');
+  const role=normalizeVistaRole_(p.role), username=String(p.username||p.email||p.employeeId||'').trim().toLowerCase();
+  if(!username)throw new Error('Username, email, or employee ID is required.');
+  const userId=String(p.userId||'').trim(); const rows=sheet.getDataRange().getValues(), headers=rows[0];
+  let row=0, existing={};
+  for(let i=1;i<rows.length;i++){const o=headers.reduce((a,k,j)=>(a[k]=rows[i][j],a),{});if((userId&&String(o.UserID)===userId)||(!userId&&String(o.Username).trim().toLowerCase()===username)){row=i+1;existing=o;break;}}
+  const rec={UserID:userId||existing.UserID||('USR-'+Utilities.getUuid().slice(0,10).toUpperCase()),EmployeeID:String(p.employeeId||''),FullName:String(p.fullName||'').trim(),Email:String(p.email||'').trim(),Department:String(p.department||''),Company:String(p.company||'Ford Energy'),BadgeUID:String(p.badgeUid||'').trim(),Username:username,PINHash:existing.PINHash||'',Role:role,ApprovalScope:String(p.approvalScope||(role==='Sponsor'||role==='Approver'?'OWN_SPONSORED_VISITS':'ALL')),Active:p.active===false?'No':'Yes',CreatedAt:existing.CreatedAt||new Date(),LastLoginAt:existing.LastLoginAt||'',FailedLoginCount:Number(existing.FailedLoginCount||0),Notes:String(p.notes||'')};
+  if(String(p.pin||'').trim())rec.PINHash=pinHash_(username,String(p.pin).trim());
+  if(!rec.PINHash&&!row)throw new Error('A PIN is required for a new user.');
+  if(row)updateObjectRow_(FE.SHEETS.USERS,row,rec);else appendObjectRow_(sheet,rec,FE.USER_HEADERS);
+  audit_(session,row?'ADMIN_USER_UPDATE':'ADMIN_USER_CREATE','','','Success',rec.Username+' · '+rec.Role);
+  return {ok:true,user:publicAdminUser_(rec),message:row?'User updated.':'User created.'};
+}
+function findUserById_(userId){const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.USERS),data=sheet.getDataRange().getValues(),h=data[0],idx=h.indexOf('UserID');for(let i=1;i<data.length;i++)if(String(data[i][idx])===String(userId))return{sheet:sheet,row:i+1,obj:h.reduce((o,k,j)=>(o[k]=data[i][j],o),{})};throw new Error('VISTA user was not found.');}
+function setVistaUserActive_(p,session){validateRequired_(p,['userId']);const found=findUserById_(p.userId);if(String(found.obj.UserID)===String(session.UserID)&&p.active===false)throw new Error('You cannot disable your own signed-in account.');updateObjectRow_(FE.SHEETS.USERS,found.row,{Active:p.active===false?'No':'Yes'});audit_(session,p.active===false?'ADMIN_USER_DISABLE':'ADMIN_USER_ENABLE','','','Success',found.obj.Username);return{ok:true};}
+function resetVistaUserPin_(p,session){validateRequired_(p,['userId','pin']);if(String(p.pin).length<4)throw new Error('PIN must contain at least four characters.');const found=findUserById_(p.userId),username=String(found.obj.Username||'').trim().toLowerCase();updateObjectRow_(FE.SHEETS.USERS,found.row,{PINHash:pinHash_(username,String(p.pin)),FailedLoginCount:0});audit_(session,'ADMIN_PIN_RESET','','','Success',username);return{ok:true};}
+function deleteVistaUser_(p,session){validateRequired_(p,['userId']);const found=findUserById_(p.userId);if(String(found.obj.UserID)===String(session.UserID))throw new Error('You cannot delete your own signed-in account.');if(isAdminRole_(found.obj.Role)){const admins=readObjects_(FE.SHEETS.USERS).filter(u=>truthyActive_(u.Active)&&isAdminRole_(u.Role));if(admins.length<=1)throw new Error('The final active administrator cannot be deleted.');}found.sheet.deleteRow(found.row);audit_(session,'ADMIN_USER_DELETE','','','Success',found.obj.Username);return{ok:true};}
+function listVistaAudit_(p,session){let rows=readObjects_(FE.SHEETS.AUDIT);const q=String(p.query||'').toLowerCase();if(q)rows=rows.filter(r=>Object.values(r).join(' ').toLowerCase().includes(q));rows=rows.slice(-Math.min(500,Math.max(25,Number(p.limit||100)))).reverse();return{ok:true,events:rows.map(r=>({auditId:String(r.AuditID||''),timestamp:dateText_(r.Timestamp),username:String(r.Username||''),role:String(r.Role||''),action:String(r.Action||''),result:String(r.Result||''),details:String(r.Details||'')}))};}
+function dateText_(value){if(!value)return'';try{return Utilities.formatDate(new Date(value),tz_(),'yyyy-MM-dd HH:mm:ss')}catch(e){return String(value)}}
 
 function appendObjectRow_(sheet, record, canonicalHeaders){
   if(!sheet)throw new Error('Destination sheet is unavailable.');

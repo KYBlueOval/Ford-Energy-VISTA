@@ -1,12 +1,14 @@
 {
-  "version": "2.0A",
-  "build": "2.2",
-  "release": "Unified Navigation and Application Identity",
-  "date": "2026-07-16",
-  "notes": [
-    "Makes the Ford Energy/VISTA brand lockup clickable on Home, Registration, and Security pages",
-    "Returns users to the VISTA Home Dashboard from every current module",
-    "Standardizes browser titles and Ford Energy favicon metadata",
-    "Adds accessible breadcrumbs and visible build identification across the platform"
+  "version": "2.1A",
+  "build": "Administration Users",
+  "releaseDate": "2026-07-17",
+  "appsScriptRedeployRequired": true,
+  "features": [
+    "Administration console",
+    "User CRUD",
+    "Super Administrator support",
+    "Role and badge management",
+    "PIN resets",
+    "Administration audit viewer"
   ]
 }
