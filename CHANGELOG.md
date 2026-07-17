@@ -1,5 +1,13 @@
 # Ford Energy VISTA Changelog
 
+## 2.1D — Lazy-Loaded User and Visitor Thumbnails
+- Added authenticated profile-photo thumbnails to Identity & Access Management user rows.
+- Added authenticated visitor-photo thumbnails to Security Operations visitor rows.
+- Added in-session photo caching and request de-duplication to prevent repeated Drive downloads.
+- Limited visitor thumbnail retrieval to four concurrent requests for responsive dashboard loading.
+- Preserved initials and placeholder fallbacks when photos are missing or unavailable.
+- Reused cached visitor images in the full Visitor Record panel.
+
 ## 2.1B — Operational RBAC & Workflow Reliability
 - Added explicit Security Supervisor approval and denial authority.
 - Removed approval and denial permissions from ordinary Security and Front Desk users while retaining check-in, checkout, badge, and no-show operations.

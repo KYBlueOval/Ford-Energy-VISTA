@@ -1,6 +1,7 @@
 (()=>{
   const cfg=window.FE_SECURITY_CONFIG||{};
   let token=sessionStorage.getItem('feVistaToken')||'', currentUser=null, permissions={}, records=[], selectedVisitId='', selectedPhotoDataUrl='', selectedPhotoFileName='visitor-photo.jpg';
+  const visitPhotoCache=new Map(),visitPhotoLoads=new Map();
   const $=s=>document.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
@@ -54,9 +55,25 @@
   function renderKpis(k){$('#kExpected').textContent=k.expectedToday||0;$('#kOnsite').textContent=k.onsite||0;$('#kOut').textContent=k.checkedOutToday||0;$('#kOverdue').textContent=k.overdue||0}
   function renderRows(){
     const body=$('#visitorRows');
-    body.innerHTML=records.map((r,i)=>`<tr class="${r.visitId===selectedVisitId?'selected ':''}${rowStatusClass(r.status)}"><td><b>${esc(r.fullName)}</b><br><small>${esc(r.company)}</small></td><td>${esc(r.startDate)} ${esc(r.arrivalTime)}<br><small>${esc(r.confirmationNumber)}</small></td><td>${esc(r.sponsorName)}<br><small>${esc(r.department)}</small></td><td><span class="status ${statusClass(r.status)}">${esc(r.status)}</span></td><td>${esc(r.badgeUid||'—')}</td><td><button class="row-btn" data-i="${i}">Open</button></td></tr>`).join('');
+    body.innerHTML=records.map((r,i)=>`<tr class="${r.visitId===selectedVisitId?'selected ':''}${rowStatusClass(r.status)}"><td><div class="visitor-cell"><div class="visitor-thumb ${r.hasPhoto?'photo-pending':''}" data-visit-photo="${esc(r.visitId)}" aria-label="${esc(r.fullName)} visitor photo"><span>${esc((r.fullName||'?').charAt(0))}</span></div><div><b>${esc(r.fullName)}</b><br><small>${esc(r.company)}</small></div></div></td><td>${esc(r.startDate)} ${esc(r.arrivalTime)}<br><small>${esc(r.confirmationNumber)}</small></td><td>${esc(r.sponsorName)}<br><small>${esc(r.department)}</small></td><td><span class="status ${statusClass(r.status)}">${esc(r.status)}</span></td><td>${esc(r.badgeUid||'—')}</td><td><button class="row-btn" data-i="${i}">Open</button></td></tr>`).join('');
     $('#emptyState').classList.toggle('hidden',records.length>0);
     document.querySelectorAll('.row-btn').forEach(b=>b.onclick=()=>openRecord(records[Number(b.dataset.i)]));
+    loadVisitorThumbnails();
+  }
+
+  function cachedVisitPhoto(visitId){return visitPhotoCache.get(String(visitId||''))||null}
+  async function fetchVisitPhoto(visitId){
+    const key=String(visitId||'');if(!key)return null;
+    if(visitPhotoCache.has(key))return visitPhotoCache.get(key);
+    if(visitPhotoLoads.has(key))return visitPhotoLoads.get(key);
+    const job=api('getVisitPhoto',{visitId:key}).then(d=>{const value=d.hasPhoto&&d.dataUrl?d:null;visitPhotoCache.set(key,value);return value}).catch(()=>{visitPhotoCache.set(key,null);return null}).finally(()=>visitPhotoLoads.delete(key));
+    visitPhotoLoads.set(key,job);return job;
+  }
+  function paintVisitorThumbnail(visitId,data){document.querySelectorAll(`[data-visit-photo="${CSS.escape(String(visitId))}"]`).forEach(host=>{host.classList.remove('photo-pending');if(data&&data.dataUrl){host.innerHTML=`<img src="${data.dataUrl}" alt="" loading="lazy">`;host.classList.add('has-photo')}else host.classList.remove('has-photo')})}
+  async function loadVisitorThumbnails(){
+    const queue=records.filter(r=>r.hasPhoto).slice();let cursor=0;
+    const worker=async()=>{while(cursor<queue.length){const r=queue[cursor++],cached=cachedVisitPhoto(r.visitId);if(cached!==null){paintVisitorThumbnail(r.visitId,cached);continue}const data=await fetchVisitPhoto(r.visitId);paintVisitorThumbnail(r.visitId,data)}};
+    await Promise.all(Array.from({length:Math.min(4,queue.length)},worker));
   }
   function statusClass(status){return 'status-'+String(status||'submitted').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
   function rowStatusClass(status){return 'row-'+String(status||'submitted').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
@@ -66,8 +83,9 @@
     const host=$('#visitorPhoto');if(!host)return;
     host.classList.add('loading');host.innerHTML='<span class="spinner"></span><small>Loading photo</small>';
     try{
-      const d=await api('getVisitPhoto',{visitId:r.visitId});
+      const d=await fetchVisitPhoto(r.visitId);
       if(selectedVisitId!==r.visitId)return;
+      if(!d){host.classList.remove('loading');host.innerHTML='<span>👤</span><small>No photo</small>';return;}
       if(d.hasPhoto&&d.dataUrl){
         selectedPhotoDataUrl=d.dataUrl;selectedPhotoFileName=validDownloadName(d.fileName)?d.fileName:photoFileName(r,d.mimeType);
         host.outerHTML=`<img id="visitorPhoto" class="photo" src="${d.dataUrl}" alt="Visitor photograph" title="${esc(selectedPhotoFileName)}">`;
