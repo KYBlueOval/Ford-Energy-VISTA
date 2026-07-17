@@ -4,6 +4,7 @@
   const visitPhotoCache=new Map(),visitPhotoLoads=new Map();
   const $=s=>document.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const roleAvatarClass=role=>{const k=String(role||'').toLowerCase().replace(/[^a-z]/g,'');if(k==='admin'||k==='superadministrator'||k==='superadmin')return'avatar-admin';if(k==='securitysupervisor')return'avatar-security-supervisor';if(k==='security'||k==='securityofficer'||k==='frontdesk')return'avatar-security';if(k==='sponsor')return'avatar-sponsor';if(k==='approver')return'avatar-approver';return'avatar-neutral'};
 
   async function api(action,payload={}){
     if(!cfg.API_URL||cfg.API_URL.includes('PASTE_')) throw new Error('Configure security-console/config.js with the Apps Script URL.');
@@ -42,7 +43,7 @@
     if(!badgeUid){$('#loginMsg').textContent='Scan or enter a Ford Energy badge UID.';return;}
     await completeLogin('badgeLogin',{badgeUid});
   }
-  function showApp(){ $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');$('#apiStatus').textContent='Connected';$('#apiStatus').classList.add('online'); const label=$('#userRole');if(label)label.textContent=`${currentUser?.fullName||currentUser?.username||''} · ${currentUser?.role||''}`;loadSessionAvatar(); }
+  function showApp(){ $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');$('#apiStatus').textContent='Connected';$('#apiStatus').classList.add('online'); const label=$('#userRole');if(label)label.textContent=`${currentUser?.fullName||currentUser?.username||''} · ${currentUser?.role||''}`;const avatar=$('#sessionAvatar');avatar.classList.remove('avatar-admin','avatar-security','avatar-security-supervisor','avatar-sponsor','avatar-approver','avatar-neutral');avatar.classList.add(roleAvatarClass(currentUser?.role));loadSessionAvatar(); }
   async function loadSessionAvatar(){try{const d=await api('getUserPhoto',{}),img=$('#sessionAvatar');if(d.hasPhoto){img.src=d.dataUrl;img.classList.remove('hidden')}else img.classList.add('hidden')}catch(e){}}
   async function load(){
     $('#refreshBtn').disabled=true;

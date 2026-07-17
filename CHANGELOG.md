@@ -47,6 +47,16 @@
 
 # Changelog
 
+## 2.1E — Role-Based Avatar Border Colors
+
+- Visitor thumbnails now use a neutral gray border.
+- Security and Front Desk user avatars use Ford blue.
+- Security Supervisor avatars use bright blue.
+- Admin and Super Administrator avatars retain the green border.
+- Sponsor, Approver, and neutral fallback colors are reserved for future modules.
+- Role-color logic is centralized and applied to header avatars and Administration user rows.
+
+
 ## v1.3.0 Sprint 1.7.1
 - Replaced CORS-blocked registration fetch with an Apps Script iframe submission bridge.
 - Added richer registration confirmation screen and notification delivery status.

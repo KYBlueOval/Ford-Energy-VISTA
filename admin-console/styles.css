@@ -8,3 +8,14 @@
 
 /* VISTA 2.1D lazy-loaded Identity & Access thumbnails */
 .user-cell{display:flex;align-items:center;gap:12px;min-width:240px}.mini-avatar{width:38px;height:38px;flex:0 0 38px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#e6f2fc;color:var(--ford);font-weight:900;border:2px solid #d4e6f5}.mini-avatar img{width:100%;height:100%;object-fit:cover;display:block}.mini-avatar.has-photo{border-color:#55d928;background:#fff}.mini-avatar.photo-pending{position:relative;color:transparent}.mini-avatar.photo-pending:after{content:"";width:15px;height:15px;border:2px solid #aac5dc;border-top-color:var(--blue);border-radius:50%;animation:adminThumbSpin .8s linear infinite}@keyframes adminThumbSpin{to{transform:rotate(360deg)}}
+
+
+/* VISTA 2.1E centralized role-based avatar borders */
+:root{--avatar-visitor:#aab6c3;--avatar-security:#0057b8;--avatar-security-supervisor:#0a6cff;--avatar-admin:#55d928;--avatar-sponsor:#f28c28;--avatar-approver:#7a4bc2;--avatar-neutral:#7f8c99}
+.session-avatar,.mini-avatar{border-style:solid}
+.session-avatar.avatar-admin,.mini-avatar.avatar-admin,.mini-avatar.avatar-admin.has-photo{border-color:var(--avatar-admin)}
+.session-avatar.avatar-security,.mini-avatar.avatar-security,.mini-avatar.avatar-security.has-photo{border-color:var(--avatar-security)}
+.session-avatar.avatar-security-supervisor,.mini-avatar.avatar-security-supervisor,.mini-avatar.avatar-security-supervisor.has-photo{border-color:var(--avatar-security-supervisor)}
+.session-avatar.avatar-sponsor,.mini-avatar.avatar-sponsor,.mini-avatar.avatar-sponsor.has-photo{border-color:var(--avatar-sponsor)}
+.session-avatar.avatar-approver,.mini-avatar.avatar-approver,.mini-avatar.avatar-approver.has-photo{border-color:var(--avatar-approver)}
+.session-avatar.avatar-neutral,.mini-avatar.avatar-neutral,.mini-avatar.avatar-neutral.has-photo{border-color:var(--avatar-neutral)}
