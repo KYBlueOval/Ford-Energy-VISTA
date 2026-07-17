@@ -1,3 +1,9 @@
+# Sprint 2.0A Build 2.1
+
+- Fixed the missing `Visitor • Information • Security • Tracking • Analytics` lockup on the Visitor Pre-Arrival Registration page.
+- Forced the registration header center lockup to remain visible and centered on desktop.
+- Preserved the Save Draft control on the upper-right.
+
 # Sprint 2.0A Build 2
 
 - Rebuilt the VISTA home page as a Ford Energy enterprise application landing experience.
