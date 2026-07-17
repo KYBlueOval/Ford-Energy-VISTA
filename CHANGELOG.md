@@ -139,3 +139,7 @@
 - Enforced Administrator or Super Administrator authorization after both badge and PIN login.
 - Removed duplicate role options from the Administration user editor.
 - Added Administration module footer and cache-busted assets.
+
+## 2.1C
+- Added managed VISTA user badge photographs stored in Google Drive and referenced in the Users sheet.
+- Added signed-in circular profile photographs to Administration and Security Operations headers.

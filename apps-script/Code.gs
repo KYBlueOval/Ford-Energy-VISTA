@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.1B-operational-workflow',
+  VERSION: '2.1C-user-profile-photos',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -8,7 +8,7 @@ const FE = {
   ACK_HEADERS: ['AcknowledgementID','VisitID','ConfirmationNumber','VisitorName','VisitorEmail','AgreementID','AgreementTitle','AgreementVersion','DatePresented','TimePresented','PresentedTimestamp','DateAccepted','TimeAccepted','AcceptedTimestamp','VisitorEnteredAcceptanceDate','TypedElectronicSignature','CheckboxAcknowledged','SessionID','ClientIP','UserAgent','ClientLanguage','ClientTimeZone','ClientTimestamp','Referrer','AgreementContentHash','CompletionStatus'],
   CONFIG_HEADERS: ['Key','Value'],
   SPONSOR_HEADERS: ['SponsorID','SponsorName','SponsorEmail','Department','Active','SearchKeywords','LastUpdatedAt'],
-  USER_HEADERS: ['UserID','EmployeeID','FullName','Email','Department','Company','BadgeUID','Username','PINHash','Role','ApprovalScope','Active','CreatedAt','LastLoginAt','FailedLoginCount','Notes'],
+  USER_HEADERS: ['UserID','EmployeeID','FullName','Email','Department','Company','BadgeUID','Username','PINHash','Role','ApprovalScope','Active','CreatedAt','LastLoginAt','FailedLoginCount','Notes','UserPhotoFileId','UserPhotoFileName','UserPhotoUrl'],
   FRONTDESK_HEADERS: ['EmployeeID','FullName','Email','Department','Company','BadgeUID','Shift','Location','Active','LastUpdatedAt'],
   SECURITY_HEADERS: ['EmployeeID','FullName','Email','Department','Company','BadgeUID','SecurityLevel','Active','LastUpdatedAt'],
   SESSION_HEADERS: ['SessionToken','UserID','Username','Role','CreatedAt','ExpiresAt','LastSeenAt','UserAgent'],
@@ -67,6 +67,7 @@ function doPost(e) {
       else if(action==='whoAmI') result={ok:true,user:publicSessionUser_(session),permissions:permissionsForRole_(session.Role)};
       else if(action==='listVisits') result=listVisitsForSession_(req.payload||{},session);
       else if(action==='getVisitPhoto') { requirePermission_(session,'viewPhoto'); result=getVisitPhoto_(req.payload||{}); }
+      else if(action==='getUserPhoto') result=getUserPhotoAuthorized_(req.payload||{},session);
       else if(action==='checkInVisit') { requirePermission_(session,'checkIn'); result=checkInVisitAuthorized_(req.payload||{},session); }
       else if(action==='checkOutVisit') { requirePermission_(session,'checkOut'); result=checkOutVisitAuthorized_(req.payload||{},session); }
       else if(action==='updateVisitStatus') result=updateVisitStatusAuthorized_(req.payload||{},session);
@@ -156,7 +157,7 @@ function setupVisitorManagement() {
   ensureSheet_(ss, FE.SHEETS.AUDIT, FE.AUDIT_HEADERS);
   const config = ensureSheet_(ss, FE.SHEETS.CONFIG, FE.CONFIG_HEADERS);
   const defaults = {
-    SECURITY_PIN:'1937', PHOTO_FOLDER_ID:'', SITE_TIMEZONE:'America/New_York', NOTIFICATION_EMAIL:'',
+    SECURITY_PIN:'1937', PHOTO_FOLDER_ID:'', USER_PHOTO_FOLDER_ID:'', SITE_TIMEZONE:'America/New_York', NOTIFICATION_EMAIL:'',
     SECURITY_CONSOLE_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/security-console/',
     PUBLIC_REGISTRATION_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/public-registration/',
     VGS_NAVIGATION_URL:'', TRAINING_VIDEO_URL:'', AGREEMENT_VERSION:'2026.2',
@@ -169,7 +170,7 @@ function setupVisitorManagement() {
   seedAgreements_();
   seedInitialAdmin_();
   [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA v1.3.0 Sprint 1.9 setup complete. Users, FrontDesk, Security, AuthSessions and AuditLog tabs are ready.';
+  return 'VISTA 2.1C setup complete. User photo columns, configuration, identity roles, sessions, and audit tables are ready.';
 }
 
 function seedAgreements_(){
@@ -404,6 +405,13 @@ function parseDateSafe_(v){if(!v)return null;const d=new Date(v);return isNaN(d.
 function validateRequired_(o,keys){keys.forEach(k=>{if(o[k]===undefined||o[k]===null||String(o[k]).trim()==='')throw new Error('Missing required field: '+k)})}
 function truthy_(v){return v===true||v==='true'||v==='on'||v==='Yes'}
 
+function setupVista(){
+  const result=setupVisitorManagement();
+  syncRosterUsers_();
+  applyVista20ASecurityDefaults();
+  return result+' USER_PHOTO_FOLDER_ID is available in Config. Set it to the shared Google Drive badge-photo folder ID, then deploy a new web-app version.';
+}
+
 function setupVistaIdentityAndRoles(){
   const result=setupVisitorManagement();
   syncRosterUsers_();
@@ -558,7 +566,7 @@ function permissionsForRole_(role){
   return none;
 }
 function requirePermission_(session,key){if(!permissionsForRole_(session.Role)[key])throw new Error('Your '+session.Role+' role is not authorized to perform this action.');}
-function publicSessionUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||u.Username||''),email:String(u.Email||''),department:String(u.Department||''),username:String(u.Username||''),role:String(u.Role||'')};}
+function publicSessionUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||u.Username||''),email:String(u.Email||''),department:String(u.Department||''),username:String(u.Username||''),role:String(u.Role||''),photoFileId:String(u.UserPhotoFileId||''),photoFileName:String(u.UserPhotoFileName||''),photoUrl:String(u.UserPhotoUrl||'')};}
 function listVisitsForSession_(p,session){requirePermission_(session,'viewVisits');let result=listVisits_(p);if(String(session.Role).toLowerCase()==='sponsor'||String(session.Role).toLowerCase()==='approver'){const email=String(session.Email||'').toLowerCase();result.visits=result.visits.filter(v=>String(v.sponsorEmail||'').toLowerCase()===email);result.kpis={expectedToday:result.visits.length,onsite:result.visits.filter(v=>v.status==='Checked In').length,checkedOutToday:result.visits.filter(v=>v.status==='Checked Out').length,overdue:0};}return result;}
 function checkInVisitAuthorized_(p,session){requirePermission_(session,'checkIn');p.officerName=p.officerName||session.FullName||session.Username;const result=checkInVisit_(p);auditVisit_(session,'CHECK_IN',p.visitId,'Success','Badge '+p.badgeUid);return result;}
 function checkOutVisitAuthorized_(p,session){requirePermission_(session,'checkOut');p.officerName=p.officerName||session.FullName||session.Username;const result=checkOutVisit_(p);auditVisit_(session,'CHECK_OUT',p.visitId,'Success','Badge '+p.badgeUid);return result;}
@@ -597,7 +605,7 @@ function listVistaUsers_(p,session){
   rows.sort((a,b)=>a.fullName.localeCompare(b.fullName));
   return {ok:true,users:rows,summary:{total:rows.length,active:rows.filter(x=>x.active).length,admins:rows.filter(x=>isAdminRole_(x.role)).length,disabled:rows.filter(x=>!x.active).length}};
 }
-function publicAdminUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||''),email:String(u.Email||''),department:String(u.Department||''),company:String(u.Company||''),badgeUid:String(u.BadgeUID||''),username:String(u.Username||''),role:String(u.Role||''),approvalScope:String(u.ApprovalScope||''),active:truthyActive_(u.Active),createdAt:dateText_(u.CreatedAt),lastLoginAt:dateText_(u.LastLoginAt),failedLoginCount:Number(u.FailedLoginCount||0),notes:String(u.Notes||'')};}
+function publicAdminUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||''),email:String(u.Email||''),department:String(u.Department||''),company:String(u.Company||''),badgeUid:String(u.BadgeUID||''),username:String(u.Username||''),role:String(u.Role||''),approvalScope:String(u.ApprovalScope||''),active:truthyActive_(u.Active),createdAt:dateText_(u.CreatedAt),lastLoginAt:dateText_(u.LastLoginAt),failedLoginCount:Number(u.FailedLoginCount||0),notes:String(u.Notes||''),photoFileId:String(u.UserPhotoFileId||''),photoFileName:String(u.UserPhotoFileName||''),photoUrl:String(u.UserPhotoUrl||''),hasPhoto:Boolean(u.UserPhotoFileId||u.UserPhotoFileName)};}
 function isAdminRole_(role){const r=String(role||'').trim().toLowerCase();return r==='admin'||r==='super administrator'||r==='superadmin';}
 function normalizeVistaRole_(role){
   const value=String(role||'').trim(); const key=value.toLowerCase().replace(/[^a-z]/g,'');
@@ -612,13 +620,45 @@ function saveVistaUser_(p,session){
   const userId=String(p.userId||'').trim(); const rows=sheet.getDataRange().getValues(), headers=rows[0];
   let row=0, existing={};
   for(let i=1;i<rows.length;i++){const o=headers.reduce((a,k,j)=>(a[k]=rows[i][j],a),{});if((userId&&String(o.UserID)===userId)||(!userId&&String(o.Username).trim().toLowerCase()===username)){row=i+1;existing=o;break;}}
-  const rec={UserID:userId||existing.UserID||('USR-'+Utilities.getUuid().slice(0,10).toUpperCase()),EmployeeID:String(p.employeeId||''),FullName:String(p.fullName||'').trim(),Email:String(p.email||'').trim(),Department:String(p.department||''),Company:String(p.company||'Ford Energy'),BadgeUID:String(p.badgeUid||'').trim(),Username:username,PINHash:existing.PINHash||'',Role:role,ApprovalScope:String(p.approvalScope||(role==='Sponsor'||role==='Approver'?'OWN_SPONSORED_VISITS':'ALL')),Active:p.active===false?'No':'Yes',CreatedAt:existing.CreatedAt||new Date(),LastLoginAt:existing.LastLoginAt||'',FailedLoginCount:Number(existing.FailedLoginCount||0),Notes:String(p.notes||'')};
+  const rec={UserID:userId||existing.UserID||('USR-'+Utilities.getUuid().slice(0,10).toUpperCase()),EmployeeID:String(p.employeeId||''),FullName:String(p.fullName||'').trim(),Email:String(p.email||'').trim(),Department:String(p.department||''),Company:String(p.company||'Ford Energy'),BadgeUID:String(p.badgeUid||'').trim(),Username:username,PINHash:existing.PINHash||'',Role:role,ApprovalScope:String(p.approvalScope||(role==='Sponsor'||role==='Approver'?'OWN_SPONSORED_VISITS':'ALL')),Active:p.active===false?'No':'Yes',CreatedAt:existing.CreatedAt||new Date(),LastLoginAt:existing.LastLoginAt||'',FailedLoginCount:Number(existing.FailedLoginCount||0),Notes:String(p.notes||''),UserPhotoFileId:String(existing.UserPhotoFileId||''),UserPhotoFileName:String(existing.UserPhotoFileName||''),UserPhotoUrl:String(existing.UserPhotoUrl||'')};
+  if(p.removePhoto===true){rec.UserPhotoFileId='';rec.UserPhotoFileName='';rec.UserPhotoUrl='';}
+  if(String(p.photoDataUrl||'').trim()){const saved=saveVistaUserPhoto_(p.photoDataUrl,rec);rec.UserPhotoFileId=saved.fileId;rec.UserPhotoFileName=saved.fileName;rec.UserPhotoUrl=saved.url;}
   if(String(p.pin||'').trim())rec.PINHash=pinHash_(username,String(p.pin).trim());
   if(!rec.PINHash&&!row)throw new Error('A PIN is required for a new user.');
   if(row)updateObjectRow_(FE.SHEETS.USERS,row,rec);else appendObjectRow_(sheet,rec,FE.USER_HEADERS);
   audit_(session,row?'ADMIN_USER_UPDATE':'ADMIN_USER_CREATE','','','Success',rec.Username+' · '+rec.Role);
   return {ok:true,user:publicAdminUser_(rec),message:row?'User updated.':'User created.'};
 }
+
+function userPhotoFolder_(){
+  const cfg=config_(),id=String(cfg.USER_PHOTO_FOLDER_ID||cfg.PHOTO_FOLDER_ID||'').trim();
+  return id?DriveApp.getFolderById(id):DriveApp.getRootFolder();
+}
+function saveVistaUserPhoto_(dataUrl,user){
+  const m=String(dataUrl||'').match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/i);
+  if(!m)throw new Error('Badge photo must be a JPG, PNG, or WebP image.');
+  const bytes=Utilities.base64Decode(m[2]);
+  if(bytes.length>2500000)throw new Error('Badge photo is too large after processing.');
+  const ext=m[1].toLowerCase().includes('png')?'png':'jpg';
+  const safe=String(user.EmployeeID||user.Username||user.UserID||'user').replace(/[^A-Za-z0-9_-]/g,'_');
+  const fileName='VISTA-USER-'+safe+'-'+Utilities.formatDate(new Date(),tz_(),'yyyyMMdd-HHmmss')+'.'+ext;
+  const file=userPhotoFolder_().createFile(Utilities.newBlob(bytes,m[1],fileName));
+  return{fileId:file.getId(),fileName:fileName,url:'https://drive.google.com/file/d/'+file.getId()+'/view'};
+}
+function getUserPhotoAuthorized_(p,session){
+  let target=session;
+  const requested=String(p.userId||'').trim();
+  if(requested&&requested!==String(session.UserID||'')){
+    requirePermission_(session,'manageUsers');target=findUserById_(requested).obj;
+  }
+  const fileId=String(target.UserPhotoFileId||'').trim();
+  if(!fileId)return{ok:true,hasPhoto:false};
+  try{
+    const file=DriveApp.getFileById(fileId),blob=file.getBlob(),mime=blob.getContentType()||'image/jpeg';
+    return{ok:true,hasPhoto:true,dataUrl:'data:'+mime+';base64,'+Utilities.base64Encode(blob.getBytes()),fileName:String(target.UserPhotoFileName||file.getName())};
+  }catch(err){return{ok:true,hasPhoto:false,error:'Stored user photo could not be read.'};}
+}
+
 function findUserById_(userId){const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.USERS),data=sheet.getDataRange().getValues(),h=data[0],idx=h.indexOf('UserID');for(let i=1;i<data.length;i++)if(String(data[i][idx])===String(userId))return{sheet:sheet,row:i+1,obj:h.reduce((o,k,j)=>(o[k]=data[i][j],o),{})};throw new Error('VISTA user was not found.');}
 function setVistaUserActive_(p,session){validateRequired_(p,['userId']);const found=findUserById_(p.userId);if(String(found.obj.UserID)===String(session.UserID)&&p.active===false)throw new Error('You cannot disable your own signed-in account.');updateObjectRow_(FE.SHEETS.USERS,found.row,{Active:p.active===false?'No':'Yes'});audit_(session,p.active===false?'ADMIN_USER_DISABLE':'ADMIN_USER_ENABLE','','','Success',found.obj.Username);return{ok:true};}
 function resetVistaUserPin_(p,session){validateRequired_(p,['userId','pin']);if(String(p.pin).length<4)throw new Error('PIN must contain at least four characters.');const found=findUserById_(p.userId),username=String(found.obj.Username||'').trim().toLowerCase();updateObjectRow_(FE.SHEETS.USERS,found.row,{PINHash:pinHash_(username,String(p.pin)),FailedLoginCount:0});audit_(session,'ADMIN_PIN_RESET','','','Success',username);return{ok:true};}

@@ -41,7 +41,8 @@
     if(!badgeUid){$('#loginMsg').textContent='Scan or enter a Ford Energy badge UID.';return;}
     await completeLogin('badgeLogin',{badgeUid});
   }
-  function showApp(){ $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');$('#apiStatus').textContent='Connected';$('#apiStatus').classList.add('online'); const label=$('#userRole');if(label)label.textContent=`${currentUser?.fullName||currentUser?.username||''} · ${currentUser?.role||''}`; }
+  function showApp(){ $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');$('#apiStatus').textContent='Connected';$('#apiStatus').classList.add('online'); const label=$('#userRole');if(label)label.textContent=`${currentUser?.fullName||currentUser?.username||''} · ${currentUser?.role||''}`;loadSessionAvatar(); }
+  async function loadSessionAvatar(){try{const d=await api('getUserPhoto',{}),img=$('#sessionAvatar');if(d.hasPhoto){img.src=d.dataUrl;img.classList.remove('hidden')}else img.classList.add('hidden')}catch(e){}}
   async function load(){
     $('#refreshBtn').disabled=true;
     try{
