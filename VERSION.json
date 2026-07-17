@@ -1,7 +1,9 @@
 {
   "version": "2.0A",
   "sprint": "2.0A",
-  "build": "20002",
+  "build": "2",
   "release": "Build 1 - Enterprise Registration & Branded Email System",
-  "summary": "Registration hero redesign, compact draft control, shared Ford Energy/BWRDO Outlook-compatible email templates, and typography refinements"
+  "summary": "Registration hero redesign, compact draft control, shared Ford Energy/BWRDO Outlook-compatible email templates, and typography refinements",
+  "label": "Sprint 2.0A Build 2",
+  "released": "2026-07-17"
 }

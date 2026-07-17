@@ -1,3 +1,13 @@
+# Sprint 2.0A Build 2
+
+- Rebuilt the VISTA home page as a Ford Energy enterprise application landing experience.
+- Added the standardized VISTA global header to Home, Visitor Registration, and Security Operations.
+- Centered the semi-transparent acronym expansion: Visitor • Information • Security • Tracking • Analytics.
+- Added page-specific descriptions beneath the acronym expansion.
+- Preserved the compact Save Draft control at the upper-right of Visitor Registration.
+- Preserved Security role, connection status, and sign-out controls at the upper-right of Security Operations.
+- Added responsive desktop, tablet, and mobile header layouts.
+
 # Sprint 2.0A Build 1 — Enterprise Registration & Email Branding
 
 - Redesigned the public-registration hero with a large VISTA wordmark and smaller Visitor Pre-Arrival Registration subtitle.
