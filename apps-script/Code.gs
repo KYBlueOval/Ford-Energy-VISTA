@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.2.1-visitor-operations-dialogs',
+  VERSION: '2.2.2-increment-a-workflow-stability',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -388,11 +388,16 @@ function upsertBadge_(uid,updates){const s=SpreadsheetApp.getActive().getSheetBy
 function logActivity_(visitId,type,by,badge,details){SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.ACTIVITY).appendRow(['ACT-'+Utilities.getUuid().slice(0,12).toUpperCase(),visitId,type,new Date(),by||'',badge||'',details||''])}
 function findVisitRow_(visitId){const s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.VISITS),data=s.getDataRange().getValues(),h=data[0],idx=h.indexOf('VisitID');for(let i=1;i<data.length;i++)if(String(data[i][idx])===String(visitId))return{row:i+1,obj:h.reduce((o,k,j)=>(o[k]=data[i][j],o),{})};throw new Error('Visit record not found.')}
 function updateVisitRow_(row,updates){const s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.VISITS),h=s.getRange(1,1,1,s.getLastColumn()).getValues()[0];Object.entries(updates).forEach(([k,v])=>{const c=h.indexOf(k);if(c>=0)s.getRange(row,c+1).setValue(v)})}
+function badgeNumberForUid_(uid){
+  const wanted=String(uid||'').trim();if(!wanted)return'';
+  const badge=readObjects_(FE.SHEETS.BADGES).find(x=>String(x.BadgeUID||'').trim()===wanted);
+  return badge?String(badge.BadgeNumber||'').trim():'';
+}
 function publicVisit_(r){
   const photoFileId=String(r.PhotoFileId||'').trim();
   const photoFileName=String(r.PhotoFileName||'').trim();
   const photoUrl=String(r.PhotoUrl||'').trim();
-  return{visitId:String(r.VisitID||''),confirmationNumber:String(r.ConfirmationNumber||''),fullName:String(r.FullName||''),email:String(r.Email||''),phone:String(r.Phone||''),company:String(r.Company||''),sponsorName:String(r.SponsorName||''),sponsorEmail:String(r.SponsorEmail||''),department:String(r.Department||''),reason:String(r.Reason||''),project:String(r.Project||''),visitorType:String(r.VisitorType||''),startDate:dateOnly_(r.StartDate),arrivalTime:timeOnly_(r.ArrivalTime),endDate:dateOnly_(r.EndDate),departureTime:timeOnly_(r.DepartureTime),accessScope:String(r.AccessScope||''),escortRequired:String(r.EscortRequired||''),lineTour:String(r.LineTour||''),specialItems:String(r.SpecialItems||''),driving:String(r.Driving||''),vehicleMake:String(r.VehicleMake||''),vehicleModel:String(r.VehicleModel||''),vehicleYear:String(r.VehicleYear||''),vehicleColor:String(r.VehicleColor||''),licensePlate:String(r.LicensePlate||''),plateState:String(r.PlateState||''),hasPhoto:Boolean(photoFileId||photoFileName||photoUrl),photoFileId,photoFileName,photoUrl,status:String(r.Status||''),agreementCompletionStatus:String(r.AgreementCompletionStatus||''),agreementCompletionCount:String(r.AgreementCompletionCount||''),checkInTime:dateTime_(r.CheckInTime),checkOutTime:dateTime_(r.CheckOutTime),badgeUid:String(r.BadgeUID||''),actualDurationMinutes:r.ActualDurationMinutes||''}
+  return{visitId:String(r.VisitID||''),confirmationNumber:String(r.ConfirmationNumber||''),fullName:String(r.FullName||''),email:String(r.Email||''),phone:String(r.Phone||''),company:String(r.Company||''),sponsorName:String(r.SponsorName||''),sponsorEmail:String(r.SponsorEmail||''),department:String(r.Department||''),reason:String(r.Reason||''),project:String(r.Project||''),visitorType:String(r.VisitorType||''),startDate:dateOnly_(r.StartDate),arrivalTime:timeOnly_(r.ArrivalTime),endDate:dateOnly_(r.EndDate),departureTime:timeOnly_(r.DepartureTime),accessScope:String(r.AccessScope||''),escortRequired:String(r.EscortRequired||''),lineTour:String(r.LineTour||''),specialItems:String(r.SpecialItems||''),driving:String(r.Driving||''),vehicleMake:String(r.VehicleMake||''),vehicleModel:String(r.VehicleModel||''),vehicleYear:String(r.VehicleYear||''),vehicleColor:String(r.VehicleColor||''),licensePlate:String(r.LicensePlate||''),plateState:String(r.PlateState||''),hasPhoto:Boolean(photoFileId||photoFileName||photoUrl),photoFileId,photoFileName,photoUrl,status:String(r.Status||''),agreementCompletionStatus:String(r.AgreementCompletionStatus||''),agreementCompletionCount:String(r.AgreementCompletionCount||''),checkInTime:dateTime_(r.CheckInTime),checkOutTime:dateTime_(r.CheckOutTime),badgeUid:String(r.BadgeUID||''),badgeNumber:badgeNumberForUid_(r.BadgeUID),actualDurationMinutes:r.ActualDurationMinutes||''}
 }
 function readObjects_(name){const s=SpreadsheetApp.getActive().getSheetByName(name);if(!s||s.getLastRow()<2)return[];const d=s.getDataRange().getValues(),h=d.shift();return d.map(r=>h.reduce((o,k,i)=>(o[k]=r[i],o),{}))}
 function config_(){return readObjects_(FE.SHEETS.CONFIG).reduce((o,r)=>(o[String(r.Key)]=String(r.Value),o),{})}
@@ -523,7 +528,12 @@ function requireSession_(token){
   if(now.getTime()-lastSeen.getTime()>idleMinutes*60000){
     deleteSession_(token);throw new Error('Your VISTA session ended after inactivity. Sign in again.');
   }
-  const user=findUserRow_(s.Username).obj;
+  let user;
+  try{
+    user=String(s.UserID||'').trim()?findUserById_(String(s.UserID).trim()).obj:findUserRow_(s.Username).obj;
+  }catch(err){
+    user=findUserRow_(s.Username).obj;
+  }
   if(!truthyActive_(user.Active))throw new Error('This VISTA account is disabled.');
   touchSession_(token,now);
   return Object.assign({},user,{SessionToken:token});
@@ -635,13 +645,23 @@ function saveVistaUser_(p,session){
   if(!username)throw new Error('Username, email, or employee ID is required.');
   const userId=String(p.userId||'').trim(); const rows=sheet.getDataRange().getValues(), headers=rows[0];
   let row=0, existing={};
-  for(let i=1;i<rows.length;i++){const o=headers.reduce((a,k,j)=>(a[k]=rows[i][j],a),{});if((userId&&String(o.UserID)===userId)||(!userId&&String(o.Username).trim().toLowerCase()===username)){row=i+1;existing=o;break;}}
+  for(let i=1;i<rows.length;i++){
+    const o=headers.reduce((a,k,j)=>(a[k]=rows[i][j],a),{});
+    if(userId&&String(o.UserID||'').trim()===userId){row=i+1;existing=o;break;}
+    if(!userId&&String(o.Username||'').trim().toLowerCase()===username){row=i+1;existing=o;break;}
+  }
+  if(userId&&!row)throw new Error('The selected VISTA user record no longer exists. Refresh the user list and try again.');
+  for(let i=1;i<rows.length;i++){
+    const o=headers.reduce((a,k,j)=>(a[k]=rows[i][j],a),{});
+    if(String(o.Username||'').trim().toLowerCase()===username&&String(o.UserID||'').trim()!==String(userId||existing.UserID||''))throw new Error('That username is already assigned to another VISTA account.');
+  }
   const rec={UserID:userId||existing.UserID||('USR-'+Utilities.getUuid().slice(0,10).toUpperCase()),EmployeeID:String(p.employeeId||''),FullName:String(p.fullName||'').trim(),Email:String(p.email||'').trim(),Department:String(p.department||''),Company:String(p.company||'Ford Energy'),BadgeUID:String(p.badgeUid||'').trim(),Username:username,PINHash:existing.PINHash||'',Role:role,ApprovalScope:String(p.approvalScope||(role==='Sponsor'||role==='Approver'?'OWN_SPONSORED_VISITS':'ALL')),Active:p.active===false?'No':'Yes',CreatedAt:existing.CreatedAt||new Date(),LastLoginAt:existing.LastLoginAt||'',FailedLoginCount:Number(existing.FailedLoginCount||0),Notes:String(p.notes||''),UserPhotoFileId:String(existing.UserPhotoFileId||''),UserPhotoFileName:String(existing.UserPhotoFileName||''),UserPhotoUrl:String(existing.UserPhotoUrl||'')};
   if(p.removePhoto===true){rec.UserPhotoFileId='';rec.UserPhotoFileName='';rec.UserPhotoUrl='';}
   if(String(p.photoDataUrl||'').trim()){const saved=saveVistaUserPhoto_(p.photoDataUrl,rec);rec.UserPhotoFileId=saved.fileId;rec.UserPhotoFileName=saved.fileName;rec.UserPhotoUrl=saved.url;}
   if(String(p.pin||'').trim())rec.PINHash=pinHash_(username,String(p.pin).trim());
   if(!rec.PINHash&&!row)throw new Error('A PIN is required for a new user.');
   if(row)updateObjectRow_(FE.SHEETS.USERS,row,rec);else appendObjectRow_(sheet,rec,FE.USER_HEADERS);
+  if(row&&String(rec.UserID||'')===String(session.UserID||''))updateSessionsForUser_(rec);
   audit_(session,row?'ADMIN_USER_UPDATE':'ADMIN_USER_CREATE','','','Success',rec.Username+' · '+rec.Role);
   return {ok:true,user:publicAdminUser_(rec),message:row?'User updated.':'User created.'};
 }
@@ -676,6 +696,14 @@ function getUserPhotoAuthorized_(p,session){
 }
 
 function findUserById_(userId){const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.USERS),data=sheet.getDataRange().getValues(),h=data[0],idx=h.indexOf('UserID');for(let i=1;i<data.length;i++)if(String(data[i][idx])===String(userId))return{sheet:sheet,row:i+1,obj:h.reduce((o,k,j)=>(o[k]=data[i][j],o),{})};throw new Error('VISTA user was not found.');}
+function updateSessionsForUser_(user){
+  const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.SESSIONS);if(!sheet||sheet.getLastRow()<2)return;
+  const data=sheet.getDataRange().getValues(),headers=data[0],idCol=headers.indexOf('UserID'),usernameCol=headers.indexOf('Username'),roleCol=headers.indexOf('Role');
+  for(let i=1;i<data.length;i++)if(String(data[i][idCol]||'')===String(user.UserID||'')){
+    if(usernameCol>=0)sheet.getRange(i+1,usernameCol+1).setValue(user.Username||'');
+    if(roleCol>=0)sheet.getRange(i+1,roleCol+1).setValue(user.Role||'');
+  }
+}
 function setVistaUserActive_(p,session){validateRequired_(p,['userId']);const found=findUserById_(p.userId);if(String(found.obj.UserID)===String(session.UserID)&&p.active===false)throw new Error('You cannot disable your own signed-in account.');updateObjectRow_(FE.SHEETS.USERS,found.row,{Active:p.active===false?'No':'Yes'});audit_(session,p.active===false?'ADMIN_USER_DISABLE':'ADMIN_USER_ENABLE','','','Success',found.obj.Username);return{ok:true};}
 function resetVistaUserPin_(p,session){validateRequired_(p,['userId','pin']);if(String(p.pin).length<4)throw new Error('PIN must contain at least four characters.');const found=findUserById_(p.userId),username=String(found.obj.Username||'').trim().toLowerCase();updateObjectRow_(FE.SHEETS.USERS,found.row,{PINHash:pinHash_(username,String(p.pin)),FailedLoginCount:0});audit_(session,'ADMIN_PIN_RESET','','','Success',username);return{ok:true};}
 function deleteVistaUser_(p,session){validateRequired_(p,['userId']);const found=findUserById_(p.userId);if(String(found.obj.UserID)===String(session.UserID))throw new Error('You cannot delete your own signed-in account.');if(isAdminRole_(found.obj.Role)){const admins=readObjects_(FE.SHEETS.USERS).filter(u=>truthyActive_(u.Active)&&isAdminRole_(u.Role));if(admins.length<=1)throw new Error('The final active administrator cannot be deleted.');}found.sheet.deleteRow(found.row);audit_(session,'ADMIN_USER_DELETE','','','Success',found.obj.Username);return{ok:true};}

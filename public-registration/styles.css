@@ -53,3 +53,9 @@ body{background:radial-gradient(circle at 90% 0,#dbeeff 0,transparent 30%),#f3f7
 
 /* Sprint 2.0A Build 2.2: global navigation and versioning */
 .vista-home-link{text-decoration:none;color:inherit;cursor:pointer;border-radius:10px;transition:opacity .2s ease,transform .2s ease}.vista-home-link:hover{opacity:.9;transform:translateY(-1px)}.vista-home-link:focus-visible{outline:2px solid #fff;outline-offset:5px}.vista-breadcrumb{max-width:1320px;margin:0 auto 14px;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.055em;text-transform:uppercase;color:#6b7f94}.vista-breadcrumb a{color:#0b67ad;text-decoration:none}.vista-breadcrumb a:hover{text-decoration:underline}.vista-module-footer{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:20px 16px 26px;color:#6b7f94;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.vista-module-footer span+span:before{content:"•";margin-right:12px;color:#1496d4}@media(max-width:560px){.vista-breadcrumb{margin-bottom:10px;font-size:9px}.vista-module-footer{gap:6px}.vista-module-footer span+span:before{margin-right:6px}}
+
+
+/* VISTA shared branded footer */
+.branded-module-footer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+.branded-module-footer img{width:92px;max-height:36px;object-fit:contain}
+.branded-module-footer div{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}

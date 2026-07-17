@@ -19,3 +19,10 @@
 .session-avatar.avatar-sponsor,.mini-avatar.avatar-sponsor,.mini-avatar.avatar-sponsor.has-photo{border-color:var(--avatar-sponsor)}
 .session-avatar.avatar-approver,.mini-avatar.avatar-approver,.mini-avatar.avatar-approver.has-photo{border-color:var(--avatar-approver)}
 .session-avatar.avatar-neutral,.mini-avatar.avatar-neutral,.mini-avatar.avatar-neutral.has-photo{border-color:var(--avatar-neutral)}
+
+
+/* VISTA 2.2.2A modal stability and footer branding */
+.branded-module-footer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+.branded-module-footer img{width:92px;max-height:36px;object-fit:contain}
+.branded-module-footer div{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+#saveBtn:disabled{opacity:.7;cursor:wait}

@@ -1,3 +1,15 @@
+## 2.2.2A — Workflow Stability Increment
+
+- Fixed Administration Edit User modal close, Cancel, Escape, and backdrop behavior.
+- Prevented cancel controls from accidentally submitting the user form.
+- Hardened session/user resolution by permanent UserID with username fallback.
+- Added duplicate-username validation and clearer stale-record errors.
+- Preserved active sessions when an administrator edits their own username or role.
+- Added saving-state feedback for user and photo updates.
+- Added BadgeInventory UID-to-BadgeNumber display in Security Operations.
+- Added 12-second auto-dismiss operation-complete dialogs with Close Now.
+- Added centered BWRDO branding to module footers and synchronized version labels.
+
 # Ford Energy VISTA Changelog
 
 ## 2.2.1 — Operational Badge and Checkout Dialogs
