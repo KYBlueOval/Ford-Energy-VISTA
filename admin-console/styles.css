@@ -28,37 +28,44 @@
 #saveBtn:disabled{opacity:.7;cursor:wait}
 
 
-/* VISTA 2.2.2B — high-transparency Ford blue gradient footer */
+/* VISTA 2.2.2C compact branded module footer */
 .branded-module-footer{
   width:100%;
-  max-width:none;
-  min-height:112px;
-  margin:42px 0 0;
-  padding:18px 24px 20px;
-  position:relative;
-  overflow:hidden;
-  background:
-    radial-gradient(circle at 84% -45%,rgba(113,202,255,.28),transparent 42%),
-    linear-gradient(105deg,rgba(5,31,75,.93) 0%,rgba(0,52,120,.90) 48%,rgba(11,103,173,.88) 100%);
-  border-top:1px solid rgba(171,220,255,.72);
-  box-shadow:0 -12px 32px rgba(0,37,82,.16),inset 0 1px 0 rgba(255,255,255,.14);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  color:#e8f5ff;
-}
-.branded-module-footer::before{
-  content:"";position:absolute;inset:auto -80px -135px auto;width:280px;height:280px;
-  border-radius:50%;border:48px solid rgba(255,255,255,.045);pointer-events:none;
+  margin-top:34px;
+  padding:12px 18px 14px;
+  min-height:92px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  text-align:center;
+  color:#eef7ff;
+  background:linear-gradient(105deg,rgba(7,35,81,.96),rgba(12,72,145,.91) 58%,rgba(20,111,180,.88));
+  border-top:1px solid rgba(255,255,255,.24);
+  box-shadow:0 -8px 24px rgba(4,35,75,.10);
 }
 .branded-module-footer img{
-  position:relative;z-index:1;width:148px;height:auto;max-height:58px;object-fit:contain;
-  filter:drop-shadow(0 5px 12px rgba(0,0,0,.28));
+  width:112px;
+  height:auto;
+  max-height:48px;
+  object-fit:contain;
+  display:block;
+  filter:none;
 }
-.branded-module-footer div{position:relative;z-index:1;color:#dceeff}
-.branded-module-footer span{color:#dceeff;text-shadow:0 1px 3px rgba(0,24,58,.45)}
-.branded-module-footer span+span:before{color:#77c8f4}
+.branded-module-footer div{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  color:#eef7ff;
+}
+.branded-module-footer span{color:#eef7ff}
+.branded-module-footer span+span:before{color:#72c8ff;margin-right:10px}
 @media(max-width:620px){
-  .branded-module-footer{min-height:104px;margin-top:30px;padding:16px 12px 18px}
-  .branded-module-footer img{width:126px;max-height:52px}
-  .branded-module-footer div{gap:6px 8px;font-size:9px}
+  .branded-module-footer{min-height:84px;padding:10px 12px 12px;gap:4px}
+  .branded-module-footer img{width:96px;max-height:42px}
+  .branded-module-footer div{gap:6px;font-size:9px}
+  .branded-module-footer span+span:before{margin-right:6px}
 }

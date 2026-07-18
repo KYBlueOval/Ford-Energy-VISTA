@@ -1,10 +1,9 @@
-# VISTA 2.2.2B — High-Visibility Branded Footer Increment
+# VISTA 2.2.2C
 
-- Added a high-transparency Ford blue gradient footer bar to Visitor Registration, Security Operations, and Administration.
-- Cropped the BWRDO source image to remove its oversized blank canvas so the mark renders at a useful size.
-- Increased logo contrast with responsive sizing, subtle shadowing, and translucent glass treatment.
-- Cache-busted the three updated module stylesheets.
-- Preserved all 2.2.2A workflow and backend functionality.
+- Restored the Home Dashboard footer and its original BWRDO asset without modification.
+- Rebuilt Registration, Security Operations, and Administration with a compact Ford blue module footer.
+- Added a tightly cropped footer-only BWRDO derivative so the standard logo remains proportionate and visible without enlarging the footer.
+- Preserved all 2.2.2A workflow and backend fixes.
 
 ## 2.2.2A — Workflow Stability Increment
 
