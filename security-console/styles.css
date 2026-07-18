@@ -80,3 +80,39 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
 .branded-module-footer img{width:92px;max-height:36px;object-fit:contain}
 .branded-module-footer div{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
 .badge-divider{color:#8798aa;padding:0 5px}.operation-success{text-align:center;padding:12px 6px}.success-check{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#dcf7e7;color:#087a43;font-size:34px;font-weight:900;margin:0 auto 14px}.operation-success p{margin:8px 0}.success-badge{margin:16px auto;padding:12px;border:1px solid #cbd9e6;background:#f4f8fc;border-radius:10px;font-weight:800}.success-countdown{color:#526a82}
+
+
+/* VISTA 2.2.2B — high-transparency Ford blue gradient footer */
+.branded-module-footer{
+  width:100%;
+  max-width:none;
+  min-height:112px;
+  margin:42px 0 0;
+  padding:18px 24px 20px;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 84% -45%,rgba(113,202,255,.28),transparent 42%),
+    linear-gradient(105deg,rgba(5,31,75,.93) 0%,rgba(0,52,120,.90) 48%,rgba(11,103,173,.88) 100%);
+  border-top:1px solid rgba(171,220,255,.72);
+  box-shadow:0 -12px 32px rgba(0,37,82,.16),inset 0 1px 0 rgba(255,255,255,.14);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:#e8f5ff;
+}
+.branded-module-footer::before{
+  content:"";position:absolute;inset:auto -80px -135px auto;width:280px;height:280px;
+  border-radius:50%;border:48px solid rgba(255,255,255,.045);pointer-events:none;
+}
+.branded-module-footer img{
+  position:relative;z-index:1;width:148px;height:auto;max-height:58px;object-fit:contain;
+  filter:drop-shadow(0 5px 12px rgba(0,0,0,.28));
+}
+.branded-module-footer div{position:relative;z-index:1;color:#dceeff}
+.branded-module-footer span{color:#dceeff;text-shadow:0 1px 3px rgba(0,24,58,.45)}
+.branded-module-footer span+span:before{color:#77c8f4}
+@media(max-width:620px){
+  .branded-module-footer{min-height:104px;margin-top:30px;padding:16px 12px 18px}
+  .branded-module-footer img{width:126px;max-height:52px}
+  .branded-module-footer div{gap:6px 8px;font-size:9px}
+}
