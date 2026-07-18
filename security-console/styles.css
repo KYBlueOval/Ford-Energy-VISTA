@@ -40,13 +40,13 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
 .login{max-width:560px}.login-intro{color:var(--muted);line-height:1.5}.login-method{border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:20px;background:#f8fbff}.primary-login{border-color:#8ab8e8;background:linear-gradient(145deg,#f6fbff,#eaf4ff)}.method-heading{display:flex;gap:14px;align-items:flex-start}.login-method h2{margin:0 0 6px;color:var(--ford)}.login-method p{margin:0;color:var(--muted);line-height:1.45}.login-method-icon{width:46px;height:46px;border-radius:12px;background:linear-gradient(145deg,var(--ford),var(--blue));color:white;display:grid;place-items:center;font-size:25px;box-shadow:0 8px 18px rgba(0,52,120,.2);flex:none}.login-switch{display:block;width:100%;margin-top:14px!important;background:transparent!important;color:var(--ford)!important;border:1px solid #9db7d3!important}.backup-login{background:#fff}#loginBadgeUid{font-family:Consolas,monospace;font-size:17px;letter-spacing:.7px;text-transform:uppercase}
 
 /* Sprint 2.0A Build 2 — unified Ford Energy VISTA global header */
-.vista-global-header{height:auto;min-height:92px;display:grid;grid-template-columns:minmax(245px,1fr) minmax(430px,2.25fr) minmax(250px,1fr);align-items:center;gap:20px;padding:12px 30px;position:sticky;top:0;z-index:50;overflow:hidden}
+.vista-global-header{height:auto;min-height:98px;display:grid;grid-template-columns:minmax(310px,1fr) minmax(430px,2.25fr) minmax(250px,1fr);align-items:center;gap:24px;padding:14px 34px;position:sticky;top:0;z-index:50;overflow:hidden}
 .vista-global-header::after{content:"";position:absolute;width:290px;height:290px;border-radius:50%;right:-120px;top:-200px;background:rgba(255,255,255,.055);pointer-events:none}
-.vista-global-header .header-brand,.vista-global-header .header-center,.vista-global-header .header-actions{position:relative;z-index:1}.vista-global-header .header-brand{min-width:0}.vista-global-header .brand-logo{height:43px}.vista-global-header .brand strong{font-size:24px;line-height:1;letter-spacing:.16em}
+.vista-global-header .header-brand,.vista-global-header .header-center,.vista-global-header .header-actions{position:relative;z-index:1}.vista-global-header .header-brand{min-width:0;gap:22px}.vista-global-header .brand-logo{height:58px}.vista-global-header .brand strong{font-size:24px;line-height:1;letter-spacing:.16em}
 .vista-global-header .header-center{text-align:center;min-width:0}.vista-global-header .vista-expansion{font-size:clamp(13px,1.28vw,19px);font-weight:800;letter-spacing:.105em;text-transform:uppercase;color:rgba(255,255,255,.39);white-space:nowrap}.vista-global-header .page-description{font-size:12px;color:#d9efff;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-top:8px}
 .vista-global-header .header-actions{justify-self:end;display:flex;align-items:center;gap:8px}.vista-global-header .pill{border:1px solid rgba(255,255,255,.18)}
-@media(max-width:1050px){.vista-global-header{grid-template-columns:1fr auto;min-height:84px;gap:8px 14px}.vista-global-header .header-center{grid-column:1/-1;grid-row:2}.vista-global-header .vista-expansion{white-space:normal;font-size:11px;line-height:1.35}.vista-global-header .page-description{font-size:10px;margin-top:4px}.vista-global-header .brand-logo{height:37px}.vista-global-header .brand strong{font-size:19px}.vista-global-header .header-actions{font-size:10px}}
-@media(max-width:620px){.vista-global-header{padding:10px 12px}.vista-global-header .brand-logo{height:31px}.vista-global-header .brand strong{font-size:16px}.vista-global-header .vista-expansion{font-size:9px;letter-spacing:.07em}.vista-global-header .page-description{font-size:9px}.vista-global-header .user-role{display:none}.vista-global-header .pill{font-size:9px;padding:5px 7px}}
+@media(max-width:1050px){.vista-global-header{grid-template-columns:1fr auto;min-height:90px;gap:8px 14px}.vista-global-header .header-center{grid-column:1/-1;grid-row:2}.vista-global-header .vista-expansion{white-space:normal;font-size:11px;line-height:1.35}.vista-global-header .page-description{font-size:10px;margin-top:4px}.vista-global-header .brand-logo{height:46px}.vista-global-header .brand strong{font-size:19px}.vista-global-header .header-actions{font-size:10px}}
+@media(max-width:620px){.vista-global-header{padding:10px 12px}.vista-global-header .brand-logo{height:38px}.vista-global-header .brand strong{font-size:16px}.vista-global-header .vista-expansion{font-size:9px;letter-spacing:.07em}.vista-global-header .page-description{font-size:9px}.vista-global-header .user-role{display:none}.vista-global-header .pill{font-size:9px;padding:5px 7px}}
 
 /* Sprint 2.0A Build 2.2: global navigation and versioning */
 .vista-home-link{text-decoration:none;color:inherit;cursor:pointer;border-radius:10px;transition:opacity .2s ease,transform .2s ease}.vista-home-link:hover{opacity:.9;transform:translateY(-1px)}.vista-home-link:focus-visible{outline:2px solid #fff;outline-offset:5px}.vista-breadcrumb{max-width:1500px;margin:18px auto 0;padding:0 24px;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.055em;text-transform:uppercase;color:#6b7f94}.vista-breadcrumb a{color:#0b67ad;text-decoration:none}.vista-breadcrumb a:hover{text-decoration:underline}.vista-module-footer{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:20px 16px 26px;color:#6b7f94;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.vista-module-footer span+span:before{content:"•";margin-right:12px;color:#1496d4}@media(max-width:620px){.vista-breadcrumb{margin-top:12px;padding:0 12px;font-size:9px}.vista-module-footer{gap:6px}.vista-module-footer span+span:before{margin-right:6px}}
@@ -87,7 +87,7 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
   width:100%;
   margin-top:34px;
   padding:12px 18px 14px;
-  min-height:92px;
+  min-height:98px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -118,7 +118,7 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
 .branded-module-footer span{color:#eef7ff}
 .branded-module-footer span+span:before{color:#72c8ff;margin-right:10px}
 @media(max-width:620px){
-  .branded-module-footer{min-height:84px;padding:10px 12px 12px;gap:4px}
+  .branded-module-footer{min-height:90px;padding:10px 12px 12px;gap:4px}
   .branded-module-footer img{width:96px;max-height:42px}
   .branded-module-footer div{gap:6px;font-size:9px}
   .branded-module-footer span+span:before{margin-right:6px}
@@ -192,3 +192,12 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
   .branded-module-footer div{gap:6px;font-size:9px}
   .branded-module-footer span+span:before{margin-right:6px}
 }
+
+
+/* VISTA 2.2.2D enterprise branding polish */
+.vista-global-header{min-height:98px!important;padding:14px 34px!important}
+.vista-global-header .header-brand{gap:22px!important;min-width:310px!important}
+.vista-global-header .brand-logo{height:58px!important;width:auto!important}
+.vista-global-header .brand strong{font-size:24px!important}
+@media(max-width:1050px){.vista-global-header{min-height:90px!important}.vista-global-header .header-brand{min-width:0!important}.vista-global-header .brand-logo{height:46px!important}}
+@media(max-width:620px){.vista-global-header{padding:10px 12px!important}.vista-global-header .brand-logo{height:38px!important}.vista-global-header .header-brand{gap:13px!important}}
