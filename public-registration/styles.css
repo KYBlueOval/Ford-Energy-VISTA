@@ -102,3 +102,72 @@ body{background:radial-gradient(circle at 90% 0,#dbeeff 0,transparent 30%),#f3f7
   .branded-module-footer div{gap:6px;font-size:9px}
   .branded-module-footer span+span:before{margin-right:6px}
 }
+
+
+/* VISTA 2.2.2D unified full-width premium module footer */
+.branded-module-footer{
+  position:relative;
+  width:100vw;
+  max-width:none;
+  min-height:104px;
+  margin:54px calc(50% - 50vw) 0;
+  padding:13px 24px 15px;
+  box-sizing:border-box;
+  overflow:hidden;
+  border:0;
+  border-radius:0;
+  background:
+    radial-gradient(circle at 88% -25%,rgba(121,214,255,.30),transparent 34%),
+    linear-gradient(115deg,rgba(6,39,91,.98) 0%,rgba(13,72,145,.97) 48%,rgba(26,137,205,.93) 100%);
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,.56) inset,
+    0 -10px 30px rgba(8,42,88,.10),
+    0 -1px 0 rgba(14,91,158,.16);
+  isolation:isolate;
+}
+.branded-module-footer::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.13),transparent 27%),
+    linear-gradient(90deg,transparent 0%,rgba(255,255,255,.055) 48%,transparent 100%);
+}
+.branded-module-footer::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:2px;
+  background:linear-gradient(90deg,transparent,rgba(176,229,255,.92),transparent);
+  opacity:.82;
+}
+.branded-module-footer img{
+  width:112px;
+  height:40px;
+  max-height:40px;
+  object-fit:contain;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.34));
+}
+.branded-module-footer div{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  font-size:10px;
+  line-height:1.35;
+  letter-spacing:.075em;
+  text-shadow:0 1px 2px rgba(0,28,67,.52);
+}
+.branded-module-footer span{color:#f4f9ff}
+.branded-module-footer span+span:before{color:#7ed4ff;margin-right:12px}
+@media(max-width:620px){
+  .branded-module-footer{min-height:96px;margin-top:36px;padding:11px 14px 13px}
+  .branded-module-footer img{width:104px;height:37px;max-height:37px}
+  .branded-module-footer div{gap:6px;font-size:9px}
+  .branded-module-footer span+span:before{margin-right:6px}
+}

@@ -1,3 +1,9 @@
+## VISTA 2.2.2D
+- Standardized Visitor Registration, Security Operations, and Administration on one full-width premium footer.
+- Added layered Ford blue gradient, top highlight, subtle reflection and depth.
+- Corrected Administration footer width mismatch.
+- Preserved all 2.2.2A operational fixes.
+
 # VISTA 2.2.2C
 
 - Restored the Home Dashboard footer and its original BWRDO asset without modification.
