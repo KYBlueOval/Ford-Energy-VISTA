@@ -1,3 +1,13 @@
+## VISTA 2.3.3 — Shift Handoff and Reconciliation
+
+- Replaced native grey live-accountability controls with consistent Ford-blue gradient actions.
+- Added an accessible refresh icon, loading animation, hover, focus, and responsive button behavior.
+- Added Officer Handoff & Reconciliation to Security Operations.
+- Captured immutable live snapshots of visitors onsite, overdue visits, badges out, and lost/broken badge exceptions.
+- Added shift/post labels, required officer notes, recent handoff history, and unresolved-item indicators.
+- Added the `ShiftHandoffs` data sheet and audit events for every recorded handoff.
+- Preserved all v2.3.2 active-visitor, photo, badge, role-permission, and checkout behavior.
+
 ## VISTA 2.3.2 — Active Visitor Accountability
 
 - Added a live Active Visitors and Badges Out workspace to Security Operations.

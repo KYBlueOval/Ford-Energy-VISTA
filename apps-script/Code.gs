@@ -1,6 +1,6 @@
 const FE = {
-  VERSION: '2.3.2-active-visitor-accountability',
-  SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
+  VERSION: '2.3.3-shift-handoff-accountability',
+  SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
   BADGE_HEADERS: ['BadgeUID','BadgeNumber','Status','CurrentVisitID','IssuedAt','ReturnedAt','Notes'],
@@ -13,6 +13,7 @@ const FE = {
   SECURITY_HEADERS: ['EmployeeID','FullName','Email','Department','Company','BadgeUID','SecurityLevel','Active','LastUpdatedAt'],
   SESSION_HEADERS: ['SessionToken','UserID','Username','Role','CreatedAt','ExpiresAt','LastSeenAt','UserAgent'],
   AUDIT_HEADERS: ['AuditID','Timestamp','UserID','Username','Role','Action','VisitID','ConfirmationNumber','Result','Details'],
+  HANDOFF_HEADERS: ['HandoffID','CreatedAt','CreatedByUserID','CreatedBy','Role','ShiftLabel','Notes','VisitorsOnsite','OverdueVisitors','BadgesOut','BadgeExceptions','Status','SnapshotJSON'],
 
   AGREEMENT_DEFINITIONS: [
     {id:'SECURITY',title:'Security Agreement',body:'Visitors are subject to screening, access restrictions, badge-control requirements, escort requirements, and Ford Energy Security direction. Unauthorized access, recording, removal of property or information, and bypass of security controls are prohibited.'},
@@ -67,6 +68,8 @@ function doPost(e) {
       else if(action==='whoAmI') result={ok:true,user:publicSessionUser_(session),permissions:permissionsForRole_(session.Role)};
       else if(action==='listVisits') result=listVisitsForSession_(req.payload||{},session);
       else if(action==='listActiveOperations') { requirePermission_(session,'viewVisits'); result=listActiveOperations_(req.payload||{},session); }
+      else if(action==='listShiftHandoffs') { requirePermission_(session,'checkOut'); result=listShiftHandoffs_(req.payload||{},session); }
+      else if(action==='createShiftHandoff') { requirePermission_(session,'checkOut'); result=createShiftHandoff_(req.payload||{},session); }
       else if(action==='getVisitPhoto') { requirePermission_(session,'viewPhoto'); result=getVisitPhoto_(req.payload||{}); }
       else if(action==='getUserPhoto') result=getUserPhotoAuthorized_(req.payload||{},session);
       else if(action==='listVisitActivity') { requirePermission_(session,'viewVisits'); result=listVisitActivityAuthorized_(req.payload||{},session); }
@@ -161,6 +164,7 @@ function setupVisitorManagement() {
   ensureSheet_(ss, FE.SHEETS.SECURITY, FE.SECURITY_HEADERS);
   ensureSheet_(ss, FE.SHEETS.SESSIONS, FE.SESSION_HEADERS);
   ensureSheet_(ss, FE.SHEETS.AUDIT, FE.AUDIT_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.HANDOFFS, FE.HANDOFF_HEADERS);
   const config = ensureSheet_(ss, FE.SHEETS.CONFIG, FE.CONFIG_HEADERS);
   const defaults = {
     SECURITY_PIN:'1937', PHOTO_FOLDER_ID:'', USER_PHOTO_FOLDER_ID:'', SITE_TIMEZONE:'America/New_York', NOTIFICATION_EMAIL:'',
@@ -175,8 +179,8 @@ function setupVisitorManagement() {
   Object.keys(defaults).forEach(k=>{ if (existing[k] === undefined || existing[k] === '') config.appendRow([k,defaults[k]]); });
   seedAgreements_();
   seedInitialAdmin_();
-  [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.1C setup complete. User photo columns, configuration, identity roles, sessions, and audit tables are ready.';
+  [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
+  return 'VISTA 2.3.3 setup complete. Identity, badge, audit, and shift-handoff tables are ready.';
 }
 
 function seedAgreements_(){
@@ -295,6 +299,24 @@ function listActiveOperations_(p,session){
   const badges=readObjects_(FE.SHEETS.BADGES).map(publicBadge_),exceptions=badges.filter(b=>['Lost','Broken'].includes(b.status));
   return{ok:true,generatedAt:dateTime_(now),visits:visits,exceptions:exceptions,summary:{onsite:visits.length,overdue:visits.filter(v=>v.overdue).length,badgesOut:badges.filter(b=>b.status==='Issued').length,badgeExceptions:exceptions.length}};
 }
+
+function createShiftHandoff_(p,session){
+  const notes=String(p.notes||'').trim(),shiftLabel=String(p.shiftLabel||'Shift handoff').trim().slice(0,80);
+  if(notes.length<5)throw new Error('Enter handoff notes with at least five characters.');
+  const live=listActiveOperations_({},session),summary=live.summary;
+  const snapshot={generatedAt:live.generatedAt,visitors:live.visits.map(v=>({visitId:v.visitId,fullName:v.fullName,company:v.company,sponsorName:v.sponsorName,badgeUid:v.badgeUid,badgeNumber:v.badgeNumber,onsiteMinutes:v.onsiteMinutes,overdue:v.overdue,expectedDeparture:v.expectedDeparture})),badgeExceptions:live.exceptions.map(b=>({badgeUid:b.badgeUid,badgeNumber:b.badgeNumber,status:b.status,notes:b.notes}))};
+  const record={HandoffID:'HND-'+Utilities.getUuid().slice(0,12).toUpperCase(),CreatedAt:new Date(),CreatedByUserID:String(session.UserID||''),CreatedBy:String(session.FullName||session.Username||''),Role:String(session.Role||''),ShiftLabel:shiftLabel,Notes:notes,VisitorsOnsite:summary.onsite,OverdueVisitors:summary.overdue,BadgesOut:summary.badgesOut,BadgeExceptions:summary.badgeExceptions,Status:(summary.onsite||summary.overdue||summary.badgesOut||summary.badgeExceptions)?'Open Items':'Clear',SnapshotJSON:JSON.stringify(snapshot)};
+  const lock=LockService.getScriptLock();lock.waitLock(15000);
+  try{appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.HANDOFFS),record,FE.HANDOFF_HEADERS);}finally{lock.releaseLock();}
+  audit_(session,'SHIFT_HANDOFF_CREATED','','','Success',record.HandoffID+' · '+record.Status+' · '+notes.slice(0,180));
+  return{ok:true,handoff:publicShiftHandoff_(record)};
+}
+function listShiftHandoffs_(p,session){
+  const limit=Math.min(25,Math.max(1,Number(p.limit||5)));
+  const handoffs=readObjects_(FE.SHEETS.HANDOFFS).slice(-limit).reverse().map(publicShiftHandoff_);
+  return{ok:true,handoffs:handoffs};
+}
+function publicShiftHandoff_(r){return{handoffId:String(r.HandoffID||''),createdAt:dateText_(r.CreatedAt),createdBy:String(r.CreatedBy||''),role:String(r.Role||''),shiftLabel:String(r.ShiftLabel||''),notes:String(r.Notes||''),visitorsOnsite:Number(r.VisitorsOnsite||0),overdueVisitors:Number(r.OverdueVisitors||0),badgesOut:Number(r.BadgesOut||0),badgeExceptions:Number(r.BadgeExceptions||0),status:String(r.Status||'')};}
 
 function checkInVisit_(p,session) {
   validateRequired_(p,['visitId','badgeUid','officerName']); const row=findVisitRow_(p.visitId), rec=row.obj;
