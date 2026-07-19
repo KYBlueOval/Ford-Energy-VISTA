@@ -1,3 +1,14 @@
+## VISTA 2.3.5 — Operational Analytics Foundation
+
+- Added a role-protected operational analytics endpoint for Administrators and Security Supervisors.
+- Added 7-day, 30-day, 90-day, and 12-month reporting periods.
+- Added visit volume, approval rate, onsite count, average visit duration, and peak-arrival metrics.
+- Added visit-outcome, daily-volume, and top-sponsor visualizations without external charting dependencies.
+- Added badge availability and unavailable-credential health metrics.
+- Added handoff Pending, Acknowledged, Resolved, Escalated, average-acknowledgement, and average-resolution metrics.
+- Added responsive analytics layouts and cache-busted Administration assets.
+- Preserved production configuration, roster worksheets, visitor and user photographs, badge operations, and Ford Energy branding.
+
 ## VISTA 2.3.4 — Handoff Resolution and Escalation
 
 - Added incoming-officer acknowledgement for recorded shift handoffs.

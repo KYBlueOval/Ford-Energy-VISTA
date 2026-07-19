@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.3.4-handoff-resolution-escalation',
+  VERSION: '2.3.5-operational-analytics-foundation',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -89,6 +89,7 @@ function doPost(e) {
       else if(action==='saveBadge') { requirePermission_(session,'manageBadges'); result=saveVistaBadge_(req.payload||{},session); }
       else if(action==='setBadgeStatus') { requirePermission_(session,'manageBadges'); result=setVistaBadgeStatus_(req.payload||{},session); }
       else if(action==='listAudit') { requirePermission_(session,'viewAudit'); result=listVistaAudit_(req.payload||{},session); }
+      else if(action==='getOperationalAnalytics') { requirePermission_(session,'viewAnalytics'); result=getOperationalAnalytics_(req.payload||{},session); }
       else throw new Error('Unknown action: '+action);
     }
     if(bridge&&requestId)storeSubmissionResult_(requestId,result);
@@ -183,7 +184,7 @@ function setupVisitorManagement() {
   seedAgreements_();
   seedInitialAdmin_();
   [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.3.4 setup complete. Identity, badge, audit, and handoff resolution tables are ready.';
+  return 'VISTA 2.3.5 setup complete. Identity, badge, audit, handoff, and analytics sources are ready.';
 }
 
 function seedAgreements_(){
@@ -301,6 +302,20 @@ function listActiveOperations_(p,session){
   }).sort((a,b)=>Number(b.overdue)-Number(a.overdue)||b.onsiteMinutes-a.onsiteMinutes);
   const badges=readObjects_(FE.SHEETS.BADGES).map(publicBadge_),exceptions=badges.filter(b=>['Lost','Broken'].includes(b.status));
   return{ok:true,generatedAt:dateTime_(now),visits:visits,exceptions:exceptions,summary:{onsite:visits.length,overdue:visits.filter(v=>v.overdue).length,badgesOut:badges.filter(b=>b.status==='Issued').length,badgeExceptions:exceptions.length}};
+}
+
+function getOperationalAnalytics_(p,session){
+  const days=[7,30,90,365].includes(Number(p.days))?Number(p.days):30,now=new Date(),today=dateKey_(now),startDate=new Date(now.getTime()-(days-1)*86400000),startKey=dateKey_(startDate);
+  const allVisits=readObjects_(FE.SHEETS.VISITS),visits=allVisits.filter(r=>{const key=dateKey_(r.StartDate||r.CreatedAt);return key>=startKey&&key<=today;});
+  const statuses={Submitted:0,Approved:0,'Checked In':0,'Checked Out':0,Denied:0,'No Show':0,Other:0},daily={},sponsors={},hours={};
+  for(let i=0;i<days;i++){const d=new Date(startDate.getTime()+i*86400000);daily[dateKey_(d)]=0;}
+  visits.forEach(r=>{const status=String(r.Status||'Submitted'),key=dateKey_(r.StartDate||r.CreatedAt);if(Object.prototype.hasOwnProperty.call(statuses,status))statuses[status]++;else statuses.Other++;if(Object.prototype.hasOwnProperty.call(daily,key))daily[key]++;const sponsor=String(r.SponsorName||'Unassigned').trim()||'Unassigned';sponsors[sponsor]=(sponsors[sponsor]||0)+1;const hour=Number(String(timeOnly_(r.ArrivalTime)||'').slice(0,2));if(!isNaN(hour))hours[hour]=(hours[hour]||0)+1;});
+  const approved=statuses.Approved+statuses['Checked In']+statuses['Checked Out'],decided=approved+statuses.Denied,durations=visits.map(r=>Number(r.ActualDurationMinutes||0)).filter(n=>n>0),avgDuration=durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length):0;
+  const peakHour=Object.keys(hours).sort((a,b)=>hours[b]-hours[a])[0],badges=readObjects_(FE.SHEETS.BADGES),badgeCounts={total:badges.length,available:0,issued:0,unavailable:0};badges.forEach(b=>{const s=String(b.Status||'Available');if(s==='Available')badgeCounts.available++;else if(s==='Issued')badgeCounts.issued++;else badgeCounts.unavailable++;});
+  const handoffs=readObjects_(FE.SHEETS.HANDOFFS).filter(r=>{const key=dateKey_(r.CreatedAt);return key>=startKey&&key<=today;}),handoffCounts={total:handoffs.length,pending:0,acknowledged:0,resolved:0,escalated:0};let ackTotal=0,ackSamples=0,resolutionTotal=0,resolutionSamples=0;
+  handoffs.forEach(h=>{const workflow=String(h.WorkflowStatus||'Pending');if(workflow==='Acknowledged')handoffCounts.acknowledged++;else if(workflow==='Resolved')handoffCounts.resolved++;else handoffCounts.pending++;if(String(h.EscalationLevel||'None')!=='None')handoffCounts.escalated++;const created=parseDateSafe_(h.CreatedAt),ack=parseDateSafe_(h.AcknowledgedAt),resolved=parseDateSafe_(h.ResolvedAt);if(created&&ack){ackTotal+=Math.max(0,(ack-created)/60000);ackSamples++;}if(created&&resolved){resolutionTotal+=Math.max(0,(resolved-created)/60000);resolutionSamples++;}});
+  const topSponsors=Object.keys(sponsors).map(name=>({name:name,count:sponsors[name]})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)).slice(0,5),dailyVolume=Object.keys(daily).sort().map(date=>({date:date,count:daily[date]}));
+  return{ok:true,generatedAt:dateTime_(now),range:{days:days,start:startKey,end:today},summary:{totalVisits:visits.length,approved:approved,denied:statuses.Denied,noShow:statuses['No Show'],checkedIn:statuses['Checked In'],checkedOut:statuses['Checked Out'],onsiteNow:allVisits.filter(r=>String(r.Status)==='Checked In').length,approvalRate:decided?Math.round(approved/decided*100):0,averageDurationMinutes:avgDuration,peakArrivalHour:peakHour===undefined?'—':String(peakHour).padStart(2,'0')+':00'},statuses:statuses,dailyVolume:dailyVolume,topSponsors:topSponsors,badges:badgeCounts,handoffs:Object.assign(handoffCounts,{averageAcknowledgementMinutes:ackSamples?Math.round(ackTotal/ackSamples):0,averageResolutionMinutes:resolutionSamples?Math.round(resolutionTotal/resolutionSamples):0})};
 }
 
 function createShiftHandoff_(p,session){
@@ -653,12 +668,12 @@ function truthyActive_(v){return !['no','false','0','inactive','disabled',''].in
 
 function permissionsForRole_(role){
   const r=String(role||'').trim().toLowerCase();
-  const none={viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false};
-  if(r==='admin'||r==='super administrator'||r==='superadmin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true,viewBadges:true,manageBadges:true,registerUnknownBadge:true};
-  if(r==='security supervisor')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewBadges:true,manageBadges:false,registerUnknownBadge:true};
-  if(r==='security')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewBadges:true,manageBadges:false,registerUnknownBadge:false};
-  if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:true,manageBadges:false,registerUnknownBadge:false};
-  if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false};
+  const none={viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false};
+  if(r==='admin'||r==='super administrator'||r==='superadmin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true,viewAnalytics:true,viewBadges:true,manageBadges:true,registerUnknownBadge:true};
+  if(r==='security supervisor')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewAnalytics:true,viewBadges:true,manageBadges:false,registerUnknownBadge:true};
+  if(r==='security')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewAnalytics:false,viewBadges:true,manageBadges:false,registerUnknownBadge:false};
+  if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:true,manageBadges:false,registerUnknownBadge:false};
+  if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false};
   return none;
 }
 function requirePermission_(session,key){if(!permissionsForRole_(session.Role)[key])throw new Error('Your '+session.Role+' role is not authorized to perform this action.');}
