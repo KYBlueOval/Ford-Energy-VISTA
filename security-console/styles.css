@@ -128,10 +128,10 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
 /* VISTA 2.2.2D unified full-width premium module footer */
 .branded-module-footer{
   position:relative;
-  width:100vw;
+  width:100%;
   max-width:none;
   min-height:104px;
-  margin:54px calc(50% - 50vw) 0;
+  margin:54px 0 0;
   padding:13px 24px 15px;
   box-sizing:border-box;
   overflow:hidden;

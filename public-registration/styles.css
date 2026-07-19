@@ -107,10 +107,10 @@ body{background:radial-gradient(circle at 90% 0,#dbeeff 0,transparent 30%),#f3f7
 /* VISTA 2.2.2D unified full-width premium module footer */
 .branded-module-footer{
   position:relative;
-  width:100vw;
+  width:100%;
   max-width:none;
   min-height:104px;
-  margin:54px calc(50% - 50vw) 0;
+  margin:54px 0 0;
   padding:13px 24px 15px;
   box-sizing:border-box;
   overflow:hidden;

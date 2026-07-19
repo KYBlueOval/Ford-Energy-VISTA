@@ -27,6 +27,10 @@
 .branded-module-footer div{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
 #saveBtn:disabled{opacity:.7;cursor:wait}
 
+/* VISTA 2.3 visitor badge inventory */
+.badge-inventory{margin-top:18px;padding:20px}.badge-inventory .section-head h2{margin:3px 0 0}.badge-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:17px 0}.badge-kpis span{padding:14px;border:1px solid var(--line);border-radius:12px;background:#f7fbff;color:var(--muted);font-size:12px}.badge-kpis b{display:block;color:var(--ford);font-size:24px;margin-bottom:3px}.badge-toolbar{display:grid;grid-template-columns:1fr 220px auto;gap:10px;margin-bottom:10px}.badge-table{overflow:auto}.badge-table code{font-family:Consolas,monospace;font-size:12px}.badge-available{background:#e7f8ee;color:#08783e}.badge-issued{background:#e5f1ff;color:#0758a5}.badge-lost,.badge-broken{background:#fff1dc;color:#9b5200}.badge-disabled{background:#fdeceb;color:#a4231b}.issued-lock{font-size:11px;color:var(--muted);font-weight:700}#saveBadgeBtn:disabled{opacity:.7;cursor:wait}
+@media(max-width:850px){.badge-kpis{grid-template-columns:1fr 1fr}.badge-toolbar{grid-template-columns:1fr}}
+
 
 /* VISTA 2.2.2C compact branded module footer */
 .branded-module-footer{
@@ -74,10 +78,10 @@
 /* VISTA 2.2.2D unified full-width premium module footer */
 .branded-module-footer{
   position:relative;
-  width:100vw;
+  width:100%;
   max-width:none;
   min-height:104px;
-  margin:54px calc(50% - 50vw) 0;
+  margin:54px 0 0;
   padding:13px 24px 15px;
   box-sizing:border-box;
   overflow:hidden;

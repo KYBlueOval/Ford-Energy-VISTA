@@ -1,3 +1,14 @@
+## VISTA 2.3.0 — Badge Inventory Milestone 1
+
+- Added an authenticated Badge Inventory workspace to Administration.
+- Added badge search, status filters, counts, create/edit controls, and visitor-badge number mapping.
+- Added Admin-only badge-management permissions and read-only badge visibility permissions for operational roles.
+- Blocked Lost, Broken, and Disabled badges from visitor check-in.
+- Locked issued badge records to the Security Operations return/check-out workflow.
+- Added badge-management audit events and normalized badge-reader UID matching.
+- Removed horizontal footer overflow across Registration, Security Operations, and Administration.
+- Preserved production Apps Script configuration keys, Drive folder IDs, public registration configuration, and Ford Energy assets.
+
 ## VISTA 2.2.2D
 - Standardized Visitor Registration, Security Operations, and Administration on one full-width premium footer.
 - Added layered Ford blue gradient, top highlight, subtle reflection and depth.
