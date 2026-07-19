@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.3.1A-account-lock-recovery',
+  VERSION: '2.3.2-active-visitor-accountability',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -66,6 +66,7 @@ function doPost(e) {
       if(action==='logout') result=logoutUser_(session,req.token||'');
       else if(action==='whoAmI') result={ok:true,user:publicSessionUser_(session),permissions:permissionsForRole_(session.Role)};
       else if(action==='listVisits') result=listVisitsForSession_(req.payload||{},session);
+      else if(action==='listActiveOperations') { requirePermission_(session,'viewVisits'); result=listActiveOperations_(req.payload||{},session); }
       else if(action==='getVisitPhoto') { requirePermission_(session,'viewPhoto'); result=getVisitPhoto_(req.payload||{}); }
       else if(action==='getUserPhoto') result=getUserPhotoAuthorized_(req.payload||{},session);
       else if(action==='listVisitActivity') { requirePermission_(session,'viewVisits'); result=listVisitActivityAuthorized_(req.payload||{},session); }
@@ -280,6 +281,19 @@ function listVisits_(p) {
   const today=Utilities.formatDate(new Date(),tz_(),'yyyy-MM-dd'), now=new Date();
   const kpis={expectedToday:rows.filter(r=>dateKey_(r.StartDate)===today&&!['Checked Out','Denied','Cancelled','No Show'].includes(r.Status)).length,onsite:rows.filter(r=>r.Status==='Checked In').length,checkedOutToday:rows.filter(r=>r.Status==='Checked Out'&&dateKey_(r.CheckOutTime)===today).length,overdue:rows.filter(r=>r.Status==='Checked In'&&r.EndDate&&new Date(`${dateKey_(r.EndDate)}T${timeOnly_(r.DepartureTime)||'23:59'}`)<now).length};
   return {ok:true,visits,kpis};
+}
+function listActiveOperations_(p,session){
+  const now=new Date(),visits=readObjects_(FE.SHEETS.VISITS).filter(r=>String(r.Status)==='Checked In').map(r=>{
+    const item=publicVisit_(r),checkIn=r.CheckInTime?new Date(r.CheckInTime):null;
+    const endDate=dateKey_(r.EndDate),endTime=timeOnly_(r.DepartureTime)||'23:59';
+    const expected=endDate?new Date(endDate+'T'+endTime):null;
+    item.onsiteMinutes=checkIn&&!isNaN(checkIn)?Math.max(0,Math.floor((now-checkIn)/60000)):0;
+    item.overdue=Boolean(expected&&!isNaN(expected)&&expected<now);
+    item.expectedDeparture=dateTime_(expected);
+    return item;
+  }).sort((a,b)=>Number(b.overdue)-Number(a.overdue)||b.onsiteMinutes-a.onsiteMinutes);
+  const badges=readObjects_(FE.SHEETS.BADGES).map(publicBadge_),exceptions=badges.filter(b=>['Lost','Broken'].includes(b.status));
+  return{ok:true,generatedAt:dateTime_(now),visits:visits,exceptions:exceptions,summary:{onsite:visits.length,overdue:visits.filter(v=>v.overdue).length,badgesOut:badges.filter(b=>b.status==='Issued').length,badgeExceptions:exceptions.length}};
 }
 
 function checkInVisit_(p,session) {

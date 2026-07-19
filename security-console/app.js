@@ -1,6 +1,6 @@
 (()=>{
   const cfg=window.FE_SECURITY_CONFIG||{};
-  let token=sessionStorage.getItem('feVistaToken')||'', currentUser=null, permissions={}, records=[], badges=[], selectedVisitId='', selectedPhotoDataUrl='', selectedPhotoFileName='visitor-photo.jpg', operationCloseTimer=null;
+  let token=sessionStorage.getItem('feVistaToken')||'', currentUser=null, permissions={}, records=[], badges=[], activeVisitors=[], activeLoadedAt=Date.now(), selectedVisitId='', selectedPhotoDataUrl='', selectedPhotoFileName='visitor-photo.jpg', operationCloseTimer=null;
   const visitPhotoCache=new Map(),visitPhotoLoads=new Map();
   const $=s=>document.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -49,11 +49,17 @@
     $('#refreshBtn').disabled=true;
     try{
       const q=$('#searchInput').value.trim(),status=$('#statusFilter').value;
-      const d=await api('listVisits',{query:q,status});records=d.visits||[];renderRows();renderKpis(d.kpis||{});
+      const d=await api('listVisits',{query:q,status});records=d.visits||[];renderRows();renderKpis(d.kpis||{});await loadActiveOperations();
       if(selectedVisitId){const updated=records.find(x=>x.visitId===selectedVisitId);if(updated)openRecord(updated);else selectedVisitId=''}
     } finally {$('#refreshBtn').disabled=false}
   }
   function renderKpis(k){$('#kExpected').textContent=k.expectedToday||0;$('#kOnsite').textContent=k.onsite||0;$('#kOut').textContent=k.checkedOutToday||0;$('#kOverdue').textContent=k.overdue||0}
+  function durationText(minutes){const value=Math.max(0,Number(minutes||0)),hours=Math.floor(value/60),mins=value%60;return hours?`${hours}h ${mins}m`:`${mins}m`}
+  async function loadActiveOperations(){
+    try{const d=await api('listActiveOperations',{});activeVisitors=d.visits||[];activeLoadedAt=Date.now();$('#aOnsite').textContent=d.summary?.onsite||0;$('#aBadgesOut').textContent=d.summary?.badgesOut||0;$('#aOverdue').textContent=d.summary?.overdue||0;$('#aExceptions').textContent=d.summary?.badgeExceptions||0;$('#activeGenerated').textContent='Updated '+(d.generatedAt||'just now');renderActiveOperations(d.exceptions||[])}catch(e){$('#activeGenerated').textContent='Live accountability unavailable: '+e.message}
+  }
+  function renderActiveOperations(exceptions){const host=$('#activeVisitorRows');host.innerHTML=activeVisitors.map((v,i)=>`<article class="active-visitor ${v.overdue?'overdue':''}"><div class="active-identity"><div class="active-initial">${esc((v.fullName||'?').charAt(0))}</div><div><h3>${esc(v.fullName)}</h3><p>${esc(v.company||'—')} · Sponsor ${esc(v.sponsorName||'—')}</p></div></div><div class="active-facts"><span><b>Onsite</b><strong class="live-duration" data-base-minutes="${esc(v.onsiteMinutes||0)}">${durationText(v.onsiteMinutes)}</strong></span><span><b>Badge</b><strong>${esc(v.badgeNumber?'Visitor '+v.badgeNumber:v.badgeUid||'—')}</strong></span><span><b>Expected out</b><strong>${esc(v.expectedDeparture||'—')}</strong></span><span><b>Escort</b><strong>${esc(v.escortRequired||'Not specified')}</strong></span></div><div class="active-actions">${v.overdue?'<span class="overdue-flag">Overdue</span>':'<span class="onsite-flag">Onsite</span>'}<button data-active-open="${i}">Open / Check Out</button></div></article>`).join('');$('#activeEmpty').classList.toggle('hidden',activeVisitors.length>0);document.querySelectorAll('[data-active-open]').forEach(b=>b.onclick=()=>{const v=activeVisitors[+b.dataset.activeOpen];openRecord(v);document.querySelector('#detailPanel')?.scrollIntoView({behavior:'smooth',block:'start'})});const queue=$('#badgeExceptionQueue');queue.classList.toggle('hidden',!exceptions.length);queue.innerHTML=exceptions.length?`<div class="exception-title"><strong>Badge Exception Queue</strong><span>Administration review required</span></div>${exceptions.map(b=>`<div><b>Visitor Badge ${esc(b.badgeNumber||'Unnumbered')}</b><span>${esc(b.status)} · ${esc(b.badgeUid)}</span><small>${esc(b.notes||'No condition notes recorded.')}</small></div>`).join('')}`:'';updateActiveTimers()}
+  function updateActiveTimers(){const extra=Math.floor((Date.now()-activeLoadedAt)/60000);document.querySelectorAll('.live-duration').forEach(el=>{el.textContent=durationText(Number(el.dataset.baseMinutes||0)+extra)})}
   function renderRows(){
     const body=$('#visitorRows');
     body.innerHTML=records.map((r,i)=>`<tr class="${r.visitId===selectedVisitId?'selected ':''}${rowStatusClass(r.status)}"><td><div class="visitor-cell"><div class="visitor-thumb ${r.hasPhoto?'photo-pending':''}" data-visit-photo="${esc(r.visitId)}" aria-label="${esc(r.fullName)} visitor photo"><span>${esc((r.fullName||'?').charAt(0))}</span></div><div><b>${esc(r.fullName)}</b><br><small>${esc(r.company)}</small></div></div></td><td>${esc(r.startDate)} ${esc(r.arrivalTime)}<br><small>${esc(r.confirmationNumber)}</small></td><td>${esc(r.sponsorName)}<br><small>${esc(r.department)}</small></td><td><span class="status ${statusClass(r.status)}">${esc(r.status)}</span></td><td>${esc(r.badgeUid||'—')}</td><td><button class="row-btn" data-i="${i}">Open</button></td></tr>`).join('');
@@ -168,6 +174,7 @@
   $('#showPinLoginBtn').onclick=()=>{$('#badgeLoginPanel').classList.add('hidden');$('#pinLoginPanel').classList.remove('hidden');$('#showPinLoginBtn').classList.add('hidden');$('#usernameInput').focus();};
   $('#showBadgeLoginBtn').onclick=()=>{$('#pinLoginPanel').classList.add('hidden');$('#badgeLoginPanel').classList.remove('hidden');$('#showPinLoginBtn').classList.remove('hidden');$('#loginBadgeUid').focus();};
   $('#refreshBtn').onclick=load;$('#searchBtn').onclick=load;$('#statusFilter').onchange=load;
+  $('#activeRefresh').onclick=loadActiveOperations;setInterval(updateActiveTimers,30000);
   $('#searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
   $('#logoutBtn').onclick=async()=>{try{await api('logout')}catch(e){}sessionStorage.clear();location.reload()};
   if(!token)setTimeout(()=>$('#loginBadgeUid')?.focus(),100);

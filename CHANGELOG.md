@@ -1,3 +1,13 @@
+## VISTA 2.3.2 — Active Visitor Accountability
+
+- Added a live Active Visitors and Badges Out workspace to Security Operations.
+- Added current onsite duration, expected departure, sponsor, escort, badge number, and overdue indicators.
+- Added quick Open / Check Out access from each onsite visitor card.
+- Added live counts for visitors onsite, issued badges, overdue visits, and lost/broken badge exceptions.
+- Added a badge exception queue for shift accountability and Administration follow-up.
+- Added automatic onsite-duration updates and manual live-view refresh.
+- Preserved the existing visitor list, record workspace, photo loading, permissions, and checkout controls.
+
 ## VISTA 2.3.1A — Account Lock Recovery Hotfix
 
 - Added an Apps Script recovery function for clearing a locked account without changing its PIN.
