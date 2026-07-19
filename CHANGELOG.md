@@ -1,3 +1,14 @@
+## VISTA 2.3.6 — Reporting and Export
+
+- Added Operational Summary, Visitor Activity, Badge Inventory, Shift Handoff, and Audit Log reports.
+- Added 7-day, 30-day, 90-day, and 12-month report periods with optional row filtering.
+- Added authenticated, role-protected report generation with a 1,000-row preview/export safety limit.
+- Added Ford Energy-branded report previews and responsive tables.
+- Added UTF-8 CSV exports with spreadsheet-formula-injection protection.
+- Added print-ready report layouts that exclude Administration controls and unrelated page content.
+- Added `REPORT_GENERATED` and `REPORT_EXPORTED` audit events.
+- Preserved production configuration, roster sheets, Drive integrations, sponsor synchronization, and operational workflows.
+
 ## VISTA 2.3.5 — Operational Analytics Foundation
 
 - Added a role-protected operational analytics endpoint for Administrators and Security Supervisors.
