@@ -31,6 +31,9 @@
 .badge-inventory{margin-top:18px;padding:20px}.badge-inventory .section-head h2{margin:3px 0 0}.badge-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:17px 0}.badge-kpis span{padding:14px;border:1px solid var(--line);border-radius:12px;background:#f7fbff;color:var(--muted);font-size:12px}.badge-kpis b{display:block;color:var(--ford);font-size:24px;margin-bottom:3px}.badge-toolbar{display:grid;grid-template-columns:1fr 220px auto;gap:10px;margin-bottom:10px}.badge-table{overflow:auto}.badge-table code{font-family:Consolas,monospace;font-size:12px}.badge-available{background:#e7f8ee;color:#08783e}.badge-issued{background:#e5f1ff;color:#0758a5}.badge-lost,.badge-broken{background:#fff1dc;color:#9b5200}.badge-disabled{background:#fdeceb;color:#a4231b}.issued-lock{font-size:11px;color:var(--muted);font-weight:700}#saveBadgeBtn:disabled{opacity:.7;cursor:wait}
 @media(max-width:850px){.badge-kpis{grid-template-columns:1fr 1fr}.badge-toolbar{grid-template-columns:1fr}}
 
+/* VISTA 2.3.1A account lock recovery */
+@media(min-width:851px){.kpis{grid-template-columns:repeat(5,1fr)}}.pill.locked{background:#fff1dc;color:#9b3700}.failed-count{display:block;margin-top:5px;color:#9b3700!important}.actions .unlock{background:linear-gradient(135deg,#9b5200,#d97706)}.locked-kpi{border-color:#efb565!important}.locked-kpi b{color:#b54708!important}
+
 
 /* VISTA 2.2.2C compact branded module footer */
 .branded-module-footer{

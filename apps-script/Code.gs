@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.3.1-security-badge-control',
+  VERSION: '2.3.1A-account-lock-recovery',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -76,6 +76,7 @@ function doPost(e) {
       else if(action==='saveUser') { requirePermission_(session,'manageUsers'); result=saveVistaUser_(req.payload||{},session); }
       else if(action==='setUserActive') { requirePermission_(session,'manageUsers'); result=setVistaUserActive_(req.payload||{},session); }
       else if(action==='resetUserPin') { requirePermission_(session,'manageUsers'); result=resetVistaUserPin_(req.payload||{},session); }
+      else if(action==='unlockUser') { requirePermission_(session,'manageUsers'); result=unlockVistaUserAccountAuthorized_(req.payload||{},session); }
       else if(action==='deleteUser') { requirePermission_(session,'manageUsers'); result=deleteVistaUser_(req.payload||{},session); }
       else if(action==='listBadges') { requirePermission_(session,'viewBadges'); result=listVistaBadges_(req.payload||{},session); }
       else if(action==='saveBadge') { requirePermission_(session,'manageBadges'); result=saveVistaBadge_(req.payload||{},session); }
@@ -466,6 +467,18 @@ function setVistaUserPin(username,pin){
   const row=findUserRow_(username); updateObjectRow_(FE.SHEETS.USERS,row.row,{PINHash:pinHash_(String(row.obj.Username).toLowerCase(),pin),FailedLoginCount:0});
   return 'PIN updated for '+row.obj.Username;
 }
+function unlockVistaUserAccount(username){
+  const row=findUserRow_(String(username||'').trim().toLowerCase());
+  updateObjectRow_(FE.SHEETS.USERS,row.row,{FailedLoginCount:0});
+  audit_({UserID:'SYSTEM',Username:'APPS_SCRIPT_RECOVERY',Role:'System Recovery'},'ACCOUNT_UNLOCK','','','Success',String(row.obj.Username||username));
+  return 'Account lock cleared for '+row.obj.Username+'. The existing PIN was not changed.';
+}
+function recoverSgrosse4Account(){return unlockVistaUserAccount('sgrosse4');}
+function resetVistaUserPinAndUnlock(username,pin){
+  const result=setVistaUserPin(username,pin);
+  audit_({UserID:'SYSTEM',Username:'APPS_SCRIPT_RECOVERY',Role:'System Recovery'},'ACCOUNT_PIN_RESET_UNLOCK','','','Success',String(username||''));
+  return result+' Account lock cleared.';
+}
 function pinHash_(username,pin){return sha256_(String(username).toLowerCase()+'|'+String(pin)+'|'+(config_().AUTH_SALT||'FORD-ENERGY-VISTA'));}
 
 function normalizeBadgeUid_(value){
@@ -638,7 +651,8 @@ function listVistaUsers_(p,session){
   if(role)rows=rows.filter(u=>u.role.toLowerCase()===role);
   if(active)rows=rows.filter(u=>(u.active?'active':'disabled')===active);
   rows.sort((a,b)=>a.fullName.localeCompare(b.fullName));
-  return {ok:true,users:rows,summary:{total:rows.length,active:rows.filter(x=>x.active).length,admins:rows.filter(x=>isAdminRole_(x.role)).length,disabled:rows.filter(x=>!x.active).length}};
+  const maxFailedLogins=Math.max(3,Number(config_().AUTH_MAX_FAILED_LOGINS||5));
+  return {ok:true,users:rows,summary:{total:rows.length,active:rows.filter(x=>x.active).length,admins:rows.filter(x=>isAdminRole_(x.role)).length,disabled:rows.filter(x=>!x.active).length,locked:rows.filter(x=>x.failedLoginCount>=maxFailedLogins).length,maxFailedLogins:maxFailedLogins}};
 }
 function publicAdminUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||''),email:String(u.Email||''),department:String(u.Department||''),company:String(u.Company||''),badgeUid:String(u.BadgeUID||''),username:String(u.Username||''),role:String(u.Role||''),approvalScope:String(u.ApprovalScope||''),active:truthyActive_(u.Active),createdAt:dateText_(u.CreatedAt),lastLoginAt:dateText_(u.LastLoginAt),failedLoginCount:Number(u.FailedLoginCount||0),notes:String(u.Notes||''),photoFileId:String(u.UserPhotoFileId||''),photoFileName:String(u.UserPhotoFileName||''),photoUrl:String(u.UserPhotoUrl||''),hasPhoto:Boolean(u.UserPhotoFileId||u.UserPhotoFileName)};}
 function isAdminRole_(role){const r=String(role||'').trim().toLowerCase();return r==='admin'||r==='super administrator'||r==='superadmin';}
@@ -715,6 +729,7 @@ function updateSessionsForUser_(user){
 }
 function setVistaUserActive_(p,session){validateRequired_(p,['userId']);const found=findUserById_(p.userId);if(String(found.obj.UserID)===String(session.UserID)&&p.active===false)throw new Error('You cannot disable your own signed-in account.');updateObjectRow_(FE.SHEETS.USERS,found.row,{Active:p.active===false?'No':'Yes'});audit_(session,p.active===false?'ADMIN_USER_DISABLE':'ADMIN_USER_ENABLE','','','Success',found.obj.Username);return{ok:true};}
 function resetVistaUserPin_(p,session){validateRequired_(p,['userId','pin']);if(String(p.pin).length<4)throw new Error('PIN must contain at least four characters.');const found=findUserById_(p.userId),username=String(found.obj.Username||'').trim().toLowerCase();updateObjectRow_(FE.SHEETS.USERS,found.row,{PINHash:pinHash_(username,String(p.pin)),FailedLoginCount:0});audit_(session,'ADMIN_PIN_RESET','','','Success',username);return{ok:true};}
+function unlockVistaUserAccountAuthorized_(p,session){validateRequired_(p,['userId']);const found=findUserById_(p.userId),username=String(found.obj.Username||'').trim().toLowerCase();updateObjectRow_(FE.SHEETS.USERS,found.row,{FailedLoginCount:0});audit_(session,'ADMIN_ACCOUNT_UNLOCK','','','Success',username);return{ok:true,message:'Account unlocked. The existing PIN was not changed.'};}
 function deleteVistaUser_(p,session){validateRequired_(p,['userId']);const found=findUserById_(p.userId);if(String(found.obj.UserID)===String(session.UserID))throw new Error('You cannot delete your own signed-in account.');if(isAdminRole_(found.obj.Role)){const admins=readObjects_(FE.SHEETS.USERS).filter(u=>truthyActive_(u.Active)&&isAdminRole_(u.Role));if(admins.length<=1)throw new Error('The final active administrator cannot be deleted.');}found.sheet.deleteRow(found.row);audit_(session,'ADMIN_USER_DELETE','','','Success',found.obj.Username);return{ok:true};}
 function listVistaAudit_(p,session){let rows=readObjects_(FE.SHEETS.AUDIT);const q=String(p.query||'').toLowerCase();if(q)rows=rows.filter(r=>Object.values(r).join(' ').toLowerCase().includes(q));rows=rows.slice(-Math.min(500,Math.max(25,Number(p.limit||100)))).reverse();return{ok:true,events:rows.map(r=>({auditId:String(r.AuditID||''),timestamp:dateText_(r.Timestamp),username:String(r.Username||''),role:String(r.Role||''),action:String(r.Action||''),result:String(r.Result||''),details:String(r.Details||'')}))};}
 function dateText_(value){if(!value)return'';try{return Utilities.formatDate(new Date(value),tz_(),'yyyy-MM-dd HH:mm:ss')}catch(e){return String(value)}}

@@ -1,3 +1,13 @@
+## VISTA 2.3.1A — Account Lock Recovery Hotfix
+
+- Added an Apps Script recovery function for clearing a locked account without changing its PIN.
+- Added a recovery function that resets the PIN and clears the lock in one operation.
+- Added locked-account counts and indicators to Identity & Access Management.
+- Added an authorized Unlock action for administrators.
+- Made the existing Reset PIN action explicitly clear account locks and refresh the user list.
+- Added audit events for manual recovery, administrative unlocks, and recovery PIN resets.
+- Preserved successful badge authentication as an automatic lock reset path.
+
 ## VISTA 2.3.1 — Security Badge Control
 
 - Added an available-badge selector to the Security Operations check-in workflow while preserving scan-first UID entry.
