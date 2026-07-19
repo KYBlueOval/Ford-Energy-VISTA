@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.3.0-badge-inventory',
+  VERSION: '2.3.1-security-badge-control',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -281,20 +281,21 @@ function listVisits_(p) {
   return {ok:true,visits,kpis};
 }
 
-function checkInVisit_(p) {
+function checkInVisit_(p,session) {
   validateRequired_(p,['visitId','badgeUid','officerName']); const row=findVisitRow_(p.visitId), rec=row.obj;
   if(String(rec.Status)!=='Approved')throw new Error('Check-in prohibited: the reservation must be Approved before a badge UID can be assigned.');
   if(rec.Status==='Checked In')throw new Error('Visitor is already checked in.'); if(rec.Status==='Checked Out')throw new Error('Visitor is already checked out.');
-  ensureBadgeAvailable_(p.badgeUid,p.visitId); const now=new Date();
+  const badge=ensureBadgeAvailable_(p.badgeUid,p.visitId,{allowUnknown:Boolean(p.allowRegisterUnknownBadge),badgeNumber:p.badgeNumber||'',session:session}); const now=new Date();
   updateVisitRow_(row.row,{Status:'Checked In',CheckInTime:now,BadgeUID:p.badgeUid,CheckInOfficer:p.officerName,SponsorNotified:p.sponsorNotified?'Yes':'No',IDRetained:p.idRetained?'Yes':'No',LastUpdatedAt:now});
-  assignBadge_(p.badgeUid,p.visitId,now); logActivity_(p.visitId,'CHECK_IN',p.officerName,p.badgeUid,p.notes||''); return {ok:true};
+  assignBadge_(p.badgeUid,p.visitId,now); logActivity_(p.visitId,'CHECK_IN',p.officerName,p.badgeUid,[badge.badgeNumber?'Visitor Badge '+badge.badgeNumber:'',p.notes||''].filter(Boolean).join(' · ')); return {ok:true,badge:badge};
 }
 function checkOutVisit_(p) {
   validateRequired_(p,['visitId','badgeUid','officerName']); const row=findVisitRow_(p.visitId), rec=row.obj;
-  if(rec.Status!=='Checked In')throw new Error('Visitor is not currently checked in.'); if(String(rec.BadgeUID)!==String(p.badgeUid))throw new Error('Returned badge UID does not match the issued badge.');
+  if(rec.Status!=='Checked In')throw new Error('Visitor is not currently checked in.'); if(normalizeBadgeUid_(rec.BadgeUID)!==normalizeBadgeUid_(p.badgeUid))throw new Error('Returned badge UID does not match the issued badge.');
   const now=new Date(), duration=Math.max(0,Math.round((now-new Date(rec.CheckInTime))/60000));
   updateVisitRow_(row.row,{Status:'Checked Out',CheckOutTime:now,CheckOutOfficer:p.officerName,IDReturned:p.idReturned?'Yes':'No',ActualDurationMinutes:duration,LastUpdatedAt:now});
-  returnBadge_(p.badgeUid,now); logActivity_(p.visitId,'CHECK_OUT',p.officerName,p.badgeUid,p.notes||''); return {ok:true,durationMinutes:duration};
+  const condition=String(p.badgeCondition||'Available'),allowedConditions=['Available','Lost','Broken'];if(!allowedConditions.includes(condition))throw new Error('Select a valid returned-badge condition.');
+  returnBadge_(p.badgeUid,now,condition,p.notes||''); logActivity_(p.visitId,'CHECK_OUT',p.officerName,p.badgeUid,['Badge condition '+condition,p.notes||''].filter(Boolean).join(' · ')); return {ok:true,durationMinutes:duration,badgeCondition:condition};
 }
 function updateVisitStatus_(p) { validateRequired_(p,['visitId','status']); const row=findVisitRow_(p.visitId),now=new Date();updateVisitRow_(row.row,{Status:p.status,LastUpdatedAt:now});logActivity_(p.visitId,'STATUS_UPDATED',p.officerName||'Security','',p.status);return {ok:true}; }
 function getVisitPhoto_(p) {
@@ -384,9 +385,9 @@ function notifySubmission_(r){
   if(result.errors.length)console.log('VISTA notification errors: '+result.errors.join(' | '));
   return result;
 }
-function ensureBadgeAvailable_(uid,visitId){const normalized=normalizeBadgeUid_(uid),s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.BADGES),rows=readObjects_(FE.SHEETS.BADGES),b=rows.find(x=>normalizeBadgeUid_(x.BadgeUID)===normalized);if(b&&String(b.Status)==='Issued'&&String(b.CurrentVisitID)!==String(visitId))throw new Error('Badge is already issued to another visitor.');if(b&&['Lost','Broken','Disabled'].includes(String(b.Status)))throw new Error('Badge '+(b.BadgeNumber||b.BadgeUID)+' is '+String(b.Status).toLowerCase()+' and cannot be issued.');if(!b)s.appendRow([uid,'','Available','','','','Auto-created during check-in']);}
+function ensureBadgeAvailable_(uid,visitId,options){const normalized=normalizeBadgeUid_(uid),opts=options||{},s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.BADGES),rows=readObjects_(FE.SHEETS.BADGES),b=rows.find(x=>normalizeBadgeUid_(x.BadgeUID)===normalized);if(b&&String(b.Status)==='Issued'&&String(b.CurrentVisitID)!==String(visitId))throw new Error('Badge is already issued to another visitor.');if(b&&['Lost','Broken','Disabled'].includes(String(b.Status)))throw new Error('Badge '+(b.BadgeNumber||b.BadgeUID)+' is '+String(b.Status).toLowerCase()+' and cannot be issued.');if(!b){if(!opts.allowUnknown||!opts.session||!permissionsForRole_(opts.session.Role).registerUnknownBadge)throw new Error('This badge UID is not registered in VISTA. Ask a Security Supervisor or Administrator to register it before check-in.');const number=String(opts.badgeNumber||'').trim();if(!number)throw new Error('A visitor badge number is required when registering an unknown UID.');const duplicate=rows.find(x=>String(x.BadgeNumber||'').trim().toLowerCase()===number.toLowerCase());if(duplicate)throw new Error('Visitor Badge '+number+' is already assigned to another UID.');s.appendRow([uid,number,'Available','','','','Registered during supervised check-in']);audit_(opts.session,'BADGE_REGISTERED_AT_CHECK_IN',visitId,'','Success','Visitor Badge '+number+' · '+uid);return{badgeUid:String(uid),badgeNumber:number,status:'Available',registeredNow:true};}return publicBadge_(b);}
 function assignBadge_(uid,visitId,now){upsertBadge_(uid,{Status:'Issued',CurrentVisitID:visitId,IssuedAt:now,ReturnedAt:''})}
-function returnBadge_(uid,now){upsertBadge_(uid,{Status:'Available',CurrentVisitID:'',ReturnedAt:now})}
+function returnBadge_(uid,now,condition,notes){upsertBadge_(uid,{Status:condition||'Available',CurrentVisitID:'',ReturnedAt:now,Notes:String(notes||'')})}
 function upsertBadge_(uid,updates){const s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.BADGES),data=s.getDataRange().getValues(),headers=data[0],idx=headers.indexOf('BadgeUID'),normalized=normalizeBadgeUid_(uid);let row=-1;for(let i=1;i<data.length;i++)if(normalizeBadgeUid_(data[i][idx])===normalized){row=i+1;break}if(row<0){s.appendRow(FE.BADGE_HEADERS.map(h=>h==='BadgeUID'?uid:(updates[h]??'')));return}Object.entries(updates).forEach(([k,v])=>{const c=headers.indexOf(k);if(c>=0)s.getRange(row,c+1).setValue(v)})}
 function publicBadge_(b){return{badgeUid:String(b.BadgeUID||''),badgeNumber:String(b.BadgeNumber||''),status:String(b.Status||'Available'),currentVisitId:String(b.CurrentVisitID||''),issuedAt:dateText_(b.IssuedAt),returnedAt:dateText_(b.ReturnedAt),notes:String(b.Notes||'')};}
 function findBadgeRow_(uid){const normalized=normalizeBadgeUid_(uid),s=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.BADGES),data=s.getDataRange().getValues(),h=data[0],idx=h.indexOf('BadgeUID');for(let i=1;i<data.length;i++)if(normalizeBadgeUid_(data[i][idx])===normalized)return{row:i+1,obj:h.reduce((o,k,j)=>(o[k]=data[i][j],o),{})};throw new Error('Badge inventory record not found.');}
@@ -576,19 +577,19 @@ function truthyActive_(v){return !['no','false','0','inactive','disabled',''].in
 
 function permissionsForRole_(role){
   const r=String(role||'').trim().toLowerCase();
-  const none={viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:false,manageBadges:false};
-  if(r==='admin'||r==='super administrator'||r==='superadmin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true,viewBadges:true,manageBadges:true};
-  if(r==='security supervisor')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewBadges:true,manageBadges:false};
-  if(r==='security')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewBadges:true,manageBadges:false};
-  if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:true,manageBadges:false};
-  if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:false,manageBadges:false};
+  const none={viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false};
+  if(r==='admin'||r==='super administrator'||r==='superadmin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true,viewBadges:true,manageBadges:true,registerUnknownBadge:true};
+  if(r==='security supervisor')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewBadges:true,manageBadges:false,registerUnknownBadge:true};
+  if(r==='security')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewBadges:true,manageBadges:false,registerUnknownBadge:false};
+  if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:true,manageBadges:false,registerUnknownBadge:false};
+  if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false};
   return none;
 }
 function requirePermission_(session,key){if(!permissionsForRole_(session.Role)[key])throw new Error('Your '+session.Role+' role is not authorized to perform this action.');}
 function publicSessionUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||u.Username||''),email:String(u.Email||''),department:String(u.Department||''),username:String(u.Username||''),role:String(u.Role||''),photoFileId:String(u.UserPhotoFileId||''),photoFileName:String(u.UserPhotoFileName||''),photoUrl:String(u.UserPhotoUrl||'')};}
 function listVisitsForSession_(p,session){requirePermission_(session,'viewVisits');let result=listVisits_(p);if(String(session.Role).toLowerCase()==='sponsor'||String(session.Role).toLowerCase()==='approver'){const email=String(session.Email||'').toLowerCase();result.visits=result.visits.filter(v=>String(v.sponsorEmail||'').toLowerCase()===email);result.kpis={expectedToday:result.visits.length,onsite:result.visits.filter(v=>v.status==='Checked In').length,checkedOutToday:result.visits.filter(v=>v.status==='Checked Out').length,overdue:0};}return result;}
-function checkInVisitAuthorized_(p,session){requirePermission_(session,'checkIn');p.officerName=p.officerName||session.FullName||session.Username;const result=checkInVisit_(p);auditVisit_(session,'CHECK_IN',p.visitId,'Success','Badge '+p.badgeUid);return result;}
-function checkOutVisitAuthorized_(p,session){requirePermission_(session,'checkOut');p.officerName=p.officerName||session.FullName||session.Username;const result=checkOutVisit_(p);auditVisit_(session,'CHECK_OUT',p.visitId,'Success','Badge '+p.badgeUid);return result;}
+function checkInVisitAuthorized_(p,session){requirePermission_(session,'checkIn');p.officerName=p.officerName||session.FullName||session.Username;const result=checkInVisit_(p,session);auditVisit_(session,'CHECK_IN',p.visitId,'Success','Badge '+p.badgeUid+(result.badge&&result.badge.badgeNumber?' · Visitor Badge '+result.badge.badgeNumber:''));return result;}
+function checkOutVisitAuthorized_(p,session){requirePermission_(session,'checkOut');p.officerName=p.officerName||session.FullName||session.Username;const result=checkOutVisit_(p);auditVisit_(session,'CHECK_OUT',p.visitId,'Success','Badge '+p.badgeUid+' · Condition '+result.badgeCondition);return result;}
 function updateVisitStatusAuthorized_(p,session){
   validateRequired_(p,['visitId','status']);
   const status=String(p.status),role=String(session.Role).toLowerCase(),rec=findVisitRow_(p.visitId).obj,current=String(rec.Status||'Submitted');

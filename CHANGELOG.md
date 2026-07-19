@@ -1,3 +1,14 @@
+## VISTA 2.3.1 — Security Badge Control
+
+- Added an available-badge selector to the Security Operations check-in workflow while preserving scan-first UID entry.
+- Added live badge status feedback for Available, Issued, Lost, Broken, Disabled, and unknown UIDs.
+- Prevented Security and Front Desk accounts from registering unknown badge UIDs.
+- Added an explicit Security Supervisor/Admin override that requires a unique visitor badge number and creates an audit event.
+- Added returned-badge condition selection for Available, Broken, or Lost during checkout.
+- Kept Broken and Lost badges unavailable after checkout for Administration review.
+- Added badge number and condition details to visit activity and audit records.
+- Updated all platform version labels to 2.3.1 without changing production configuration or branding assets.
+
 ## VISTA 2.3.0 — Badge Inventory Milestone 1
 
 - Added an authenticated Badge Inventory workspace to Administration.
