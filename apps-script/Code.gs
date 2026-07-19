@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.3.3-shift-handoff-accountability',
+  VERSION: '2.3.4-handoff-resolution-escalation',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -13,7 +13,7 @@ const FE = {
   SECURITY_HEADERS: ['EmployeeID','FullName','Email','Department','Company','BadgeUID','SecurityLevel','Active','LastUpdatedAt'],
   SESSION_HEADERS: ['SessionToken','UserID','Username','Role','CreatedAt','ExpiresAt','LastSeenAt','UserAgent'],
   AUDIT_HEADERS: ['AuditID','Timestamp','UserID','Username','Role','Action','VisitID','ConfirmationNumber','Result','Details'],
-  HANDOFF_HEADERS: ['HandoffID','CreatedAt','CreatedByUserID','CreatedBy','Role','ShiftLabel','Notes','VisitorsOnsite','OverdueVisitors','BadgesOut','BadgeExceptions','Status','SnapshotJSON'],
+  HANDOFF_HEADERS: ['HandoffID','CreatedAt','CreatedByUserID','CreatedBy','Role','ShiftLabel','Notes','VisitorsOnsite','OverdueVisitors','BadgesOut','BadgeExceptions','Status','WorkflowStatus','AcknowledgedAt','AcknowledgedByUserID','AcknowledgedBy','AssignedTo','EscalationLevel','EscalationNotes','ResolutionNotes','ResolvedAt','ResolvedByUserID','ResolvedBy','LastUpdatedAt','SnapshotJSON'],
 
   AGREEMENT_DEFINITIONS: [
     {id:'SECURITY',title:'Security Agreement',body:'Visitors are subject to screening, access restrictions, badge-control requirements, escort requirements, and Ford Energy Security direction. Unauthorized access, recording, removal of property or information, and bypass of security controls are prohibited.'},
@@ -70,6 +70,9 @@ function doPost(e) {
       else if(action==='listActiveOperations') { requirePermission_(session,'viewVisits'); result=listActiveOperations_(req.payload||{},session); }
       else if(action==='listShiftHandoffs') { requirePermission_(session,'checkOut'); result=listShiftHandoffs_(req.payload||{},session); }
       else if(action==='createShiftHandoff') { requirePermission_(session,'checkOut'); result=createShiftHandoff_(req.payload||{},session); }
+      else if(action==='acknowledgeShiftHandoff') { requirePermission_(session,'checkOut'); result=acknowledgeShiftHandoff_(req.payload||{},session); }
+      else if(action==='resolveShiftHandoff') { requirePermission_(session,'checkOut'); result=resolveShiftHandoff_(req.payload||{},session); }
+      else if(action==='escalateShiftHandoff') { requirePermission_(session,'approve'); result=escalateShiftHandoff_(req.payload||{},session); }
       else if(action==='getVisitPhoto') { requirePermission_(session,'viewPhoto'); result=getVisitPhoto_(req.payload||{}); }
       else if(action==='getUserPhoto') result=getUserPhotoAuthorized_(req.payload||{},session);
       else if(action==='listVisitActivity') { requirePermission_(session,'viewVisits'); result=listVisitActivityAuthorized_(req.payload||{},session); }
@@ -180,7 +183,7 @@ function setupVisitorManagement() {
   seedAgreements_();
   seedInitialAdmin_();
   [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.3.3 setup complete. Identity, badge, audit, and shift-handoff tables are ready.';
+  return 'VISTA 2.3.4 setup complete. Identity, badge, audit, and handoff resolution tables are ready.';
 }
 
 function seedAgreements_(){
@@ -305,7 +308,7 @@ function createShiftHandoff_(p,session){
   if(notes.length<5)throw new Error('Enter handoff notes with at least five characters.');
   const live=listActiveOperations_({},session),summary=live.summary;
   const snapshot={generatedAt:live.generatedAt,visitors:live.visits.map(v=>({visitId:v.visitId,fullName:v.fullName,company:v.company,sponsorName:v.sponsorName,badgeUid:v.badgeUid,badgeNumber:v.badgeNumber,onsiteMinutes:v.onsiteMinutes,overdue:v.overdue,expectedDeparture:v.expectedDeparture})),badgeExceptions:live.exceptions.map(b=>({badgeUid:b.badgeUid,badgeNumber:b.badgeNumber,status:b.status,notes:b.notes}))};
-  const record={HandoffID:'HND-'+Utilities.getUuid().slice(0,12).toUpperCase(),CreatedAt:new Date(),CreatedByUserID:String(session.UserID||''),CreatedBy:String(session.FullName||session.Username||''),Role:String(session.Role||''),ShiftLabel:shiftLabel,Notes:notes,VisitorsOnsite:summary.onsite,OverdueVisitors:summary.overdue,BadgesOut:summary.badgesOut,BadgeExceptions:summary.badgeExceptions,Status:(summary.onsite||summary.overdue||summary.badgesOut||summary.badgeExceptions)?'Open Items':'Clear',SnapshotJSON:JSON.stringify(snapshot)};
+  const now=new Date(),record={HandoffID:'HND-'+Utilities.getUuid().slice(0,12).toUpperCase(),CreatedAt:now,CreatedByUserID:String(session.UserID||''),CreatedBy:String(session.FullName||session.Username||''),Role:String(session.Role||''),ShiftLabel:shiftLabel,Notes:notes,VisitorsOnsite:summary.onsite,OverdueVisitors:summary.overdue,BadgesOut:summary.badgesOut,BadgeExceptions:summary.badgeExceptions,Status:(summary.onsite||summary.overdue||summary.badgesOut||summary.badgeExceptions)?'Open Items':'Clear',WorkflowStatus:'Pending',AcknowledgedAt:'',AcknowledgedByUserID:'',AcknowledgedBy:'',AssignedTo:'',EscalationLevel:'None',EscalationNotes:'',ResolutionNotes:'',ResolvedAt:'',ResolvedByUserID:'',ResolvedBy:'',LastUpdatedAt:now,SnapshotJSON:JSON.stringify(snapshot)};
   const lock=LockService.getScriptLock();lock.waitLock(15000);
   try{appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.HANDOFFS),record,FE.HANDOFF_HEADERS);}finally{lock.releaseLock();}
   audit_(session,'SHIFT_HANDOFF_CREATED','','','Success',record.HandoffID+' · '+record.Status+' · '+notes.slice(0,180));
@@ -316,7 +319,31 @@ function listShiftHandoffs_(p,session){
   const handoffs=readObjects_(FE.SHEETS.HANDOFFS).slice(-limit).reverse().map(publicShiftHandoff_);
   return{ok:true,handoffs:handoffs};
 }
-function publicShiftHandoff_(r){return{handoffId:String(r.HandoffID||''),createdAt:dateText_(r.CreatedAt),createdBy:String(r.CreatedBy||''),role:String(r.Role||''),shiftLabel:String(r.ShiftLabel||''),notes:String(r.Notes||''),visitorsOnsite:Number(r.VisitorsOnsite||0),overdueVisitors:Number(r.OverdueVisitors||0),badgesOut:Number(r.BadgesOut||0),badgeExceptions:Number(r.BadgeExceptions||0),status:String(r.Status||'')};}
+function findShiftHandoffRow_(handoffId){
+  const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.HANDOFFS);if(!sheet||sheet.getLastRow()<2)throw new Error('Shift handoff record not found.');
+  const data=sheet.getDataRange().getValues(),headers=data[0],idIndex=headers.indexOf('HandoffID');
+  for(let i=1;i<data.length;i++)if(String(data[i][idIndex])===String(handoffId))return{sheet:sheet,row:i+1,obj:headers.reduce((o,k,j)=>(o[k]=data[i][j],o),{})};
+  throw new Error('Shift handoff record not found. Refresh the handoff list and try again.');
+}
+function acknowledgeShiftHandoff_(p,session){
+  validateRequired_(p,['handoffId']);const found=findShiftHandoffRow_(p.handoffId),workflow=String(found.obj.WorkflowStatus||'Pending');if(workflow==='Resolved')throw new Error('This shift handoff is already resolved.');
+  const now=new Date(),by=String(session.FullName||session.Username||''),assigned=String(p.assignedTo||by).trim().slice(0,120);
+  updateObjectRow_(FE.SHEETS.HANDOFFS,found.row,{WorkflowStatus:'Acknowledged',AcknowledgedAt:now,AcknowledgedByUserID:String(session.UserID||''),AcknowledgedBy:by,AssignedTo:assigned,LastUpdatedAt:now});
+  audit_(session,'SHIFT_HANDOFF_ACKNOWLEDGED','','','Success',found.obj.HandoffID+' · Assigned to '+assigned);return{ok:true};
+}
+function resolveShiftHandoff_(p,session){
+  validateRequired_(p,['handoffId']);const notes=String(p.resolutionNotes||'').trim();if(notes.length<5)throw new Error('Enter resolution notes with at least five characters.');
+  const found=findShiftHandoffRow_(p.handoffId),workflow=String(found.obj.WorkflowStatus||'Pending');if(workflow==='Resolved')throw new Error('This shift handoff is already resolved.');if(workflow!=='Acknowledged')throw new Error('A shift handoff must be acknowledged before it can be resolved.');
+  const now=new Date(),by=String(session.FullName||session.Username||'');updateObjectRow_(FE.SHEETS.HANDOFFS,found.row,{WorkflowStatus:'Resolved',ResolutionNotes:notes.slice(0,1000),ResolvedAt:now,ResolvedByUserID:String(session.UserID||''),ResolvedBy:by,LastUpdatedAt:now});
+  audit_(session,'SHIFT_HANDOFF_RESOLVED','','','Success',found.obj.HandoffID+' · '+notes.slice(0,180));return{ok:true};
+}
+function escalateShiftHandoff_(p,session){
+  validateRequired_(p,['handoffId']);const notes=String(p.escalationNotes||'').trim();if(notes.length<5)throw new Error('Enter an escalation reason with at least five characters.');
+  const found=findShiftHandoffRow_(p.handoffId);if(String(found.obj.WorkflowStatus||'Pending')==='Resolved')throw new Error('A resolved shift handoff cannot be escalated.');
+  const now=new Date(),assigned=String(p.assignedTo||found.obj.AssignedTo||'Security Supervisor').trim().slice(0,120);updateObjectRow_(FE.SHEETS.HANDOFFS,found.row,{EscalationLevel:'Supervisor Attention',EscalationNotes:notes.slice(0,1000),AssignedTo:assigned,LastUpdatedAt:now});
+  audit_(session,'SHIFT_HANDOFF_ESCALATED','','','Success',found.obj.HandoffID+' · Assigned to '+assigned+' · '+notes.slice(0,180));return{ok:true};
+}
+function publicShiftHandoff_(r){const created=r.CreatedAt?new Date(r.CreatedAt):null,ageMinutes=created&&!isNaN(created)?Math.max(0,Math.floor((new Date()-created)/60000)):0;return{handoffId:String(r.HandoffID||''),createdAt:dateText_(r.CreatedAt),createdBy:String(r.CreatedBy||''),role:String(r.Role||''),shiftLabel:String(r.ShiftLabel||''),notes:String(r.Notes||''),visitorsOnsite:Number(r.VisitorsOnsite||0),overdueVisitors:Number(r.OverdueVisitors||0),badgesOut:Number(r.BadgesOut||0),badgeExceptions:Number(r.BadgeExceptions||0),status:String(r.Status||''),workflowStatus:String(r.WorkflowStatus||'Pending'),ageMinutes:ageMinutes,acknowledgedAt:dateText_(r.AcknowledgedAt),acknowledgedBy:String(r.AcknowledgedBy||''),assignedTo:String(r.AssignedTo||''),escalationLevel:String(r.EscalationLevel||'None'),escalationNotes:String(r.EscalationNotes||''),resolutionNotes:String(r.ResolutionNotes||''),resolvedAt:dateText_(r.ResolvedAt),resolvedBy:String(r.ResolvedBy||'')};}
 
 function checkInVisit_(p,session) {
   validateRequired_(p,['visitId','badgeUid','officerName']); const row=findVisitRow_(p.visitId), rec=row.obj;

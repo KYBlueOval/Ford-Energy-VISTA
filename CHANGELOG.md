@@ -1,3 +1,15 @@
+## VISTA 2.3.4 — Handoff Resolution and Escalation
+
+- Added incoming-officer acknowledgement for recorded shift handoffs.
+- Added follow-up ownership assignments and acknowledgement timestamps.
+- Added required resolution notes, resolver identity, and resolution timestamps.
+- Added supervisor-only escalation with assigned owner and escalation reason.
+- Added Pending, Acknowledged, and Resolved workflow states without changing the original accountability snapshot.
+- Added live unresolved-handoff aging and preserved supervisor assignments during acknowledgement.
+- Added dedicated audit events for acknowledgement, escalation, and resolution.
+- Added a non-destructive sheet migration for the new handoff workflow columns.
+- Preserved the FrontDesk and Security roster sheets as compatibility sources while Users remains the authoritative identity table.
+
 ## VISTA 2.3.3 — Shift Handoff and Reconciliation
 
 - Replaced native grey live-accountability controls with consistent Ford-blue gradient actions.
