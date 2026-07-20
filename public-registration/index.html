@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#003478" />
-  <title>VISTA | Visitor Pre-Arrival Registration</title>
+  <title>V • I • S • T • A | Visitor Registration</title>
   <link rel="icon" href="/Ford-Energy-VISTA/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/Ford-Energy-VISTA/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/Ford-Energy-VISTA/favicon-16x16.png">
@@ -13,12 +13,67 @@
   <meta name="msapplication-TileColor" content="#003478">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="stylesheet" href="styles.css?v=2.3.0" />
+
+<style>
+  .vista-product-wordmark{
+    display:inline-flex;
+    align-items:center;
+    white-space:nowrap;
+    font:inherit;
+    font-weight:900;
+    letter-spacing:.055em;
+    line-height:1;
+  }
+  .vista-product-dot{
+    display:inline-block;
+    color:currentColor;
+    opacity:.48;
+    font-size:.68em;
+    margin:0 .13em;
+    transform:translateY(-.02em);
+  }
+  .product-module-lockup{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:.42rem;
+  }
+  .product-module-lockup .vista-product-wordmark{
+    font-size:clamp(2rem,4vw,3.15rem);
+    color:inherit;
+  }
+  .product-module-name{
+    margin:0;
+    font-size:clamp(1.35rem,2.2vw,2rem);
+    line-height:1.15;
+  }
+  .hero-title-lockup .vista-product-wordmark{
+    font-size:clamp(3.35rem,7vw,5.8rem);
+    color:#fff;
+  }
+  .hero-title-lockup .vista-product-dot{
+    opacity:.52;
+  }
+  .vista-global-header .vista-product-wordmark,
+  .vista-header .vista-product-wordmark{
+    color:#fff;
+  }
+  @media(max-width:700px){
+    .vista-global-header .vista-product-wordmark,
+    .vista-header .vista-product-wordmark{
+      font-size:.92em;
+      letter-spacing:.025em;
+    }
+    .vista-product-dot{margin:0 .08em}
+  }
+</style>
+
 </head>
 <body>
   <header class="topbar vista-global-header">
     <a class="brand header-brand vista-home-link" href="https://kyblueoval.github.io/Ford-Energy-VISTA/" aria-label="Return to VISTA Home Dashboard">
       <img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy" />
-      <div class="brand-copy"><strong>VISTA</strong></div>
+      <div class="brand-copy"><strong><span class="vista-product-wordmark" aria-label="VISTA">V<span class="vista-product-dot" aria-hidden="true">•</span>I<span class="vista-product-dot" aria-hidden="true">•</span>S<span class="vista-product-dot" aria-hidden="true">•</span>T<span class="vista-product-dot" aria-hidden="true">•</span>A</span></strong></div>
     </a>
     <div class="header-center">
       <div class="vista-expansion">Visitor • Information • Security • Tracking • Analytics</div>
@@ -33,7 +88,7 @@
       <div class="hero-copy">
         <p class="eyebrow">FORD ENERGY &bull; BLUEOVAL GLENDALE KENTUCKY</p>
         <div class="hero-title-lockup">
-          <h1>VISTA</h1>
+          <span class="vista-product-wordmark" aria-label="VISTA">V<span class="vista-product-dot" aria-hidden="true">•</span>I<span class="vista-product-dot" aria-hidden="true">•</span>S<span class="vista-product-dot" aria-hidden="true">•</span>T<span class="vista-product-dot" aria-hidden="true">•</span>A</span>
           <p class="hero-subtitle">Visitor Pre-Arrival Registration</p>
         </div>
         <p class="hero-description">Complete each section before arriving at the Main Security Building. Bring a valid government-issued photo ID for check-in.</p>
@@ -208,7 +263,7 @@
       <div class="form-actions"><button id="backBtn" class="btn btn-secondary" type="button" disabled>Back</button><button id="nextBtn" class="btn btn-primary" type="button">Continue</button><button id="submitBtn" class="btn btn-primary hidden" type="submit">Submit Visit Request</button></div>
     </form>
   </main>
-  <footer class="vista-module-footer branded-module-footer"><img src="../shared/assets/ford-energy-bwrdo-footer.png" alt="BlueOval Rechargeable Battery Development Organization"><div><span>Ford Energy VISTA</span><span>Visitor Pre-Arrival Registration</span><span>Version 2.3.6</span></div></footer>
+  <footer class="vista-module-footer branded-module-footer"><img src="../shared/assets/ford-energy-bwrdo-footer.png" alt="BlueOval Rechargeable Battery Development Organization"><div><span>Ford Energy V • I • S • T • A</span><span>Visitor Pre-Arrival Registration</span><span>Version 2.3.6</span></div></footer>
 
   <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><p class="eyebrow">REQUEST RECEIVED</p><h2>Visitor Registration Submitted</h2><p>Your request has been recorded and sent to the selected Ford Energy sponsor for review.</p><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><div id="confirmationQr" class="confirmation-qr" aria-label="Registration QR code"></div><div id="confirmationSummary" class="confirmation-summary"></div><div id="confirmationNotifications" class="confirmation-notifications"></div><div class="arrival-reminder"><strong>What happens next</strong><p>Your sponsor and Security Operations will review the request. Submission does not guarantee approval or site access.</p><p>Upon arrival, proceed to the Main Security Building, park in Ford Energy / Visitor Parking, and bring a valid government-issued photo ID.</p><p>Do not bring undeclared restricted items or electronic storage devices.</p></div><div class="confirmation-actions"><a id="vgsLink" class="btn btn-secondary hidden" target="_blank" rel="noopener">Open VGS Navigation</a><button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></div></dialog>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
