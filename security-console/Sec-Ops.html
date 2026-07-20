@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VISTA | Security Operations Console</title>
+  <link rel="icon" href="/Ford-Energy-VISTA/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/Ford-Energy-VISTA/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/Ford-Energy-VISTA/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/Ford-Energy-VISTA/apple-touch-icon.png">
+  <link rel="manifest" href="/Ford-Energy-VISTA/site.webmanifest">
+  <meta name="msapplication-TileColor" content="#003478">
+  <meta name="apple-mobile-web-app-capable" content="yes"><link rel="stylesheet" href="styles.css?v=2.3.4"></head>
+<body>
+<header class="vista-global-header"><a class="brand header-brand vista-home-link" href="https://kyblueoval.github.io/Ford-Energy-VISTA/" aria-label="Return to VISTA Home Dashboard"><img class="brand-logo" src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy"><span><strong>VISTA</strong></span></a><div class="header-center"><div class="vista-expansion">Visitor • Information • Security • Tracking • Analytics</div><div class="page-description">Security Operations Console</div></div><div class="header-actions"><img id="sessionAvatar" class="session-avatar hidden" alt="Signed-in user badge photo"><span id="userRole" class="user-role"></span><span id="apiStatus" class="pill">Not connected</span><button id="logoutBtn" class="link hidden">Sign out</button></div></header>
+<nav class="vista-breadcrumb" aria-label="Breadcrumb"><a href="https://kyblueoval.github.io/Ford-Energy-VISTA/">Home</a><span aria-hidden="true">›</span><span aria-current="page">Security Operations Console</span></nav><main>
+<section id="loginView" class="login card">
+  <p class="eyebrow">FORD ENERGY SECURITY OPERATIONS</p>
+  <h1>VISTA Security Console</h1>
+  <p class="login-intro">Scan your assigned Ford Energy badge to sign in. Username and PIN remain available as a backup.</p>
+  <div id="badgeLoginPanel" class="login-method primary-login">
+    <div class="method-heading"><div class="login-method-icon">▣</div><div><h2>Scan Ford Energy Badge</h2><p>Use the connected USB/HID badge reader. Press Enter if the reader does not submit automatically.</p></div></div>
+    <label>Badge UID<input id="loginBadgeUid" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Waiting for badge scan…"></label>
+    <button id="badgeLoginBtn">Sign In with Badge</button>
+  </div>
+  <button id="showPinLoginBtn" class="login-switch" type="button">Use username and PIN backup</button>
+  <div id="pinLoginPanel" class="login-method backup-login hidden">
+    <h2>Backup PIN Access</h2>
+    <label>Username<input id="usernameInput" autocomplete="username" placeholder="Assigned VISTA username"></label>
+    <label>PIN<input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" placeholder="PIN"></label>
+    <button id="loginBtn">Sign In with PIN</button>
+    <button id="showBadgeLoginBtn" class="login-switch" type="button">Return to badge scan</button>
+  </div>
+  <div id="loginMsg" class="msg" role="alert"></div>
+</section>
+<section id="appView" class="hidden">
+  <div class="title-row"><div><p class="eyebrow">MAIN SECURITY BUILDING</p><h1>VISTA Visitor Operations</h1></div><button id="refreshBtn">Refresh</button></div>
+  <div class="kpis"><div class="kpi"><span>Expected Today</span><b id="kExpected">0</b></div><div class="kpi"><span>Currently Onsite</span><b id="kOnsite">0</b></div><div class="kpi"><span>Checked Out Today</span><b id="kOut">0</b></div><div class="kpi"><span>Overdue</span><b id="kOverdue">0</b></div></div>
+  <section class="card active-operations"><div class="active-head"><div><p class="eyebrow">LIVE SITE ACCOUNTABILITY</p><h2>Active Visitors &amp; Badges Out</h2><p id="activeGenerated">Awaiting live operations data.</p></div><button id="activeRefresh" class="icon-action" type="button" title="Refresh live accountability" aria-label="Refresh live accountability"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.1 9A7 7 0 0 0 6.4 6.4L4 9m16 6-2.4 2.6A7 7 0 0 1 5.9 15"/></svg><span>Refresh</span></button></div><div class="active-summary"><article><b id="aOnsite">0</b><span>Visitors Onsite</span></article><article><b id="aBadgesOut">0</b><span>Badges Out</span></article><article class="overdue-card"><b id="aOverdue">0</b><span>Overdue</span></article><article class="exception-card"><b id="aExceptions">0</b><span>Lost / Broken</span></article></div><div id="activeVisitorRows" class="active-visitor-grid"></div><div id="activeEmpty" class="active-empty">No visitors are currently checked in.</div><div id="badgeExceptionQueue" class="exception-queue hidden"></div></section>
+  <section class="card handoff-panel"><div class="handoff-heading"><div><p class="eyebrow">SHIFT ACCOUNTABILITY</p><h2>Officer Handoff &amp; Reconciliation</h2><p>Capture the live accountability snapshot and document anything the next shift must resolve.</p></div><span class="handoff-state" id="handoffState">Ready</span></div><div class="handoff-compose"><label>Shift or post label<input id="handoffLabel" maxlength="80" placeholder="Example: Day Shift · Main Security"></label><label>Handoff notes<textarea id="handoffNotes" rows="3" placeholder="Record unresolved visitors, badge exceptions, sponsor follow-up, or other instructions."></textarea></label><button id="submitHandoff" type="button">Record Shift Handoff</button></div><div class="handoff-recent"><div class="handoff-recent-head"><h3>Recent handoffs</h3><button id="handoffRefresh" class="text-icon-action" type="button" aria-label="Refresh recent handoffs"><span aria-hidden="true">↻</span> Refresh</button></div><div id="handoffRows"></div><p id="handoffEmpty" class="active-empty">No shift handoffs have been recorded.</p></div></section>
+  <div class="toolbar card"><input id="searchInput" placeholder="Search name, confirmation, sponsor, company, plate, badge UID"><select id="statusFilter"><option value="">All statuses</option><option>Submitted</option><option>Approved</option><option>Checked In</option><option>Checked Out</option><option>Denied</option><option>No Show</option></select><button id="searchBtn">Search</button></div>
+  <div class="layout"><section class="card table-card"><table><thead><tr><th>Visitor</th><th>Visit</th><th>Sponsor</th><th>Status</th><th>Badge</th><th></th></tr></thead><tbody id="visitorRows"></tbody></table><div id="emptyState" class="empty hidden">No visitor records matched.</div></section><aside id="detailPanel" class="card detail"><h2>Visitor Record</h2><p>Select a visitor to view check-in and checkout controls.</p></aside></div>
+</section>
+</main><footer class="vista-module-footer branded-module-footer"><img src="../shared/assets/ford-energy-bwrdo-footer.png" alt="BlueOval Rechargeable Battery Development Organization"><div><span>Ford Energy VISTA</span><span>Security Operations Console</span><span>Version 2.3.6</span></div></footer><div id="operationModal" class="operation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="operationModalTitle">
+  <div class="operation-backdrop" data-close-operation></div>
+  <section class="operation-dialog">
+    <header class="operation-dialog-head"><div><p class="eyebrow" id="operationModalEyebrow">VISITOR OPERATIONS</p><h2 id="operationModalTitle">Visitor Operation</h2></div><button id="operationModalClose" class="modal-close" type="button" aria-label="Close">×</button></header>
+    <div id="operationModalBody" class="operation-dialog-body"></div>
+    <footer id="operationModalFooter" class="operation-dialog-footer"></footer>
+  </section>
+</div><div id="toast" class="toast hidden" role="status" aria-live="polite"></div><script src="config.js?v=130190"></script><script src="app.js?v=23401"></script></body></html>
