@@ -1,3 +1,12 @@
+## VISTA 2.3.7 — Mobile Operations and Incident Response
+
+- Added a Security Operations alert center for overdue visitors, badge exceptions, and escalated handoffs.
+- Added alert acknowledgement and automatic clearing when the underlying condition is resolved.
+- Added incident reporting with camera evidence, visitor/badge linkage, supervisor resolution, and audit history.
+- Added `Notifications` and `Incidents` sheets without changing existing production configuration values.
+- Added an Android companion application with mobile-data access, NFC badge scanning, camera/file capture, and direct Home, Registration, Security, and Administration navigation.
+- Added web-native NFC event handling for employee login, visitor badge assignment/return, user records, and badge inventory.
+
 ## VISTA 2.3.6 — Reporting and Export
 
 - Added Operational Summary, Visitor Activity, Badge Inventory, Shift Handoff, and Audit Log reports.
