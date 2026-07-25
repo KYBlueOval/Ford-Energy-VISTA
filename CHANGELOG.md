@@ -1,3 +1,12 @@
+## VISTA 2.3.8 — Administration Alert Broadcasts
+
+- Added Administration-authored alert and notification broadcasts for Security Operations.
+- Added effective timestamps, optional expiration, priority, detailed information, and image attachments.
+- Added persistent dashboard visibility until an administrator archives the alert or its expiration is reached.
+- Added required login acknowledgement for each Security Operations user.
+- Added individual acknowledgement records containing user, role, date, time, and client context.
+- Added acknowledgement audit events and Administration sign-off counts.
+
 ## VISTA 2.3.7 — Mobile Operations and Incident Response
 
 - Added a Security Operations alert center for overdue visitors, badge exceptions, and escalated handoffs.
