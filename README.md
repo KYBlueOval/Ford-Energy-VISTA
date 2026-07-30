@@ -1,7 +1,7 @@
 # Ford Energy VISTA
 
-Current development build: **2.3.8 — Administration Alert Broadcasts**.
+Current development build: **2.4.0 — EV Charging Access Requests**.
 
-This repository contains the public visitor registration workflow, Security Operations Console, Administration Console, Google Apps Script backend, sponsor synchronization, Ford Energy branding assets, and deployment documentation.
+This repository contains the public visitor registration workflow, employee EV charging access workflow, Security Operations Console, Administration Console, Google Apps Script backend, sponsor synchronization, Ford Energy branding assets, and deployment documentation.
 
-See `documentation/V2.3.8-DEPLOYMENT.md` for deployment and test steps.
+See `documentation/V2.4.0-DEPLOYMENT.md` for deployment and test steps.

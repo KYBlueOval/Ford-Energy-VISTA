@@ -1,6 +1,6 @@
 const FE = {
-  VERSION: '2.3.8-admin-alert-broadcasts',
-  SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs', NOTIFICATIONS:'Notifications', NOTIFICATION_ACKS:'NotificationAcknowledgements', INCIDENTS:'Incidents' },
+  VERSION: '2.4.0-ev-charging-access',
+  SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs', NOTIFICATIONS:'Notifications', NOTIFICATION_ACKS:'NotificationAcknowledgements', INCIDENTS:'Incidents', EV_REQUESTS:'EVChargingRequests', EV_ACTIVITY:'EVChargingActivity', EV_POLICIES:'EVChargingPolicies' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
   BADGE_HEADERS: ['BadgeUID','BadgeNumber','Status','CurrentVisitID','IssuedAt','ReturnedAt','Notes'],
@@ -17,6 +17,9 @@ const FE = {
   NOTIFICATION_HEADERS: ['NotificationID','CreatedAt','CreatedByUserID','CreatedBy','Type','Severity','Title','Message','EffectiveAt','ExpiresAt','RelatedVisitID','RelatedBadgeUID','RelatedHandoffID','PhotoFileId','PhotoFileName','PhotoUrl','TargetRoles','RequireAcknowledgement','Status','AcknowledgedAt','AcknowledgedByUserID','AcknowledgedBy','LastUpdatedAt','DeduplicationKey'],
   NOTIFICATION_ACK_HEADERS: ['AcknowledgementID','NotificationID','UserID','Username','FullName','Role','AcknowledgedAt','UserAgent'],
   INCIDENT_HEADERS: ['IncidentID','CreatedAt','ReportedByUserID','ReportedBy','Role','Category','Severity','Location','Description','RelatedVisitID','RelatedBadgeUID','PhotoFileId','PhotoFileName','PhotoUrl','Status','AssignedTo','ResolutionNotes','ResolvedAt','ResolvedByUserID','ResolvedBy','LastUpdatedAt'],
+  EV_REQUEST_HEADERS: ['RequestID','ConfirmationNumber','ClientSubmissionID','CreatedAt','Status','FirstName','LastName','FullName','CDSID','CellPhone','Email','Department','ManagerName','ManagerCDSID','ManagerEmail','ManagerDirectorySource','VehicleMake','VehicleModel','LicensePlate','PlateState','PolicyVersion','PolicyContentHash','PolicyAcknowledged','PolicyAcknowledgedAt','ManagerReviewTokenHash','ManagerReviewExpiresAt','ManagerDecision','ManagerDecisionAt','ManagerDecisionBy','ManagerDecisionCDSID','ManagerComments','EmployeeNotificationSent','ManagerNotificationSent','DecisionNotificationSent','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','LastUpdatedAt'],
+  EV_ACTIVITY_HEADERS: ['ActivityID','RequestID','ConfirmationNumber','EventType','EventTime','PerformedBy','PerformedByCDSID','PerformedByEmail','Details'],
+  EV_POLICY_HEADERS: ['PolicyID','Title','Version','EffectiveDate','SitePolicy','StateAndUseTerms','Active','ContentHash','LastUpdatedAt'],
 
   AGREEMENT_DEFINITIONS: [
     {id:'SECURITY',title:'Security Agreement',body:'Visitors are subject to screening, access restrictions, badge-control requirements, escort requirements, and Ford Energy Security direction. Unauthorized access, recording, removal of property or information, and bypass of security controls are prohibited.'},
@@ -38,6 +41,10 @@ function doGet(e) {
       result = listSponsors_({ query: (e.parameter && e.parameter.query) || '' });
     } else if (action === 'submissionStatus') {
       result = getSubmissionStatus_((e.parameter && e.parameter.requestId) || '');
+    } else if (action === 'getEVChargingPolicy') {
+      result = getEVChargingPolicy_();
+    } else if (action === 'getEVManagerReview') {
+      result = getEVManagerReview_((e.parameter && e.parameter.token) || '');
     } else {
       result = {ok:true, service:'Ford Energy VISTA API', version:FE.VERSION};
     }
@@ -62,6 +69,8 @@ function doPost(e) {
     req.payload=normalizeRequestPayload_(req.payload||{});
     let result;
     if(action==='createVisit') result=createVisit_(req.payload||{});
+    else if(action==='createEVChargingRequest') result=createEVChargingRequest_(req.payload||{});
+    else if(action==='submitEVManagerDecision') result=submitEVManagerDecision_(req.payload||{});
     else if(action==='listSponsors') result=listSponsors_(req.payload||{});
     else if(action==='login'||action==='pinLogin') result=loginUser_(req.payload||{}, e);
     else if(action==='badgeLogin') result=badgeLoginUser_(req.payload||{}, e);
@@ -187,11 +196,17 @@ function setupVisitorManagement() {
   ensureSheet_(ss, FE.SHEETS.NOTIFICATIONS, FE.NOTIFICATION_HEADERS);
   ensureSheet_(ss, FE.SHEETS.NOTIFICATION_ACKS, FE.NOTIFICATION_ACK_HEADERS);
   ensureSheet_(ss, FE.SHEETS.INCIDENTS, FE.INCIDENT_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.EV_REQUESTS, FE.EV_REQUEST_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.EV_ACTIVITY, FE.EV_ACTIVITY_HEADERS);
+  ensureSheet_(ss, FE.SHEETS.EV_POLICIES, FE.EV_POLICY_HEADERS);
   const config = ensureSheet_(ss, FE.SHEETS.CONFIG, FE.CONFIG_HEADERS);
   const defaults = {
     SECURITY_PIN:'1937', PHOTO_FOLDER_ID:'', USER_PHOTO_FOLDER_ID:'', INCIDENT_PHOTO_FOLDER_ID:'', SITE_TIMEZONE:'America/New_York', NOTIFICATION_EMAIL:'',
     SECURITY_CONSOLE_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/security-console/',
     PUBLIC_REGISTRATION_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/public-registration/',
+    EV_CHARGING_REQUEST_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/ev-charging-request/',
+    EV_MANAGER_REVIEW_DAYS:'14',
+    EV_NOTIFICATION_EMAIL:'',
     VGS_NAVIGATION_URL:'', TRAINING_VIDEO_URL:'', AGREEMENT_VERSION:'2026.2',
     ARRIVAL_INSTRUCTIONS:'Proceed to the Main Security Building and park in Ford Energy / Visitor Parking.',
     PARKING_INSTRUCTIONS:'Use designated Ford Energy / Visitor Parking and follow posted VGS or site signage.',
@@ -200,9 +215,10 @@ function setupVisitorManagement() {
   const existing = config.getDataRange().getValues().slice(1).reduce((o,r)=>(o[String(r[0])]=r[1],o),{});
   Object.keys(defaults).forEach(k=>{ if (existing[k] === undefined) config.appendRow([k,defaults[k]]); });
   seedAgreements_();
+  seedEVChargingPolicy_();
   seedInitialAdmin_();
-  [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS,FE.SHEETS.NOTIFICATIONS,FE.SHEETS.NOTIFICATION_ACKS,FE.SHEETS.INCIDENTS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.3.8 setup complete. Identity, badge, audit, handoff, alert broadcast, acknowledgement, incident, analytics, and reporting sources are ready.';
+  [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS,FE.SHEETS.NOTIFICATIONS,FE.SHEETS.NOTIFICATION_ACKS,FE.SHEETS.INCIDENTS,FE.SHEETS.EV_REQUESTS,FE.SHEETS.EV_ACTIVITY,FE.SHEETS.EV_POLICIES].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
+  return 'VISTA 2.4.0 setup complete. Visitor operations and EV charging access request, policy, manager approval, notification, and audit sources are ready.';
 }
 
 function seedAgreements_(){
@@ -212,6 +228,130 @@ function seedAgreements_(){
     const hash=sha256_(`${d.id}|${d.title}|${version}|${d.body}`), existing=rows.find(r=>String(r.AgreementID)===d.id&&String(r.Version)===version);
     if(!existing) sheet.appendRow([d.id,d.title,version,new Date(),hash,'Yes',new Date()]);
   });
+}
+
+function seedEVChargingPolicy_(){
+  const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.EV_POLICIES);
+  if(readObjects_(FE.SHEETS.EV_POLICIES).length)return;
+  const version='2026.1';
+  const sitePolicy=[
+    'Charging access is limited to approved Ford Energy and Ford Motor Company employees and the approved vehicle listed on the request.',
+    'Use only designated employee EV charging spaces and compatible charging equipment. Do not use unauthorized adapters, extension cords, damaged cables, or equipment.',
+    'Move the vehicle when charging is complete or when directed so charging capacity remains available to other approved employees.',
+    'Keep charging areas, access aisles, fire lanes, and accessible spaces clear. Follow posted time limits, parking controls, and Security instructions.',
+    'Immediately report damaged equipment, unsafe conditions, collisions, fire, smoke, overheating, or suspected electrical hazards. Do not use equipment that appears damaged.',
+    'Access may be suspended or revoked for unsafe use, policy violations, inaccurate request information, or failure to follow site direction.'
+  ].join('\n');
+  const stateTerms=[
+    'Comply with applicable Kentucky law, site traffic rules, posted signs, parking restrictions, fire and life-safety requirements, and all lawful directions from Ford Energy Security or site management.',
+    'Operate and park the vehicle safely. The request does not reserve a specific charger, guarantee charger availability, or authorize access to restricted site areas.',
+    'The employee is responsible for ensuring the vehicle and charging connection are compatible and in safe operating condition and for promptly disconnecting when required.',
+    'Charging records may be retained for safety, security, access control, operational planning, compliance, and audit purposes.'
+  ].join('\n');
+  const hash=sha256_([version,sitePolicy,stateTerms].join('|'));
+  appendObjectRow_(sheet,{PolicyID:'EV-POLICY-'+version.replace(/[^A-Za-z0-9]/g,''),Title:'Ford Energy BlueOval Site Charging Policy and Terms of Use',Version:version,EffectiveDate:new Date(),SitePolicy:sitePolicy,StateAndUseTerms:stateTerms,Active:'Yes',ContentHash:hash,LastUpdatedAt:new Date()},FE.EV_POLICY_HEADERS);
+}
+
+function activeEVChargingPolicy_(){
+  const rows=readObjects_(FE.SHEETS.EV_POLICIES).filter(r=>truthyActive_(r.Active));
+  if(!rows.length)throw new Error('The EV charging policy is not configured. Run setupVista or activate an EVChargingPolicies row.');
+  return rows[rows.length-1];
+}
+
+function evPolicyContentHash_(r){return sha256_([String(r.Version||''),String(r.SitePolicy||''),String(r.StateAndUseTerms||'')].join('|'))}
+function getEVChargingPolicy_(){
+  const r=activeEVChargingPolicy_();
+  return{ok:true,policy:{policyId:String(r.PolicyID||''),title:String(r.Title||''),version:String(r.Version||''),effectiveDate:dateOnly_(r.EffectiveDate),sitePolicy:String(r.SitePolicy||''),stateAndUseTerms:String(r.StateAndUseTerms||''),contentHash:evPolicyContentHash_(r)}};
+}
+
+function fordEmployeeEmail_(value){return/^[^@\s]+@(?:[A-Za-z0-9-]+\.)*ford\.com$/i.test(String(value||'').trim())}
+function validCDSID_(value){return/^[A-Za-z0-9._-]{3,32}$/.test(String(value||'').trim())}
+function normalizeCDSID_(value){return String(value||'').trim().toLowerCase()}
+function normalizePlate_(value){return String(value||'').toUpperCase().replace(/\s+/g,' ').trim()}
+
+function resolveEVManager_(p){
+  const cdsid=normalizeCDSID_(p.managerCDSID),email=String(p.managerEmail||'').trim().toLowerCase();
+  const user=readObjects_(FE.SHEETS.USERS).find(u=>truthyActive_(u.Active)&&[u.EmployeeID,u.Username].some(v=>normalizeCDSID_(v)===cdsid));
+  if(user&&String(user.Email||'').trim()){
+    const directoryEmail=String(user.Email).trim().toLowerCase();
+    if(email&&email!==directoryEmail)throw new Error('The manager email does not match the active VISTA user directory record for that CDSID.');
+    return{name:String(user.FullName||p.managerName||''),email:directoryEmail,source:'VISTA Users'};
+  }
+  const sponsor=readObjects_(FE.SHEETS.SPONSORS).find(s=>truthyActive_(s.Active)&&(normalizeCDSID_(s.SponsorID)===cdsid||String(s.SponsorEmail||'').trim().toLowerCase()===email));
+  if(sponsor&&String(sponsor.SponsorEmail||'').trim())return{name:String(sponsor.SponsorName||p.managerName||''),email:String(sponsor.SponsorEmail).trim().toLowerCase(),source:'VISTA Sponsors'};
+  return{name:String(p.managerName||'').trim(),email:email,source:'Request Form'};
+}
+
+function logEVActivity_(requestId,confirmation,eventType,by,cdsid,email,details){
+  appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.EV_ACTIVITY),{ActivityID:'EVA-'+Utilities.getUuid().slice(0,12).toUpperCase(),RequestID:requestId,ConfirmationNumber:confirmation,EventType:eventType,EventTime:new Date(),PerformedBy:by||'',PerformedByCDSID:cdsid||'',PerformedByEmail:email||'',Details:details||''},FE.EV_ACTIVITY_HEADERS);
+}
+
+function findEVRequestById_(requestId){
+  const sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.EV_REQUESTS),data=sheet.getDataRange().getValues(),headers=data[0],idx=headers.indexOf('RequestID');
+  for(let i=1;i<data.length;i++)if(String(data[i][idx])===String(requestId))return{sheet:sheet,row:i+1,obj:headers.reduce((o,k,j)=>(o[k]=data[i][j],o),{})};
+  throw new Error('EV charging access request was not found.');
+}
+
+function findEVRequestByToken_(token){
+  const hash=sha256_(String(token||'').trim());
+  const row=readObjects_(FE.SHEETS.EV_REQUESTS).find(r=>String(r.ManagerReviewTokenHash||'')===hash);
+  if(!row)throw new Error('This manager review link is invalid.');
+  return findEVRequestById_(row.RequestID);
+}
+
+function publicEVRequest_(r){
+  return{requestId:String(r.RequestID||''),confirmationNumber:String(r.ConfirmationNumber||''),createdAt:dateText_(r.CreatedAt),status:String(r.Status||''),fullName:String(r.FullName||''),cdsid:String(r.CDSID||''),department:String(r.Department||''),managerName:String(r.ManagerName||''),vehicleMake:String(r.VehicleMake||''),vehicleModel:String(r.VehicleModel||''),licensePlate:String(r.LicensePlate||''),plateState:String(r.PlateState||''),policyVersion:String(r.PolicyVersion||''),managerDecision:String(r.ManagerDecision||''),managerDecisionAt:dateText_(r.ManagerDecisionAt),managerDecisionBy:String(r.ManagerDecisionBy||''),managerComments:String(r.ManagerComments||'')};
+}
+
+function createEVChargingRequest_(p){
+  p=p||{};
+  validateRequired_(p,['firstName','lastName','cdsid','cellPhone','email','department','managerName','managerCDSID','managerEmail','vehicleMake','vehicleModel','licensePlate','plateState','policyVersion','policyContentHash']);
+  if(!validCDSID_(p.cdsid)||!validCDSID_(p.managerCDSID))throw new Error('Enter valid employee and manager CDSIDs.');
+  if(!fordEmployeeEmail_(p.email)||!fordEmployeeEmail_(p.managerEmail))throw new Error('Employee and manager email addresses must be Ford email addresses.');
+  if(String(p.cellPhone||'').replace(/\D/g,'').length<7)throw new Error('Enter a valid employee cell phone number.');
+  if(normalizePlate_(p.licensePlate).length<2||String(p.plateState||'').trim().length!==2)throw new Error('Enter a valid vehicle license plate number and state.');
+  if(!truthy_(p.policyAcknowledged))throw new Error('The charging policy and terms of use must be acknowledged.');
+  const policy=activeEVChargingPolicy_();
+  const policyHash=evPolicyContentHash_(policy);
+  if(String(p.policyVersion)!==String(policy.Version)||String(p.policyContentHash)!==policyHash)throw new Error('The charging policy changed while this request was open. Refresh and review the current policy.');
+  const manager=resolveEVManager_(p),sheet=SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.EV_REQUESTS);
+  const clientSubmissionId=String(p.clientSubmissionId||'').trim();
+  if(clientSubmissionId){const duplicate=readObjects_(FE.SHEETS.EV_REQUESTS).find(r=>String(r.ClientSubmissionID||'')===clientSubmissionId);if(duplicate)return{ok:true,requestId:String(duplicate.RequestID),confirmationNumber:String(duplicate.ConfirmationNumber),fullName:String(duplicate.FullName),status:String(duplicate.Status),duplicate:true,notifications:{employeeSent:truthy_(duplicate.EmployeeNotificationSent),managerSent:truthy_(duplicate.ManagerNotificationSent)}};}
+  const now=new Date(),requestId='EVR-'+Utilities.formatDate(now,tz_(),'yyyyMMdd')+'-'+Utilities.getUuid().slice(0,8).toUpperCase(),confirmation='EV-'+Utilities.getUuid().replace(/-/g,'').slice(0,8).toUpperCase(),fullName=[p.firstName,p.lastName].map(x=>String(x||'').trim()).join(' '),rawToken=Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,''),cfg=config_(),reviewDays=Math.min(30,Math.max(1,Number(cfg.EV_MANAGER_REVIEW_DAYS||14))),expires=new Date(now.getTime()+reviewDays*86400000);
+  const record={RequestID:requestId,ConfirmationNumber:confirmation,ClientSubmissionID:clientSubmissionId,CreatedAt:now,Status:'Pending Manager Approval',FirstName:String(p.firstName).trim(),LastName:String(p.lastName).trim(),FullName:fullName,CDSID:normalizeCDSID_(p.cdsid),CellPhone:String(p.cellPhone).trim(),Email:String(p.email).trim().toLowerCase(),Department:String(p.department).trim(),ManagerName:manager.name,ManagerCDSID:normalizeCDSID_(p.managerCDSID),ManagerEmail:manager.email,ManagerDirectorySource:manager.source,VehicleMake:String(p.vehicleMake).trim(),VehicleModel:String(p.vehicleModel).trim(),LicensePlate:normalizePlate_(p.licensePlate),PlateState:String(p.plateState).trim().toUpperCase(),PolicyVersion:String(policy.Version),PolicyContentHash:policyHash,PolicyAcknowledged:'Yes',PolicyAcknowledgedAt:now,ManagerReviewTokenHash:sha256_(rawToken),ManagerReviewExpiresAt:expires,ManagerDecision:'',ManagerDecisionAt:'',ManagerDecisionBy:'',ManagerDecisionCDSID:'',ManagerComments:'',EmployeeNotificationSent:'No',ManagerNotificationSent:'No',DecisionNotificationSent:'No',ClientLanguage:String(p.clientLanguage||''),ClientTimeZone:String(p.clientTimeZone||''),UserAgent:String(p.userAgent||''),ClientTimestamp:String(p.clientTimestamp||''),Referrer:String(p.referrer||''),LastUpdatedAt:now};
+  const lock=LockService.getScriptLock();lock.waitLock(15000);try{if(clientSubmissionId){const duplicate=readObjects_(FE.SHEETS.EV_REQUESTS).find(r=>String(r.ClientSubmissionID||'')===clientSubmissionId);if(duplicate)return{ok:true,requestId:String(duplicate.RequestID),confirmationNumber:String(duplicate.ConfirmationNumber),fullName:String(duplicate.FullName),status:String(duplicate.Status),duplicate:true,notifications:{employeeSent:truthy_(duplicate.EmployeeNotificationSent),managerSent:truthy_(duplicate.ManagerNotificationSent)}};}appendObjectRow_(sheet,record,FE.EV_REQUEST_HEADERS);}finally{lock.releaseLock();}
+  logEVActivity_(requestId,confirmation,'REQUEST_SUBMITTED',fullName,record.CDSID,record.Email,'Policy '+record.PolicyVersion+' acknowledged; manager source '+manager.source);
+  audit_({UserID:'',Username:record.CDSID,Role:'EV Applicant'},'EV_CHARGING_REQUEST_SUBMITTED',requestId,confirmation,'Success',fullName+' · '+record.LicensePlate);
+  const notifications=notifyEVChargingSubmission_(record,rawToken),found=findEVRequestById_(requestId);
+  updateObjectRow_(FE.SHEETS.EV_REQUESTS,found.row,{EmployeeNotificationSent:notifications.employeeSent?'Yes':'No',ManagerNotificationSent:notifications.managerSent?'Yes':'No',LastUpdatedAt:new Date()});
+  return{ok:true,requestId:requestId,confirmationNumber:confirmation,fullName:fullName,status:'Pending Manager Approval',policyVersion:record.PolicyVersion,notifications:notifications};
+}
+
+function getEVManagerReview_(token){
+  const found=findEVRequestByToken_(token),r=found.obj,expires=parseDateSafe_(r.ManagerReviewExpiresAt),expired=Boolean(expires&&expires<new Date()&&String(r.Status)==='Pending Manager Approval');
+  return{ok:true,request:publicEVRequest_(r),manager:{name:String(r.ManagerName||''),cdsidHint:String(r.ManagerCDSID||'').slice(0,2)+'••••'},expired:expired,reviewable:String(r.Status)==='Pending Manager Approval'&&!expired};
+}
+
+function submitEVManagerDecision_(p){
+  validateRequired_(p,['token','managerCDSID','decision']);
+  const decision=String(p.decision||''),managerCDSID=normalizeCDSID_(p.managerCDSID);
+  if(!['Approved','Denied'].includes(decision))throw new Error('Select Approve or Deny.');
+  if(decision==='Denied'&&!String(p.comments||'').trim())throw new Error('Enter a reason when denying an EV charging access request.');
+  const lock=LockService.getScriptLock();lock.waitLock(15000);
+  let found,r,now;
+  try{
+    found=findEVRequestByToken_(p.token);r=found.obj;now=new Date();
+    if(String(r.Status)!=='Pending Manager Approval')return{ok:true,request:publicEVRequest_(r),alreadyDecided:true};
+    const expires=parseDateSafe_(r.ManagerReviewExpiresAt);if(expires&&expires<now)throw new Error('This manager review link has expired. The employee must submit a new request.');
+    if(managerCDSID!==normalizeCDSID_(r.ManagerCDSID))throw new Error('The manager CDSID does not match this request.');
+    updateObjectRow_(FE.SHEETS.EV_REQUESTS,found.row,{Status:decision,ManagerDecision:decision,ManagerDecisionAt:now,ManagerDecisionBy:String(r.ManagerName||''),ManagerDecisionCDSID:managerCDSID,ManagerComments:String(p.comments||'').trim().slice(0,2000),LastUpdatedAt:now});
+  }finally{lock.releaseLock();}
+  r=Object.assign({},r,{Status:decision,ManagerDecision:decision,ManagerDecisionAt:now,ManagerDecisionBy:String(r.ManagerName||''),ManagerDecisionCDSID:managerCDSID,ManagerComments:String(p.comments||'').trim().slice(0,2000)});
+  logEVActivity_(r.RequestID,r.ConfirmationNumber,'MANAGER_'+decision.toUpperCase(),r.ManagerName,managerCDSID,r.ManagerEmail,String(r.ManagerComments||''));
+  audit_({UserID:'',Username:managerCDSID,Role:'EV Manager Approver'},'EV_CHARGING_MANAGER_'+decision.toUpperCase(),r.RequestID,r.ConfirmationNumber,'Success',r.ManagerName+' · '+r.FullName);
+  const notified=notifyEVChargingDecision_(r),updated=findEVRequestById_(r.RequestID);
+  updateObjectRow_(FE.SHEETS.EV_REQUESTS,updated.row,{DecisionNotificationSent:notified.employeeSent?'Yes':'No',LastUpdatedAt:new Date()});
+  return{ok:true,request:publicEVRequest_(r),notifications:notified};
 }
 
 
@@ -509,6 +649,49 @@ function emailDetailsTable_(r,visitPeriod,vehicle){
   const rows=[['Visitor',`${html_(r.FullName)}<br><span style="color:#667587">${html_(r.Company)}</span>`],['Visit',html_(visitPeriod)],['Department',html_(r.Department)],['Reason',html_(r.Reason)],['Requested access',html_(r.AccessScope)],['Vehicle',html_(vehicle)],['Confirmation',`<strong style="color:#003478;font-size:17px">${html_(r.ConfirmationNumber)}</strong>`]];
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #dce6f0;border-radius:10px;border-collapse:separate;overflow:hidden">${rows.map((x,i)=>`<tr><td width="34%" valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#ffffff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:12px;line-height:18px;text-transform:uppercase;letter-spacing:.55px;font-weight:bold;color:#667587">${x[0]}</td><td valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#ffffff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:14px;line-height:20px;color:#16283d">${x[1]}</td></tr>`).join('')}</table>`;
 }
+function evEmailDetails_(r){
+  const rows=[['Employee',html_(r.FullName)],['CDSID',html_(r.CDSID)],['Department',html_(r.Department)],['Vehicle',html_([r.VehicleMake,r.VehicleModel].filter(Boolean).join(' '))],['License plate',html_([r.LicensePlate,r.PlateState].filter(Boolean).join(' · '))],['Policy version',html_(r.PolicyVersion)],['Confirmation',`<strong style="color:#003478;font-size:17px">${html_(r.ConfirmationNumber)}</strong>`]];
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #dce6f0;border-radius:10px;border-collapse:separate;overflow:hidden">${rows.map((x,i)=>`<tr><td width="34%" valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#ffffff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:12px;line-height:18px;text-transform:uppercase;letter-spacing:.55px;font-weight:bold;color:#667587">${x[0]}</td><td valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#ffffff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:14px;line-height:20px;color:#16283d">${x[1]}</td></tr>`).join('')}</table>`;
+}
+function notifyEVChargingSubmission_(r,rawToken){
+  const cfg=config_(),base=String(cfg.EV_CHARGING_REQUEST_URL||'https://kyblueoval.github.io/Ford-Energy-VISTA/ev-charging-request/'),reviewUrl=base+(base.includes('?')?'&':'?')+'review='+encodeURIComponent(rawToken),details=evEmailDetails_(r),result={employeeSent:false,managerSent:false,operationsSent:false,operationsConfigured:Boolean(cfg.EV_NOTIFICATION_EMAIL),errors:[]};
+  try{
+    const body=`<p style="margin:0 0 16px">Hello ${html_(r.FullName)},</p><p style="margin:0 0 20px">Your Ford Energy BlueOval onsite EV charging access request has been received and sent to ${html_(r.ManagerName)} for approval.</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px"><tr><td style="padding:14px 16px;background:#fff4dc;border-left:5px solid #ff7a00;border-radius:7px"><strong style="color:#684300">Current status:</strong> Pending Manager Approval</td></tr></table>${details}<p style="margin:20px 0 0">Keep confirmation number <strong style="color:#003478">${html_(r.ConfirmationNumber)}</strong>. Approval does not reserve a charger or grant access to restricted areas.</p>`;
+    MailApp.sendEmail({to:r.Email,subject:`EV charging access request ${r.ConfirmationNumber} received`,htmlBody:brandedEmail_({title:'EV Charging Request Received',kicker:'FORD ENERGY · BLUEOVAL GLENDALE',preheader:`Request ${r.ConfirmationNumber} is pending manager approval`,body:body,footerNote:'This message was generated by the Ford Energy VISTA EV Charging Access workflow.'})});
+    result.employeeSent=true;
+  }catch(err){result.errors.push('Employee email: '+String(err.message||err));}
+  try{
+    const body=`<p style="margin:0 0 16px">Hello ${html_(r.ManagerName)},</p><p style="margin:0 0 20px">${html_(r.FullName)} identified you as their manager and requested onsite EV charging access for the vehicle below.</p>${details}<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:20px"><tr><td style="padding:14px 16px;background:#fff4dc;border-left:5px solid #ff7a00;border-radius:7px;color:#684300"><strong>Action required:</strong> Review the employee and vehicle information, confirm your manager CDSID, and approve or deny the request. This secure link expires on ${html_(dateOnly_(r.ManagerReviewExpiresAt))}.</td></tr></table>${emailButton_(reviewUrl,'Review EV Charging Request')}`;
+    MailApp.sendEmail({to:r.ManagerEmail,subject:`Manager approval required: EV charging request ${r.ConfirmationNumber}`,htmlBody:brandedEmail_({title:'Manager Approval Required',kicker:'FORD ENERGY · BLUEOVAL GLENDALE',preheader:`Review EV charging request ${r.ConfirmationNumber} for ${r.FullName}`,body:body,footerNote:'Use the secure review link only if you are the manager identified in this request.'})});
+    result.managerSent=true;
+  }catch(err){result.errors.push('Manager email: '+String(err.message||err));}
+  try{
+    if(cfg.EV_NOTIFICATION_EMAIL){
+      const body=`<p style="margin:0 0 20px">A new employee EV charging access request is pending manager approval.</p>${details}`;
+      MailApp.sendEmail({to:cfg.EV_NOTIFICATION_EMAIL,subject:`Pending EV charging request ${r.ConfirmationNumber}: ${r.FullName}`,htmlBody:brandedEmail_({title:'New EV Charging Access Request',kicker:'FORD ENERGY · VISTA',preheader:`New request ${r.ConfirmationNumber}`,body:body})});
+      result.operationsSent=true;
+    }
+  }catch(err){result.errors.push('Operations email: '+String(err.message||err));}
+  if(result.errors.length)console.log('VISTA EV request notification errors: '+result.errors.join(' | '));
+  return result;
+}
+function notifyEVChargingDecision_(r){
+  const cfg=config_(),approved=String(r.ManagerDecision)==='Approved',details=evEmailDetails_(r),result={employeeSent:false,operationsSent:false,operationsConfigured:Boolean(cfg.EV_NOTIFICATION_EMAIL),errors:[]},statusColor=approved?'#18864b':'#b42318',statusBg=approved?'#dcfae6':'#fee4e2';
+  try{
+    const body=`<p style="margin:0 0 16px">Hello ${html_(r.FullName)},</p><p style="margin:0 0 20px">Your manager has <strong>${html_(String(r.ManagerDecision).toLowerCase())}</strong> your Ford Energy BlueOval onsite EV charging access request.</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px"><tr><td style="padding:14px 16px;background:${statusBg};border-left:5px solid ${statusColor};border-radius:7px;color:${statusColor};font-size:17px;font-weight:bold">${html_(r.ManagerDecision)}</td></tr></table>${details}${r.ManagerComments?`<p style="margin:18px 0 0"><strong>Manager comments:</strong><br>${html_(r.ManagerComments)}</p>`:''}${approved?'<p style="margin:18px 0 0">Follow posted charging-space rules and site direction. Approval does not guarantee charger availability.</p>':''}`;
+    MailApp.sendEmail({to:r.Email,subject:`EV charging request ${r.ConfirmationNumber}: ${r.ManagerDecision}`,htmlBody:brandedEmail_({title:'EV Charging Request '+r.ManagerDecision,kicker:'FORD ENERGY · BLUEOVAL GLENDALE',preheader:`Request ${r.ConfirmationNumber} was ${String(r.ManagerDecision).toLowerCase()}`,body:body,footerNote:'This decision and its timestamp are retained in the VISTA audit record.'})});
+    result.employeeSent=true;
+  }catch(err){result.errors.push('Employee decision email: '+String(err.message||err));}
+  try{
+    if(cfg.EV_NOTIFICATION_EMAIL){
+      const body=`<p style="margin:0 0 20px">Manager ${html_(r.ManagerName)} ${html_(String(r.ManagerDecision).toLowerCase())} this EV charging access request.</p>${details}`;
+      MailApp.sendEmail({to:cfg.EV_NOTIFICATION_EMAIL,subject:`EV charging request ${r.ConfirmationNumber}: ${r.ManagerDecision}`,htmlBody:brandedEmail_({title:'EV Charging Decision Recorded',body:body})});
+      result.operationsSent=true;
+    }
+  }catch(err){result.errors.push('Operations decision email: '+String(err.message||err));}
+  if(result.errors.length)console.log('VISTA EV decision notification errors: '+result.errors.join(' | '));
+  return result;
+}
 function notifySubmission_(r){
   const cfg=config_(),reviewUrl=cfg.SECURITY_CONSOLE_URL||'',result={sponsorSent:false,visitorSent:false,securitySent:false,securityConfigured:Boolean(cfg.NOTIFICATION_EMAIL),errors:[]};
   const visitPeriod=[r.StartDate,r.ArrivalTime].filter(Boolean).join(' ')+' through '+[r.EndDate,r.DepartureTime].filter(Boolean).join(' ');
@@ -579,7 +762,7 @@ function setupVista(){
   const result=setupVisitorManagement();
   syncRosterUsers_();
   applyVista20ASecurityDefaults();
-  return result+' USER_PHOTO_FOLDER_ID is available in Config. Set it to the shared Google Drive badge-photo folder ID, then deploy a new web-app version.';
+  return result+' Existing Config values were preserved. Review the EV_CHARGING_REQUEST_URL, EV_MANAGER_REVIEW_DAYS, and optional EV_NOTIFICATION_EMAIL values, then deploy a new web-app version.';
 }
 
 function setupVistaIdentityAndRoles(){
@@ -929,9 +1112,9 @@ function applyVista20ASecurityDefaults(){
   const rows=sheet.getDataRange().getValues();
   Object.keys(defaults).forEach(key=>{
     let found=false;
-    for(let i=1;i<rows.length;i++)if(String(rows[i][0]).trim()===key){sheet.getRange(i+1,2).setValue(defaults[key]);found=true;break;}
+    for(let i=1;i<rows.length;i++)if(String(rows[i][0]).trim()===key){if(String(rows[i][1]||'').trim()==='')sheet.getRange(i+1,2).setValue(defaults[key]);found=true;break;}
     if(!found)sheet.appendRow([key,defaults[key]]);
   });
   cleanupExpiredVistaSessions();
-  return 'VISTA 2.0A security defaults applied.';
+  return 'VISTA security defaults verified without replacing configured values.';
 }

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#061f4a">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Ford Energy BlueOval Glendale onsite EV charging access request for Ford employees.">
+  <title>Ford Energy | On-Site EV Charging Access Request</title>
+  <link rel="icon" href="/Ford-Energy-VISTA/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/Ford-Energy-VISTA/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=24001">
+</head>
+<body>
+  <header class="vista-header">
+    <a class="header-brand" href="../" aria-label="Return to VISTA Home Dashboard">
+      <img src="../shared/assets/ford-energy-primary-logo.png" alt="Ford Energy">
+      <span class="vista-wordmark" aria-label="VISTA">V<span>•</span>I<span>•</span>S<span>•</span>T<span>•</span>A</span>
+    </a>
+    <div class="header-center">
+      <div class="vista-expansion">Visitor • Information • Security • Tracking • Analytics</div>
+      <div class="page-description">EV Charging Access Request</div>
+    </div>
+    <div class="header-meta">Ford Energy<br>BlueOval Glendale Kentucky</div>
+  </header>
+
+  <main class="shell">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../">Home</a><span>›</span><span>EV Charging Access Request</span></nav>
+
+    <section id="requestApplication">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">FORD ENERGY · BLUEOVAL GLENDALE</p>
+          <h1>On-Site EV Charging Access Request</h1>
+          <p>Request authorization for an employee vehicle to use designated onsite EV charging equipment.</p>
+          <div class="employee-only">Ford Energy &amp; Ford Motor Company employees only</div>
+        </div>
+        <div class="hero-status">
+          <span id="heroStep">Step 1 of 2</span>
+          <strong id="heroStepName">Employee &amp; Vehicle</strong>
+          <div class="progress"><i id="progressBar"></i></div>
+        </div>
+      </section>
+
+      <div class="steps" aria-label="Request progress">
+        <button class="step active" id="stepNav1" type="button"><span>1</span><div><strong>Request details</strong><small>Employee, manager, and vehicle</small></div></button>
+        <button class="step" id="stepNav2" type="button"><span>2</span><div><strong>Review &amp; acknowledge</strong><small>Policy, terms, and submission</small></div></button>
+      </div>
+
+      <form id="evRequestForm" novalidate>
+        <section class="panel form-step active" id="formStep1">
+          <div class="section-heading">
+            <div><p class="eyebrow">STEP 1</p><h2>Employee and vehicle information</h2></div>
+            <span>All fields are required</span>
+          </div>
+
+          <div class="form-notice">
+            Submit information exactly as it appears in Ford records. Your manager will receive a secure approval request at the email listed below.
+          </div>
+
+          <h3>Employee</h3>
+          <div class="grid cols-3">
+            <label>First name<input name="firstName" required autocomplete="given-name" maxlength="80"></label>
+            <label>Last name<input name="lastName" required autocomplete="family-name" maxlength="80"></label>
+            <label>CDSID<input name="cdsid" required autocomplete="username" maxlength="32" pattern="[A-Za-z0-9._-]{3,32}" autocapitalize="none"></label>
+            <label>Cell phone number<input name="cellPhone" required type="tel" autocomplete="tel" maxlength="30"></label>
+            <label>Email address<input name="email" required type="email" autocomplete="email" placeholder="name@ford.com"></label>
+            <label>Department<input name="department" required maxlength="120"></label>
+          </div>
+
+          <h3>Manager</h3>
+          <div class="grid cols-3">
+            <label>Manager's name<input name="managerName" required maxlength="160"></label>
+            <label>Manager's CDSID<input name="managerCDSID" required maxlength="32" pattern="[A-Za-z0-9._-]{3,32}" autocapitalize="none"></label>
+            <label>Manager's email<input name="managerEmail" required type="email" placeholder="manager@ford.com"></label>
+          </div>
+
+          <h3>Vehicle</h3>
+          <div class="grid cols-2">
+            <label>Vehicle make<input name="vehicleMake" required maxlength="80" placeholder="Example: Ford"></label>
+            <label>Vehicle model<input name="vehicleModel" required maxlength="80" placeholder="Example: Mustang Mach-E"></label>
+            <label>Vehicle license plate number<input name="licensePlate" required maxlength="20" autocapitalize="characters"></label>
+            <label>Vehicle license plate state
+              <select name="plateState" required>
+                <option value="">Select state</option>
+                <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>DC</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option selected>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="step1Message" class="message error hidden" role="alert"></div>
+          <div class="form-actions end"><button id="continueButton" class="btn primary" type="button">Review Request →</button></div>
+        </section>
+
+        <section class="panel form-step" id="formStep2">
+          <div class="section-heading">
+            <div><p class="eyebrow">STEP 2</p><h2>Review, policy, and acknowledgement</h2></div>
+            <span id="policyVersion">Loading current policy…</span>
+          </div>
+
+          <h3>Submission summary</h3>
+          <div id="reviewSummary" class="review-grid"></div>
+
+          <div id="policyLoading" class="policy-loading">Loading the current Ford Energy BlueOval charging policy…</div>
+          <section id="policyContent" class="policy-wrap hidden">
+            <article class="policy-section">
+              <div class="policy-heading"><span>01</span><div><p>Site policy</p><h3 id="policyTitle">Ford Energy BlueOval Site Charging Policy</h3></div></div>
+              <div id="sitePolicyText" class="policy-text"></div>
+            </article>
+            <article class="policy-section">
+              <div class="policy-heading"><span>02</span><div><p>Rules and regulations</p><h3>Terms of Use</h3></div></div>
+              <div id="stateTermsText" class="policy-text"></div>
+            </article>
+          </section>
+
+          <label class="acknowledgement">
+            <input id="policyAcknowledged" type="checkbox" required>
+            <span>I confirm the information in this request is accurate. I have read, understand, and agree to the Ford Energy BlueOval Site Charging Policy, applicable site rules, and Terms of Use shown above.</span>
+          </label>
+
+          <div id="submitMessage" class="message hidden" role="alert"></div>
+          <div class="form-actions"><button id="backButton" class="btn secondary" type="button">← Edit Information</button><button id="submitButton" class="btn primary" type="submit">Submit EV Charging Request</button></div>
+        </section>
+      </form>
+    </section>
+
+    <section id="managerReview" class="hidden">
+      <section class="hero review-hero">
+        <div><p class="eyebrow">SECURE MANAGER REVIEW</p><h1>EV Charging Access Approval</h1><p>Review the employee and vehicle information and record your decision.</p></div>
+      </section>
+      <section class="panel manager-panel">
+        <div id="managerReviewLoading" class="policy-loading">Validating the secure manager review link…</div>
+        <div id="managerReviewContent" class="hidden">
+          <div class="section-heading"><div><p class="eyebrow">MANAGER ACTION</p><h2 id="managerReviewTitle">Charging request</h2></div><span id="managerReviewStatus"></span></div>
+          <div id="managerRequestSummary" class="review-grid"></div>
+          <div id="managerDecisionForm">
+            <div class="manager-confirm">
+              <label>Confirm your manager CDSID<input id="managerConfirmCDSID" autocomplete="username" autocapitalize="none" maxlength="32"></label>
+              <label>Comments (required for denial)<textarea id="managerComments" rows="4" maxlength="2000" placeholder="Add conditions, reason for denial, or other direction."></textarea></label>
+            </div>
+            <div id="managerMessage" class="message hidden" role="alert"></div>
+            <div class="decision-actions"><button id="denyRequest" class="btn danger" type="button">Deny Request</button><button id="approveRequest" class="btn approve" type="button">Approve Request</button></div>
+            <p class="decision-note">Your CDSID, decision, date, and time are written to the VISTA audit record. A recorded decision cannot be changed from this link.</p>
+          </div>
+          <div id="managerDecisionComplete" class="decision-complete hidden"></div>
+        </div>
+        <div id="managerReviewError" class="message error hidden" role="alert"></div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="confirmationDialog">
+    <div class="confirmation">
+      <div class="success-icon">✓</div>
+      <p class="eyebrow">REQUEST RECEIVED</p>
+      <h2>EV Charging Access Request Submitted</h2>
+      <p>Your request was recorded and sent to your manager for approval.</p>
+      <div id="confirmationNumber" class="confirmation-number"></div>
+      <div id="confirmationSummary" class="review-grid"></div>
+      <div id="confirmationNotifications" class="notification-status"></div>
+      <div class="next-steps"><strong>What happens next</strong><p>Your manager will approve or deny the request using the secure link in their email. You will receive another email when the decision is recorded.</p></div>
+      <button class="btn primary" type="button" onclick="location.href='../'">Return to VISTA Home</button>
+    </div>
+  </dialog>
+
+  <footer class="module-footer">
+    <img src="../shared/assets/ford-energy-bwrdo-footer.png" alt="BlueOval Rechargeable Battery Development Organization">
+    <div><span>Ford Energy V • I • S • T • A</span><span>EV Charging Access Request</span><span>Version 2.4.0</span></div>
+  </footer>
+
+  <script src="config.js?v=24001"></script>
+  <script src="app.js?v=24001"></script>
+</body>
+</html>

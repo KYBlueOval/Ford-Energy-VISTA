@@ -1,3 +1,15 @@
+## VISTA 2.4.0 — EV Charging Access Requests
+
+- Added a fourth VISTA module for Ford Energy and Ford Motor Company employee onsite EV charging access requests.
+- Added a two-step request: employee/manager/vehicle information followed by summary, policy, Terms of Use, and acknowledgement.
+- Added manager approval and denial through a secure, time-limited email link with CDSID confirmation.
+- Added employee submission and decision emails plus optional EV program notifications.
+- Added `EVChargingRequests`, `EVChargingActivity`, and `EVChargingPolicies` sheets.
+- Added policy version and content-hash capture, per-request acknowledgement timestamps, manager decision timestamps, and global AuditLog events.
+- Added VISTA Users and Sponsors directory matching for manager contact information when a known CDSID is supplied.
+- Preserved all existing visitor-management data and Config values.
+- Corrected the legacy security-default setup helper so rerunning `setupVista()` no longer replaces populated authentication Config values.
+
 ## VISTA 2.3.8 — Administration Alert Broadcasts
 
 - Added Administration-authored alert and notification broadcasts for Security Operations.
