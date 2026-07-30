@@ -13,10 +13,10 @@ Tracks badge UID, printed number, current status, active Visit ID, issue time, a
 Stores deployment configuration. Do not store high-value secrets here for a production system. The pilot PIN is intentionally simple and should be replaced with approved identity-based authentication.
 
 ## EVChargingRequests
-The authoritative employee EV charging access record. Each row contains employee and manager identity/contact information, the requested vehicle, policy version and content hash, acknowledgement time, manager-link token hash and expiration, approval outcome, notification status, and client audit metadata. The usable manager token is never stored.
+The authoritative employee EV charging access record. Each row contains employee and manager identity/contact information, the requested vehicle, policy version and content hash, acknowledgement time, manager-link token hash and expiration, approval outcome and source, employee notification status, onboarding Badge UID lookup result, Facilities notification result, and client audit metadata. The usable manager token is never stored.
 
 ## EVChargingActivity
-Append-only EV request history. Events include request submission, manager approval, and manager denial with the actor, CDSID, email, timestamp, and decision details.
+Append-only EV request history. Events include request submission, manager or Administration decisions, and Facilities approval-email outcomes with the actor, CDSID, email, timestamp, and decision details.
 
 ## EVChargingPolicies
 Versioned Ford Energy BlueOval charging policy and Terms of Use. Only active policy rows are presented to applicants. VISTA recalculates a content hash from the active text and stores that hash with each acknowledgement.

@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.4.1a-ev-email-test-mode',
+  VERSION: '2.4.2-ev-administration-approval',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs', NOTIFICATIONS:'Notifications', NOTIFICATION_ACKS:'NotificationAcknowledgements', INCIDENTS:'Incidents', EV_REQUESTS:'EVChargingRequests', EV_ACTIVITY:'EVChargingActivity', EV_POLICIES:'EVChargingPolicies' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt','SponsorNotificationStatus','SponsorNotifiedAt','SponsorNotificationEmail','SponsorNotificationError'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -17,7 +17,7 @@ const FE = {
   NOTIFICATION_HEADERS: ['NotificationID','CreatedAt','CreatedByUserID','CreatedBy','Type','Severity','Title','Message','EffectiveAt','ExpiresAt','RelatedVisitID','RelatedBadgeUID','RelatedHandoffID','PhotoFileId','PhotoFileName','PhotoUrl','TargetRoles','RequireAcknowledgement','Status','AcknowledgedAt','AcknowledgedByUserID','AcknowledgedBy','LastUpdatedAt','DeduplicationKey'],
   NOTIFICATION_ACK_HEADERS: ['AcknowledgementID','NotificationID','UserID','Username','FullName','Role','AcknowledgedAt','UserAgent'],
   INCIDENT_HEADERS: ['IncidentID','CreatedAt','ReportedByUserID','ReportedBy','Role','Category','Severity','Location','Description','RelatedVisitID','RelatedBadgeUID','PhotoFileId','PhotoFileName','PhotoUrl','Status','AssignedTo','ResolutionNotes','ResolvedAt','ResolvedByUserID','ResolvedBy','LastUpdatedAt'],
-  EV_REQUEST_HEADERS: ['RequestID','ConfirmationNumber','ClientSubmissionID','CreatedAt','Status','FirstName','LastName','FullName','CDSID','CellPhone','Email','Department','ManagerName','ManagerCDSID','ManagerEmail','ManagerDirectorySource','VehicleMake','VehicleModel','LicensePlate','PlateState','PolicyVersion','PolicyContentHash','PolicyAcknowledged','PolicyAcknowledgedAt','ManagerReviewTokenHash','ManagerReviewExpiresAt','ManagerDecision','ManagerDecisionAt','ManagerDecisionBy','ManagerDecisionCDSID','ManagerComments','EmployeeNotificationSent','ManagerNotificationSent','DecisionNotificationSent','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','LastUpdatedAt'],
+  EV_REQUEST_HEADERS: ['RequestID','ConfirmationNumber','ClientSubmissionID','CreatedAt','Status','FirstName','LastName','FullName','CDSID','CellPhone','Email','Department','ManagerName','ManagerCDSID','ManagerEmail','ManagerDirectorySource','VehicleMake','VehicleModel','LicensePlate','PlateState','PolicyVersion','PolicyContentHash','PolicyAcknowledged','PolicyAcknowledgedAt','ManagerReviewTokenHash','ManagerReviewExpiresAt','ManagerDecision','ManagerDecisionAt','ManagerDecisionBy','ManagerDecisionCDSID','ManagerComments','EmployeeNotificationSent','ManagerNotificationSent','DecisionNotificationSent','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','LastUpdatedAt','DecisionSource','OnboardingBadgeUID','OnboardingLookupStatus','FacilitiesNotificationSent','FacilitiesNotificationStatus','FacilitiesNotificationRecipients','FacilitiesNotificationAt','FacilitiesNotificationError'],
   EV_ACTIVITY_HEADERS: ['ActivityID','RequestID','ConfirmationNumber','EventType','EventTime','PerformedBy','PerformedByCDSID','PerformedByEmail','Details'],
   EV_POLICY_HEADERS: ['PolicyID','Title','Version','EffectiveDate','SitePolicy','StateAndUseTerms','Active','ContentHash','LastUpdatedAt'],
 
@@ -104,6 +104,8 @@ function doPost(e) {
       else if(action==='getOperationalAnalytics') { requirePermission_(session,'viewAnalytics'); result=getOperationalAnalytics_(req.payload||{},session); }
       else if(action==='generateOperationalReport') { requirePermission_(session,'viewAnalytics'); result=generateOperationalReport_(req.payload||{},session); }
       else if(action==='recordReportExport') { requirePermission_(session,'viewAnalytics'); result=recordReportExport_(req.payload||{},session); }
+      else if(action==='listEVChargingRequests') { requirePermission_(session,'manageConfig'); result=listEVChargingRequests_(req.payload||{},session); }
+      else if(action==='submitEVAdminDecision') { requirePermission_(session,'manageConfig'); result=submitEVAdminDecision_(req.payload||{},session); }
       else if(action==='listOperationalNotifications') { requirePermission_(session,'viewVisits'); result=listOperationalNotifications_(req.payload||{},session); }
       else if(action==='acknowledgeNotification') { requirePermission_(session,'viewVisits'); result=acknowledgeOperationalNotification_(req.payload||{},session); }
       else if(action==='listAdminNotifications') { requirePermission_(session,'manageConfig'); result=listAdminNotifications_(req.payload||{},session); }
@@ -208,6 +210,10 @@ function setupVisitorManagement() {
     EV_MANAGER_REVIEW_DAYS:'14',
     EV_NOTIFICATION_EMAIL:'',
     EV_REQUIRE_FORD_EMAILS:'YES',
+    EV_FACILITIES_EMAIL_ENABLED:'NO',
+    EV_FACILITIES_EMAILS:'',
+    EV_ONBOARDING_SPREADSHEET_ID:'1QSJN0Sx5okbIgT47R2zoze518Lu994ypyTHocevzSjI',
+    EV_ONBOARDING_SHEET_NAME:'Onboarding_Raw_Data',
     SPONSOR_ARRIVAL_EMAILS:'YES',
     CHECK_IN_LOCATION:'Main Security Front Desk',
     VGS_NAVIGATION_URL:'', TRAINING_VIDEO_URL:'', AGREEMENT_VERSION:'2026.2',
@@ -221,7 +227,7 @@ function setupVisitorManagement() {
   seedEVChargingPolicy_();
   seedInitialAdmin_();
   [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS,FE.SHEETS.NOTIFICATIONS,FE.SHEETS.NOTIFICATION_ACKS,FE.SHEETS.INCIDENTS,FE.SHEETS.EV_REQUESTS,FE.SHEETS.EV_ACTIVITY,FE.SHEETS.EV_POLICIES].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.4.1A setup complete. EV email-domain test mode, sponsor arrival delivery tracking, and existing workflows are ready.';
+  return 'VISTA 2.4.2 setup complete. Administration EV approvals, onboarding badge lookup, Facilities notifications, and existing workflows are ready.';
 }
 
 function seedAgreements_(){
@@ -306,6 +312,76 @@ function findEVRequestByToken_(token){
 function publicEVRequest_(r){
   return{requestId:String(r.RequestID||''),confirmationNumber:String(r.ConfirmationNumber||''),createdAt:dateText_(r.CreatedAt),status:String(r.Status||''),fullName:String(r.FullName||''),cdsid:String(r.CDSID||''),department:String(r.Department||''),managerName:String(r.ManagerName||''),vehicleMake:String(r.VehicleMake||''),vehicleModel:String(r.VehicleModel||''),licensePlate:String(r.LicensePlate||''),plateState:String(r.PlateState||''),policyVersion:String(r.PolicyVersion||''),managerDecision:String(r.ManagerDecision||''),managerDecisionAt:dateText_(r.ManagerDecisionAt),managerDecisionBy:String(r.ManagerDecisionBy||''),managerComments:String(r.ManagerComments||'')};
 }
+function publicAdminEVRequest_(r){
+  const item=publicEVRequest_(r);
+  return Object.assign(item,{email:String(r.Email||''),cellPhone:String(r.CellPhone||''),managerCDSID:String(r.ManagerCDSID||''),managerEmail:String(r.ManagerEmail||''),managerDirectorySource:String(r.ManagerDirectorySource||''),policyAcknowledged:String(r.PolicyAcknowledged||''),policyAcknowledgedAt:dateText_(r.PolicyAcknowledgedAt),decisionSource:String(r.DecisionSource||''),onboardingBadgeUid:String(r.OnboardingBadgeUID||''),onboardingLookupStatus:String(r.OnboardingLookupStatus||''),facilitiesNotificationSent:truthy_(r.FacilitiesNotificationSent),facilitiesNotificationStatus:String(r.FacilitiesNotificationStatus||''),facilitiesNotificationRecipients:String(r.FacilitiesNotificationRecipients||''),facilitiesNotificationAt:dateText_(r.FacilitiesNotificationAt),facilitiesNotificationError:String(r.FacilitiesNotificationError||'')});
+}
+function listEVChargingRequests_(p){
+  const query=String(p.query||'').trim().toLowerCase(),status=String(p.status||'').trim();
+  let rows=readObjects_(FE.SHEETS.EV_REQUESTS);
+  if(status)rows=rows.filter(r=>String(r.Status||'')===status);
+  if(query)rows=rows.filter(r=>[r.FullName,r.CDSID,r.Email,r.ManagerName,r.ManagerEmail,r.ConfirmationNumber,r.LicensePlate,r.OnboardingBadgeUID].join(' ').toLowerCase().includes(query));
+  rows.sort((a,b)=>new Date(b.CreatedAt||0)-new Date(a.CreatedAt||0));
+  const all=readObjects_(FE.SHEETS.EV_REQUESTS),statuses=all.reduce((o,r)=>(o[String(r.Status||'Unknown')]=(o[String(r.Status||'Unknown')]||0)+1,o),{});
+  return{ok:true,requests:rows.slice(0,300).map(publicAdminEVRequest_),summary:{total:all.length,pending:statuses['Pending Manager Approval']||0,approved:statuses.Approved||0,denied:statuses.Denied||0}};
+}
+
+function normalizePersonName_(value){
+  let text=String(value||'').trim().toLowerCase();
+  try{text=text.normalize('NFKD').replace(/[\u0300-\u036f]/g,'')}catch(e){}
+  return text.replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function lookupOnboardingBadge_(fullName){
+  const cfg=config_(),spreadsheetId=String(cfg.EV_ONBOARDING_SPREADSHEET_ID||'').trim(),sheetName=String(cfg.EV_ONBOARDING_SHEET_NAME||'Onboarding_Raw_Data').trim();
+  if(!spreadsheetId)return{status:'Not Configured',badgeUid:'',matches:0,error:'EV_ONBOARDING_SPREADSHEET_ID is blank.'};
+  try{
+    const sheet=SpreadsheetApp.openById(spreadsheetId).getSheetByName(sheetName);
+    if(!sheet)return{status:'Sheet Not Found',badgeUid:'',matches:0,error:'Worksheet '+sheetName+' was not found.'};
+    const lastRow=sheet.getLastRow();if(lastRow<2)return{status:'Not Found',badgeUid:'',matches:0,error:'The onboarding worksheet contains no employee rows.'};
+    const names=sheet.getRange(2,4,lastRow-1,1).getDisplayValues(),badges=sheet.getRange(2,43,lastRow-1,1).getDisplayValues(),wanted=normalizePersonName_(fullName),wantedParts=wanted.split(' ').filter(Boolean),rows=[];
+    for(let i=0;i<names.length;i++)rows.push({name:normalizePersonName_(names[i][0]),badge:String(badges[i][0]||'').trim()});
+    let matches=rows.filter(x=>x.name===wanted).map(x=>x.badge),matchType='Exact Name';
+    if(!matches.length&&wantedParts.length>=2){
+      const first=wantedParts[0],last=wantedParts[wantedParts.length-1];
+      matches=rows.filter(x=>{const parts=x.name.split(' ').filter(Boolean);return parts.length>=2&&parts[0]===first&&parts[parts.length-1]===last}).map(x=>x.badge);
+      matchType='First and Last Name';
+    }
+    const unique=[...new Set(matches.filter(Boolean).map(x=>x.toUpperCase()))];
+    if(!matches.length)return{status:'Not Found',badgeUid:'',matches:0,error:'No safe employee-name match was found in Onboarding_Raw_Data column D.'};
+    if(unique.length===1)return{status:matchType==='Exact Name'?'Found':'Found · First/Last',badgeUid:unique[0],matches:matches.length,error:''};
+    if(!unique.length)return{status:'Badge UID Missing',badgeUid:'',matches:matches.length,error:'Employee name matched, but Onboarding_Raw_Data column AQ is blank.'};
+    return{status:'Ambiguous',badgeUid:'',matches:matches.length,error:'Multiple different Badge UIDs were found for this employee name.'};
+  }catch(err){return{status:'Lookup Failed',badgeUid:'',matches:0,error:String(err&&err.message||err).replace(/\s+/g,' ').slice(0,500)}}
+}
+function facilitiesRecipients_(value){
+  const emails=String(value||'').split(/[,;\n]+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
+  const unique=[...new Set(emails)];
+  const invalid=unique.filter(x=>!validEmailAddress_(x));
+  return{emails:unique.filter(x=>validEmailAddress_(x)),invalid:invalid};
+}
+function notifyEVFacilitiesApproval_(r,actor){
+  const cfg=config_(),requested=['yes','true','1','on','enabled'].includes(String(cfg.EV_FACILITIES_EMAIL_ENABLED||'NO').trim().toLowerCase()),parsed=facilitiesRecipients_(cfg.EV_FACILITIES_EMAILS),lookup=lookupOnboardingBadge_(r.FullName);
+  const result={requested:requested,sent:false,status:'Disabled',recipients:parsed.emails.join(', '),sentAt:'',error:'',badgeUid:lookup.badgeUid,lookupStatus:lookup.status,lookupError:lookup.error};
+  if(!requested)return result;
+  if(parsed.invalid.length){result.status='Invalid Recipients';result.error='Invalid Facilities email address: '+parsed.invalid.join(', ');return result;}
+  if(!parsed.emails.length){result.status='No Recipients';result.error='EV_FACILITIES_EMAILS is blank.';return result;}
+  const badgeDisplay=lookup.badgeUid?html_(lookup.badgeUid):'<strong style="color:#b54708">Manual verification required</strong>';
+  const rows=[['Employee',html_(r.FullName)],['Employee CDSID',html_(r.CDSID)],['Badge UID',badgeDisplay],['Onboarding lookup',html_(lookup.status)],['Department',html_(r.Department)],['Vehicle',html_([r.VehicleMake,r.VehicleModel].filter(Boolean).join(' '))],['License plate',html_([r.LicensePlate,r.PlateState].filter(Boolean).join(' · '))],['Approved by',html_(actor.FullName||actor.Username||r.ManagerDecisionBy)],['Confirmation',`<strong style="color:#003478">${html_(r.ConfirmationNumber)}</strong>`]];
+  const details=`<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #dce6f0;border-radius:10px;border-collapse:separate;overflow:hidden">${rows.map((x,i)=>`<tr><td width="34%" valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#fff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:12px;text-transform:uppercase;font-weight:bold;color:#667587">${x[0]}</td><td style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#fff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'}">${x[1]}</td></tr>`).join('')}</table>`;
+  const body=`<p style="margin:0 0 18px">An employee EV charging access request has been approved and is ready for Facilities processing.</p>${details}${lookup.error?`<p style="margin:18px 0 0;padding:13px 15px;background:#fff4e5;border-left:5px solid #f79009"><strong>Onboarding lookup note:</strong> ${html_(lookup.error)}</p>`:''}`;
+  const textBody=`Approved EV charging access request\n\nEmployee: ${r.FullName}\nCDSID: ${r.CDSID}\nBadge UID: ${lookup.badgeUid||'Manual verification required'}\nOnboarding lookup: ${lookup.status}\nVehicle: ${[r.VehicleMake,r.VehicleModel].filter(Boolean).join(' ')}\nLicense plate: ${[r.LicensePlate,r.PlateState].filter(Boolean).join(' · ')}\nConfirmation: ${r.ConfirmationNumber}`;
+  try{
+    MailApp.sendEmail({to:parsed.emails.join(','),subject:`EV charging approval: ${r.FullName} (${r.ConfirmationNumber})`,body:textBody,htmlBody:brandedEmail_({title:'EV Charging Access Approved',kicker:'FORD ENERGY · FACILITIES NOTIFICATION',preheader:`Approved EV charging request for ${r.FullName}`,body:body,footerNote:'This approval notification and onboarding lookup result are retained in the VISTA audit record.'})});
+    result.sent=true;result.status=lookup.badgeUid?'Sent':'Sent · Manual Verification Required';result.sentAt=new Date();return result;
+  }catch(err){result.status='Failed';result.error=String(err&&err.message||err).replace(/\s+/g,' ').slice(0,500);return result}
+}
+function recordEVFacilitiesResult_(r,result,actor){
+  const found=findEVRequestById_(r.RequestID),updates={OnboardingBadgeUID:result.badgeUid||'',OnboardingLookupStatus:result.lookupStatus||'',FacilitiesNotificationSent:result.sent?'Yes':'No',FacilitiesNotificationStatus:result.status||'',FacilitiesNotificationRecipients:result.recipients||'',FacilitiesNotificationAt:result.sent?result.sentAt:'',FacilitiesNotificationError:[result.error,result.lookupError].filter(Boolean).join(' · ').slice(0,500),LastUpdatedAt:new Date()};
+  updateObjectRow_(FE.SHEETS.EV_REQUESTS,found.row,updates);
+  const event=result.sent?'FACILITIES_APPROVAL_EMAIL_SENT':result.requested?'FACILITIES_APPROVAL_EMAIL_FAILED':'FACILITIES_APPROVAL_EMAIL_SKIPPED',details=[result.status,result.recipients,result.lookupStatus,result.badgeUid,result.error,result.lookupError].filter(Boolean).join(' · ').slice(0,1000);
+  logEVActivity_(r.RequestID,r.ConfirmationNumber,event,actor.FullName||actor.Username||'',actor.Username||'',actor.Email||'',details);
+  audit_(actor,event,r.RequestID,r.ConfirmationNumber,result.sent?'Success':result.requested?'Warning':'Skipped',details);
+}
 
 function createEVChargingRequest_(p){
   p=p||{};
@@ -350,14 +426,39 @@ function submitEVManagerDecision_(p){
     if(String(r.Status)!=='Pending Manager Approval')return{ok:true,request:publicEVRequest_(r),alreadyDecided:true};
     const expires=parseDateSafe_(r.ManagerReviewExpiresAt);if(expires&&expires<now)throw new Error('This manager review link has expired. The employee must submit a new request.');
     if(managerCDSID!==normalizeCDSID_(r.ManagerCDSID))throw new Error('The manager CDSID does not match this request.');
-    updateObjectRow_(FE.SHEETS.EV_REQUESTS,found.row,{Status:decision,ManagerDecision:decision,ManagerDecisionAt:now,ManagerDecisionBy:String(r.ManagerName||''),ManagerDecisionCDSID:managerCDSID,ManagerComments:String(p.comments||'').trim().slice(0,2000),LastUpdatedAt:now});
+    updateObjectRow_(FE.SHEETS.EV_REQUESTS,found.row,{Status:decision,ManagerDecision:decision,ManagerDecisionAt:now,ManagerDecisionBy:String(r.ManagerName||''),ManagerDecisionCDSID:managerCDSID,ManagerComments:String(p.comments||'').trim().slice(0,2000),DecisionSource:'Manager Email Review',LastUpdatedAt:now});
   }finally{lock.releaseLock();}
-  r=Object.assign({},r,{Status:decision,ManagerDecision:decision,ManagerDecisionAt:now,ManagerDecisionBy:String(r.ManagerName||''),ManagerDecisionCDSID:managerCDSID,ManagerComments:String(p.comments||'').trim().slice(0,2000)});
+  r=Object.assign({},r,{Status:decision,ManagerDecision:decision,ManagerDecisionAt:now,ManagerDecisionBy:String(r.ManagerName||''),ManagerDecisionCDSID:managerCDSID,ManagerComments:String(p.comments||'').trim().slice(0,2000),DecisionSource:'Manager Email Review'});
   logEVActivity_(r.RequestID,r.ConfirmationNumber,'MANAGER_'+decision.toUpperCase(),r.ManagerName,managerCDSID,r.ManagerEmail,String(r.ManagerComments||''));
-  audit_({UserID:'',Username:managerCDSID,Role:'EV Manager Approver'},'EV_CHARGING_MANAGER_'+decision.toUpperCase(),r.RequestID,r.ConfirmationNumber,'Success',r.ManagerName+' · '+r.FullName);
+  const actor={UserID:'',Username:managerCDSID,Role:'EV Manager Approver',FullName:r.ManagerName,Email:r.ManagerEmail};
+  audit_(actor,'EV_CHARGING_MANAGER_'+decision.toUpperCase(),r.RequestID,r.ConfirmationNumber,'Success',r.ManagerName+' · '+r.FullName);
   const notified=notifyEVChargingDecision_(r),updated=findEVRequestById_(r.RequestID);
   updateObjectRow_(FE.SHEETS.EV_REQUESTS,updated.row,{DecisionNotificationSent:notified.employeeSent?'Yes':'No',LastUpdatedAt:new Date()});
-  return{ok:true,request:publicEVRequest_(r),notifications:notified};
+  let facilities={requested:false,sent:false,status:'Not Applicable'};
+  if(decision==='Approved'){facilities=notifyEVFacilitiesApproval_(r,actor);try{recordEVFacilitiesResult_(r,facilities,actor)}catch(err){facilities.trackingError=String(err&&err.message||err)}}
+  return{ok:true,request:publicEVRequest_(r),notifications:notified,facilities:facilities};
+}
+
+function submitEVAdminDecision_(p,session){
+  validateRequired_(p,['requestId','decision']);
+  const decision=String(p.decision||''),comments=String(p.comments||'').trim().slice(0,2000);
+  if(!['Approved','Denied'].includes(decision))throw new Error('Select Approve or Deny.');
+  if(decision==='Denied'&&!comments)throw new Error('Enter a reason when denying an EV charging access request.');
+  const lock=LockService.getScriptLock();lock.waitLock(15000);
+  let found,r,now;
+  try{
+    found=findEVRequestById_(p.requestId);r=found.obj;now=new Date();
+    if(String(r.Status)!=='Pending Manager Approval')throw new Error('This EV charging request has already been decided. Current status: '+String(r.Status||'Unknown')+'.');
+    updateObjectRow_(FE.SHEETS.EV_REQUESTS,found.row,{Status:decision,ManagerDecision:decision,ManagerDecisionAt:now,ManagerDecisionBy:String(session.FullName||session.Username||''),ManagerDecisionCDSID:String(session.Username||''),ManagerComments:comments,DecisionSource:'VISTA Administration',LastUpdatedAt:now});
+  }finally{lock.releaseLock()}
+  r=Object.assign({},r,{Status:decision,ManagerDecision:decision,ManagerDecisionAt:now,ManagerDecisionBy:String(session.FullName||session.Username||''),ManagerDecisionCDSID:String(session.Username||''),ManagerComments:comments,DecisionSource:'VISTA Administration'});
+  logEVActivity_(r.RequestID,r.ConfirmationNumber,'ADMIN_'+decision.toUpperCase(),session.FullName||session.Username,session.Username,session.Email,comments);
+  audit_(session,'EV_CHARGING_ADMIN_'+decision.toUpperCase(),r.RequestID,r.ConfirmationNumber,'Success',r.FullName+' · '+r.LicensePlate);
+  const notified=notifyEVChargingDecision_(r),updated=findEVRequestById_(r.RequestID);
+  updateObjectRow_(FE.SHEETS.EV_REQUESTS,updated.row,{DecisionNotificationSent:notified.employeeSent?'Yes':'No',LastUpdatedAt:new Date()});
+  let facilities={requested:false,sent:false,status:'Not Applicable'};
+  if(decision==='Approved'){facilities=notifyEVFacilitiesApproval_(r,session);try{recordEVFacilitiesResult_(r,facilities,session)}catch(err){facilities.trackingError=String(err&&err.message||err)}}
+  return{ok:true,request:publicAdminEVRequest_(Object.assign({},r,{FacilitiesNotificationSent:facilities.sent?'Yes':'No',FacilitiesNotificationStatus:facilities.status,FacilitiesNotificationRecipients:facilities.recipients||'',FacilitiesNotificationAt:facilities.sent?facilities.sentAt:'',FacilitiesNotificationError:[facilities.error,facilities.lookupError].filter(Boolean).join(' · '),OnboardingBadgeUID:facilities.badgeUid||'',OnboardingLookupStatus:facilities.lookupStatus||''})),notifications:notified,facilities:facilities};
 }
 
 
@@ -719,13 +820,14 @@ function notifyEVChargingSubmission_(r,rawToken){
 function notifyEVChargingDecision_(r){
   const cfg=config_(),approved=String(r.ManagerDecision)==='Approved',details=evEmailDetails_(r),result={employeeSent:false,operationsSent:false,operationsConfigured:Boolean(cfg.EV_NOTIFICATION_EMAIL),errors:[]},statusColor=approved?'#18864b':'#b42318',statusBg=approved?'#dcfae6':'#fee4e2';
   try{
-    const body=`<p style="margin:0 0 16px">Hello ${html_(r.FullName)},</p><p style="margin:0 0 20px">Your manager has <strong>${html_(String(r.ManagerDecision).toLowerCase())}</strong> your Ford Energy BlueOval onsite EV charging access request.</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px"><tr><td style="padding:14px 16px;background:${statusBg};border-left:5px solid ${statusColor};border-radius:7px;color:${statusColor};font-size:17px;font-weight:bold">${html_(r.ManagerDecision)}</td></tr></table>${details}${r.ManagerComments?`<p style="margin:18px 0 0"><strong>Manager comments:</strong><br>${html_(r.ManagerComments)}</p>`:''}${approved?'<p style="margin:18px 0 0">Follow posted charging-space rules and site direction. Approval does not guarantee charger availability.</p>':''}`;
+    const decisionBy=String(r.ManagerDecisionBy||r.ManagerName||'VISTA Administration'),decisionLabel=String(r.DecisionSource||'Manager Review');
+    const body=`<p style="margin:0 0 16px">Hello ${html_(r.FullName)},</p><p style="margin:0 0 20px">Your Ford Energy BlueOval onsite EV charging access request has been <strong>${html_(String(r.ManagerDecision).toLowerCase())}</strong> by ${html_(decisionBy)}.</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px"><tr><td style="padding:14px 16px;background:${statusBg};border-left:5px solid ${statusColor};border-radius:7px;color:${statusColor};font-size:17px;font-weight:bold">${html_(r.ManagerDecision)} · ${html_(decisionLabel)}</td></tr></table>${details}${r.ManagerComments?`<p style="margin:18px 0 0"><strong>Decision comments:</strong><br>${html_(r.ManagerComments)}</p>`:''}${approved?'<p style="margin:18px 0 0">Follow posted charging-space rules and site direction. Approval does not guarantee charger availability.</p>':''}`;
     MailApp.sendEmail({to:r.Email,subject:`EV charging request ${r.ConfirmationNumber}: ${r.ManagerDecision}`,htmlBody:brandedEmail_({title:'EV Charging Request '+r.ManagerDecision,kicker:'FORD ENERGY · BLUEOVAL GLENDALE',preheader:`Request ${r.ConfirmationNumber} was ${String(r.ManagerDecision).toLowerCase()}`,body:body,footerNote:'This decision and its timestamp are retained in the VISTA audit record.'})});
     result.employeeSent=true;
   }catch(err){result.errors.push('Employee decision email: '+String(err.message||err));}
   try{
     if(cfg.EV_NOTIFICATION_EMAIL){
-      const body=`<p style="margin:0 0 20px">Manager ${html_(r.ManagerName)} ${html_(String(r.ManagerDecision).toLowerCase())} this EV charging access request.</p>${details}`;
+      const body=`<p style="margin:0 0 20px">${html_(r.ManagerDecisionBy||r.ManagerName)} ${html_(String(r.ManagerDecision).toLowerCase())} this EV charging access request through ${html_(r.DecisionSource||'Manager Review')}.</p>${details}`;
       MailApp.sendEmail({to:cfg.EV_NOTIFICATION_EMAIL,subject:`EV charging request ${r.ConfirmationNumber}: ${r.ManagerDecision}`,htmlBody:brandedEmail_({title:'EV Charging Decision Recorded',body:body})});
       result.operationsSent=true;
     }
@@ -803,7 +905,7 @@ function setupVista(){
   const result=setupVisitorManagement();
   syncRosterUsers_();
   applyVista20ASecurityDefaults();
-  return result+' Existing Config values were preserved. Review EV_CHARGING_REQUEST_URL, EV_MANAGER_REVIEW_DAYS, EV_REQUIRE_FORD_EMAILS, and optional EV_NOTIFICATION_EMAIL, then deploy a new web-app version.';
+  return result+' Existing Config values were preserved. Review the EV request, onboarding, Facilities email, and domain-enforcement Config values, then deploy a new web-app version.';
 }
 
 function setupVistaIdentityAndRoles(){

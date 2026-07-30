@@ -1,3 +1,16 @@
+## VISTA 2.4.2 — EV Administration Approval and Facilities Integration
+
+- Added an Administration workspace for searching, reviewing, approving, and denying EV charging requests.
+- Restricted Administration decisions to authenticated Admin and Super Administrator accounts.
+- Preserved manager email-link approval while recording whether each decision came from Manager Email Review or VISTA Administration.
+- Added optional Facilities approval emails with configurable recipients and an on/off control.
+- Added a read-only onboarding lookup against `Onboarding_Raw_Data`, using employee name in column D and Badge UID in column AQ.
+- Added exact normalized-name matching with safe Not Found, Missing, Ambiguous, and Lookup Failed outcomes.
+- Facilities approval messages include employee name, CDSID, resolved Badge UID, department, vehicle, plate, approver, and confirmation number.
+- Added Facilities delivery and onboarding lookup results to `EVChargingRequests`, `EVChargingActivity`, and `AuditLog`.
+- Approval remains recorded if onboarding lookup or Facilities email delivery fails.
+- Documented where to maintain the active Site Policy and Rules and Regulations in `EVChargingPolicies`.
+
 ## VISTA 2.4.1A — EV Email Test Mode
 
 - Added the `EV_REQUIRE_FORD_EMAILS` Config switch with a secure production default of `YES`.
