@@ -1,10 +1,10 @@
 # Data Model
 
 ## VisitRequests
-The authoritative visit record. Each row is one requested visit period and contains visitor identity/contact information, sponsor and department, requested access, vehicle details, agreement acknowledgements, photograph reference, check-in/out timestamps, badge UID, and actual duration.
+The authoritative visit record. Each row is one requested visit period and contains visitor identity/contact information, sponsor and department, requested access, vehicle details, agreement acknowledgements, photograph reference, check-in/out timestamps, badge UID, actual duration, and the sponsor-arrival email delivery status, recipient, timestamp, and last delivery error.
 
 ## VisitActivity
-Append-only operational audit history. Events include registration submission, status updates, check-in, and checkout. Future versions can add sponsor approval, training completion, badge replacement, and cancellation events.
+Append-only operational audit history. Events include registration submission, status updates, check-in, checkout, and sponsor arrival email delivery outcomes. Future versions can add training completion, badge replacement, and cancellation events.
 
 ## BadgeInventory
 Tracks badge UID, printed number, current status, active Visit ID, issue time, and return time.

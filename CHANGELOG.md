@@ -1,3 +1,14 @@
+## VISTA 2.4.1 — Sponsor Arrival Email Notifications
+
+- Replaced the check-in-only “Sponsor has been notified” indicator with an actual sponsor arrival email action.
+- Sends a branded Ford Energy VISTA email to the sponsor after the visitor is successfully checked in.
+- Includes the visitor, company, arrival location, check-in time, badge number and UID, confirmation number, and check-in officer.
+- Added `SPONSOR_ARRIVAL_EMAILS` and `CHECK_IN_LOCATION` configuration keys without replacing existing production values.
+- Added actual email delivery status, recipient, sent timestamp, and last error fields to `VisitRequests`.
+- Added sponsor-email delivery events to `VisitActivity` and `AuditLog`.
+- Preserved successful check-in and badge assignment when email delivery is unavailable or fails.
+- Added Security Operations confirmation feedback showing whether the sponsor message was sent or recorded for follow-up.
+
 ## VISTA 2.4.0 — EV Charging Access Requests
 
 - Added a fourth VISTA module for Ford Energy and Ford Motor Company employee onsite EV charging access requests.

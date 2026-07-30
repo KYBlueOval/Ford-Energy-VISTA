@@ -1,7 +1,7 @@
 const FE = {
-  VERSION: '2.4.0-ev-charging-access',
+  VERSION: '2.4.1-sponsor-arrival-email',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs', NOTIFICATIONS:'Notifications', NOTIFICATION_ACKS:'NotificationAcknowledgements', INCIDENTS:'Incidents', EV_REQUESTS:'EVChargingRequests', EV_ACTIVITY:'EVChargingActivity', EV_POLICIES:'EVChargingPolicies' },
-  VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt'],
+  VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt','SponsorNotificationStatus','SponsorNotifiedAt','SponsorNotificationEmail','SponsorNotificationError'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
   BADGE_HEADERS: ['BadgeUID','BadgeNumber','Status','CurrentVisitID','IssuedAt','ReturnedAt','Notes'],
   AGREEMENT_HEADERS: ['AgreementID','Title','Version','EffectiveDate','ContentHash','Active','LastUpdatedAt'],
@@ -207,6 +207,8 @@ function setupVisitorManagement() {
     EV_CHARGING_REQUEST_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/ev-charging-request/',
     EV_MANAGER_REVIEW_DAYS:'14',
     EV_NOTIFICATION_EMAIL:'',
+    SPONSOR_ARRIVAL_EMAILS:'YES',
+    CHECK_IN_LOCATION:'Main Security Front Desk',
     VGS_NAVIGATION_URL:'', TRAINING_VIDEO_URL:'', AGREEMENT_VERSION:'2026.2',
     ARRIVAL_INSTRUCTIONS:'Proceed to the Main Security Building and park in Ford Energy / Visitor Parking.',
     PARKING_INSTRUCTIONS:'Use designated Ford Energy / Visitor Parking and follow posted VGS or site signage.',
@@ -218,7 +220,7 @@ function setupVisitorManagement() {
   seedEVChargingPolicy_();
   seedInitialAdmin_();
   [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS,FE.SHEETS.NOTIFICATIONS,FE.SHEETS.NOTIFICATION_ACKS,FE.SHEETS.INCIDENTS,FE.SHEETS.EV_REQUESTS,FE.SHEETS.EV_ACTIVITY,FE.SHEETS.EV_POLICIES].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.4.0 setup complete. Visitor operations and EV charging access request, policy, manager approval, notification, and audit sources are ready.';
+  return 'VISTA 2.4.1 setup complete. Sponsor arrival email delivery tracking and existing visitor and EV charging workflows are ready.';
 }
 
 function seedAgreements_(){
@@ -581,8 +583,17 @@ function checkInVisit_(p,session) {
   if(String(rec.Status)!=='Approved')throw new Error('Check-in prohibited: the reservation must be Approved before a badge UID can be assigned.');
   if(rec.Status==='Checked In')throw new Error('Visitor is already checked in.'); if(rec.Status==='Checked Out')throw new Error('Visitor is already checked out.');
   const badge=ensureBadgeAvailable_(p.badgeUid,p.visitId,{allowUnknown:Boolean(p.allowRegisterUnknownBadge),badgeNumber:p.badgeNumber||'',session:session}); const now=new Date();
-  updateVisitRow_(row.row,{Status:'Checked In',CheckInTime:now,BadgeUID:p.badgeUid,CheckInOfficer:p.officerName,SponsorNotified:p.sponsorNotified?'Yes':'No',IDRetained:p.idRetained?'Yes':'No',LastUpdatedAt:now});
-  assignBadge_(p.badgeUid,p.visitId,now); logActivity_(p.visitId,'CHECK_IN',p.officerName,p.badgeUid,[badge.badgeNumber?'Visitor Badge '+badge.badgeNumber:'',p.notes||''].filter(Boolean).join(' · ')); return {ok:true,badge:badge};
+  const notificationRequested=Boolean(p.sponsorNotified);
+  updateVisitRow_(row.row,{Status:'Checked In',CheckInTime:now,BadgeUID:p.badgeUid,CheckInOfficer:p.officerName,SponsorNotified:'No',SponsorNotificationStatus:notificationRequested?'Pending':'Not Requested',SponsorNotifiedAt:'',SponsorNotificationEmail:String(rec.SponsorEmail||''),SponsorNotificationError:'',IDRetained:p.idRetained?'Yes':'No',LastUpdatedAt:now});
+  assignBadge_(p.badgeUid,p.visitId,now);
+  const checkedInVisit=Object.assign({},rec,{Status:'Checked In',CheckInTime:now,BadgeUID:p.badgeUid,CheckInOfficer:p.officerName});
+  const sponsorNotification=notifySponsorVisitorArrival_(checkedInVisit,badge,now,p,session);
+  updateVisitRow_(row.row,{SponsorNotified:sponsorNotification.sent?'Yes':'No',SponsorNotificationStatus:sponsorNotification.status,SponsorNotifiedAt:sponsorNotification.sent?sponsorNotification.sentAt:'',SponsorNotificationEmail:sponsorNotification.recipient||String(rec.SponsorEmail||''),SponsorNotificationError:sponsorNotification.error||'',LastUpdatedAt:new Date()});
+  const checkInDetails=[badge.badgeNumber?'Visitor Badge '+badge.badgeNumber:'',p.notes||'','Sponsor email: '+sponsorNotification.status].filter(Boolean).join(' · ');
+  logActivity_(p.visitId,'CHECK_IN',p.officerName,p.badgeUid,checkInDetails);
+  if(sponsorNotification.sent)logActivity_(p.visitId,'SPONSOR_ARRIVAL_EMAIL_SENT',p.officerName,p.badgeUid,'Sent to '+sponsorNotification.recipient);
+  else if(sponsorNotification.requested)logActivity_(p.visitId,sponsorNotification.status==='Disabled'?'SPONSOR_ARRIVAL_EMAIL_SKIPPED':'SPONSOR_ARRIVAL_EMAIL_FAILED',p.officerName,p.badgeUid,[sponsorNotification.status,sponsorNotification.recipient,sponsorNotification.error].filter(Boolean).join(' · '));
+  return {ok:true,badge:badge,sponsorNotification:sponsorNotification};
 }
 function checkOutVisit_(p) {
   validateRequired_(p,['visitId','badgeUid','officerName']); const row=findVisitRow_(p.visitId), rec=row.obj;
@@ -648,6 +659,32 @@ function emailButton_(url,label){
 function emailDetailsTable_(r,visitPeriod,vehicle){
   const rows=[['Visitor',`${html_(r.FullName)}<br><span style="color:#667587">${html_(r.Company)}</span>`],['Visit',html_(visitPeriod)],['Department',html_(r.Department)],['Reason',html_(r.Reason)],['Requested access',html_(r.AccessScope)],['Vehicle',html_(vehicle)],['Confirmation',`<strong style="color:#003478;font-size:17px">${html_(r.ConfirmationNumber)}</strong>`]];
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #dce6f0;border-radius:10px;border-collapse:separate;overflow:hidden">${rows.map((x,i)=>`<tr><td width="34%" valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#ffffff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:12px;line-height:18px;text-transform:uppercase;letter-spacing:.55px;font-weight:bold;color:#667587">${x[0]}</td><td valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#ffffff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:14px;line-height:20px;color:#16283d">${x[1]}</td></tr>`).join('')}</table>`;
+}
+function notifySponsorVisitorArrival_(visit,badge,checkedInAt,p,session){
+  const requested=Boolean(p&&p.sponsorNotified),recipient=String(visit.SponsorEmail||'').trim(),cfg=config_();
+  const result={requested:requested,sent:false,status:'Not Requested',recipient:recipient,sentAt:'',error:''};
+  if(!requested)return result;
+  if(!truthyActive_(cfg.SPONSOR_ARRIVAL_EMAILS)){result.status='Disabled';return result;}
+  if(!recipient){result.status='No Sponsor Email';result.error='The visitor request does not contain a sponsor email address.';return result;}
+  const location=String(cfg.CHECK_IN_LOCATION||'Main Security Front Desk').trim(),officer=String(p.officerName||session&&session.FullName||session&&session.Username||'Security Operations').trim();
+  const badgeLabel=badge&&badge.badgeNumber?'Visitor Badge '+badge.badgeNumber:'Visitor badge';
+  const rows=[
+    ['Visitor',`${html_(visit.FullName)}<br><span style="color:#667587">${html_(visit.Company)}</span>`],
+    ['Arrival location',html_(location)],
+    ['Checked in',html_(dateTime_(checkedInAt))],
+    ['Badge',`${html_(badgeLabel)}<br><span style="color:#667587">UID ${html_(visit.BadgeUID||'')}</span>`],
+    ['Check-in officer',html_(officer)],
+    ['Confirmation',`<strong style="color:#003478;font-size:17px">${html_(visit.ConfirmationNumber)}</strong>`]
+  ];
+  const details=`<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #dce6f0;border-radius:10px;border-collapse:separate;overflow:hidden">${rows.map((x,i)=>`<tr><td width="34%" valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#ffffff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:12px;line-height:18px;text-transform:uppercase;letter-spacing:.55px;font-weight:bold;color:#667587">${x[0]}</td><td valign="top" style="padding:11px 13px;background:${i%2===0?'#f6f9fc':'#ffffff'};border-bottom:${i===rows.length-1?'0':'1px solid #e2eaf2'};font-size:14px;line-height:20px;color:#16283d">${x[1]}</td></tr>`).join('')}</table>`;
+  const body=`<p style="margin:0 0 16px">Hello ${html_(visit.SponsorName||'Sponsor')},</p><p style="margin:0 0 20px">Your guest <strong>${html_(visit.FullName)}</strong> has arrived and checked in at the ${html_(location)}.</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px"><tr><td style="padding:14px 16px;background:#e7f5ee;border-left:5px solid #1f8f57;border-radius:7px"><strong style="color:#17663f">Guest status:</strong> Checked In · Please meet or receive your guest according to site escort requirements.</td></tr></table>${details}${emailButton_(cfg.SECURITY_CONSOLE_URL,'Open VISTA Security Operations')}<p style="margin:20px 0 0;color:#516477">If you are no longer the appropriate sponsor for this visit, contact the Main Security Front Desk.</p>`;
+  const textBody=`Hello ${visit.SponsorName||'Sponsor'},\n\nYour guest ${visit.FullName} has arrived and checked in at the ${location}.\n\nChecked in: ${dateTime_(checkedInAt)}\nBadge: ${badgeLabel} (${visit.BadgeUID||'UID not available'})\nConfirmation: ${visit.ConfirmationNumber||''}\nCheck-in officer: ${officer}\n\nPlease meet or receive your guest according to site escort requirements.`;
+  try{
+    MailApp.sendEmail({to:recipient,subject:`Your guest has arrived: ${visit.FullName} (${visit.ConfirmationNumber})`,body:textBody,htmlBody:brandedEmail_({title:'Your Guest Has Arrived',kicker:'FORD ENERGY · VISTA SECURITY OPERATIONS',preheader:`${visit.FullName} checked in at ${location}`,body:body,footerNote:'This arrival notification and its delivery status are retained in the VISTA audit record.'})});
+    result.sent=true;result.status='Sent';result.sentAt=new Date();return result;
+  }catch(err){
+    result.status='Failed';result.error=String(err&&err.message||err||'Unknown email delivery error').replace(/\s+/g,' ').slice(0,500);return result;
+  }
 }
 function evEmailDetails_(r){
   const rows=[['Employee',html_(r.FullName)],['CDSID',html_(r.CDSID)],['Department',html_(r.Department)],['Vehicle',html_([r.VehicleMake,r.VehicleModel].filter(Boolean).join(' '))],['License plate',html_([r.LicensePlate,r.PlateState].filter(Boolean).join(' · '))],['Policy version',html_(r.PolicyVersion)],['Confirmation',`<strong style="color:#003478;font-size:17px">${html_(r.ConfirmationNumber)}</strong>`]];
@@ -938,7 +975,14 @@ function permissionsForRole_(role){
 function requirePermission_(session,key){if(!permissionsForRole_(session.Role)[key])throw new Error('Your '+session.Role+' role is not authorized to perform this action.');}
 function publicSessionUser_(u){return{userId:String(u.UserID||''),employeeId:String(u.EmployeeID||''),fullName:String(u.FullName||u.Username||''),email:String(u.Email||''),department:String(u.Department||''),username:String(u.Username||''),role:String(u.Role||''),photoFileId:String(u.UserPhotoFileId||''),photoFileName:String(u.UserPhotoFileName||''),photoUrl:String(u.UserPhotoUrl||'')};}
 function listVisitsForSession_(p,session){requirePermission_(session,'viewVisits');let result=listVisits_(p);if(String(session.Role).toLowerCase()==='sponsor'||String(session.Role).toLowerCase()==='approver'){const email=String(session.Email||'').toLowerCase();result.visits=result.visits.filter(v=>String(v.sponsorEmail||'').toLowerCase()===email);result.kpis={expectedToday:result.visits.length,onsite:result.visits.filter(v=>v.status==='Checked In').length,checkedOutToday:result.visits.filter(v=>v.status==='Checked Out').length,overdue:0};}return result;}
-function checkInVisitAuthorized_(p,session){requirePermission_(session,'checkIn');p.officerName=p.officerName||session.FullName||session.Username;const result=checkInVisit_(p,session);auditVisit_(session,'CHECK_IN',p.visitId,'Success','Badge '+p.badgeUid+(result.badge&&result.badge.badgeNumber?' · Visitor Badge '+result.badge.badgeNumber:''));return result;}
+function checkInVisitAuthorized_(p,session){
+  requirePermission_(session,'checkIn');p.officerName=p.officerName||session.FullName||session.Username;
+  const result=checkInVisit_(p,session),notice=result.sponsorNotification||{};
+  auditVisit_(session,'CHECK_IN',p.visitId,'Success','Badge '+p.badgeUid+(result.badge&&result.badge.badgeNumber?' · Visitor Badge '+result.badge.badgeNumber:'')+' · Sponsor email '+String(notice.status||'Not Requested'));
+  if(notice.sent)auditVisit_(session,'SPONSOR_ARRIVAL_EMAIL_SENT',p.visitId,'Success','Sent to '+notice.recipient);
+  else if(notice.requested)auditVisit_(session,notice.status==='Disabled'?'SPONSOR_ARRIVAL_EMAIL_SKIPPED':'SPONSOR_ARRIVAL_EMAIL_FAILED',p.visitId,'Warning',[notice.status,notice.recipient,notice.error].filter(Boolean).join(' · ').slice(0,500));
+  return result;
+}
 function checkOutVisitAuthorized_(p,session){requirePermission_(session,'checkOut');p.officerName=p.officerName||session.FullName||session.Username;const result=checkOutVisit_(p);auditVisit_(session,'CHECK_OUT',p.visitId,'Success','Badge '+p.badgeUid+' · Condition '+result.badgeCondition);return result;}
 function updateVisitStatusAuthorized_(p,session){
   validateRequired_(p,['visitId','status']);
