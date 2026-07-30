@@ -7,7 +7,7 @@
   function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function values(){return Object.fromEntries(new FormData(form).entries())}
   function setMessage(element,text,type='error'){element.textContent=text;element.className='message '+type;element.classList.toggle('hidden',!text)}
-  function fordEmail(value){return/^[^@\s]+@(?:[A-Za-z0-9-]+\.)*ford\.com$/i.test(String(value||'').trim())}
+  function emailAddress(value){return/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(value||'').trim())}
 
   function jsonpRequest(action,params={},timeoutMs=20000){
     return new Promise((resolve,reject)=>{
@@ -73,7 +73,7 @@
     const fields=[...$('#formStep1').querySelectorAll('input,select')],invalid=fields.find(field=>!field.checkValidity());
     if(invalid){invalid.reportValidity();invalid.focus();return false}
     const data=values();
-    if(!fordEmail(data.email)||!fordEmail(data.managerEmail)){setMessage($('#step1Message'),'Employee and manager email addresses must be Ford email addresses, such as name@ford.com.');return false}
+    if(!emailAddress(data.email)||!emailAddress(data.managerEmail)){setMessage($('#step1Message'),'Enter valid employee and manager email addresses.');return false}
     setMessage($('#step1Message'),'');return true;
   }
 

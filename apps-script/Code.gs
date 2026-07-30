@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.4.1-sponsor-arrival-email',
+  VERSION: '2.4.1a-ev-email-test-mode',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs', NOTIFICATIONS:'Notifications', NOTIFICATION_ACKS:'NotificationAcknowledgements', INCIDENTS:'Incidents', EV_REQUESTS:'EVChargingRequests', EV_ACTIVITY:'EVChargingActivity', EV_POLICIES:'EVChargingPolicies' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt','SponsorNotificationStatus','SponsorNotifiedAt','SponsorNotificationEmail','SponsorNotificationError'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -207,6 +207,7 @@ function setupVisitorManagement() {
     EV_CHARGING_REQUEST_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/ev-charging-request/',
     EV_MANAGER_REVIEW_DAYS:'14',
     EV_NOTIFICATION_EMAIL:'',
+    EV_REQUIRE_FORD_EMAILS:'YES',
     SPONSOR_ARRIVAL_EMAILS:'YES',
     CHECK_IN_LOCATION:'Main Security Front Desk',
     VGS_NAVIGATION_URL:'', TRAINING_VIDEO_URL:'', AGREEMENT_VERSION:'2026.2',
@@ -220,7 +221,7 @@ function setupVisitorManagement() {
   seedEVChargingPolicy_();
   seedInitialAdmin_();
   [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS,FE.SHEETS.NOTIFICATIONS,FE.SHEETS.NOTIFICATION_ACKS,FE.SHEETS.INCIDENTS,FE.SHEETS.EV_REQUESTS,FE.SHEETS.EV_ACTIVITY,FE.SHEETS.EV_POLICIES].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.4.1 setup complete. Sponsor arrival email delivery tracking and existing visitor and EV charging workflows are ready.';
+  return 'VISTA 2.4.1A setup complete. EV email-domain test mode, sponsor arrival delivery tracking, and existing workflows are ready.';
 }
 
 function seedAgreements_(){
@@ -267,6 +268,7 @@ function getEVChargingPolicy_(){
 }
 
 function fordEmployeeEmail_(value){return/^[^@\s]+@(?:[A-Za-z0-9-]+\.)*ford\.com$/i.test(String(value||'').trim())}
+function validEmailAddress_(value){return/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(value||'').trim())}
 function validCDSID_(value){return/^[A-Za-z0-9._-]{3,32}$/.test(String(value||'').trim())}
 function normalizeCDSID_(value){return String(value||'').trim().toLowerCase()}
 function normalizePlate_(value){return String(value||'').toUpperCase().replace(/\s+/g,' ').trim()}
@@ -309,7 +311,9 @@ function createEVChargingRequest_(p){
   p=p||{};
   validateRequired_(p,['firstName','lastName','cdsid','cellPhone','email','department','managerName','managerCDSID','managerEmail','vehicleMake','vehicleModel','licensePlate','plateState','policyVersion','policyContentHash']);
   if(!validCDSID_(p.cdsid)||!validCDSID_(p.managerCDSID))throw new Error('Enter valid employee and manager CDSIDs.');
-  if(!fordEmployeeEmail_(p.email)||!fordEmployeeEmail_(p.managerEmail))throw new Error('Employee and manager email addresses must be Ford email addresses.');
+  const requireFordEmails=truthyActive_(config_().EV_REQUIRE_FORD_EMAILS);
+  if(!validEmailAddress_(p.email)||!validEmailAddress_(p.managerEmail))throw new Error('Enter valid employee and manager email addresses.');
+  if(requireFordEmails&&(!fordEmployeeEmail_(p.email)||!fordEmployeeEmail_(p.managerEmail)))throw new Error('Employee and manager email addresses must be Ford email addresses. For controlled testing, an administrator may set EV_REQUIRE_FORD_EMAILS to NO in Config.');
   if(String(p.cellPhone||'').replace(/\D/g,'').length<7)throw new Error('Enter a valid employee cell phone number.');
   if(normalizePlate_(p.licensePlate).length<2||String(p.plateState||'').trim().length!==2)throw new Error('Enter a valid vehicle license plate number and state.');
   if(!truthy_(p.policyAcknowledged))throw new Error('The charging policy and terms of use must be acknowledged.');
@@ -799,7 +803,7 @@ function setupVista(){
   const result=setupVisitorManagement();
   syncRosterUsers_();
   applyVista20ASecurityDefaults();
-  return result+' Existing Config values were preserved. Review the EV_CHARGING_REQUEST_URL, EV_MANAGER_REVIEW_DAYS, and optional EV_NOTIFICATION_EMAIL values, then deploy a new web-app version.';
+  return result+' Existing Config values were preserved. Review EV_CHARGING_REQUEST_URL, EV_MANAGER_REVIEW_DAYS, EV_REQUIRE_FORD_EMAILS, and optional EV_NOTIFICATION_EMAIL, then deploy a new web-app version.';
 }
 
 function setupVistaIdentityAndRoles(){

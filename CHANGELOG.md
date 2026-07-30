@@ -1,3 +1,11 @@
+## VISTA 2.4.1A — EV Email Test Mode
+
+- Added the `EV_REQUIRE_FORD_EMAILS` Config switch with a secure production default of `YES`.
+- Setting the switch to `NO` permits valid external email addresses for controlled EV workflow testing.
+- Updated the EV request page to validate general email syntax while leaving domain enforcement to the Apps Script configuration.
+- Preserved the Ford-only employee statement and all manager approval, token, notification, policy, and audit behavior.
+- Existing production Config values are not overwritten when `setupVista()` is rerun.
+
 ## VISTA 2.4.1 — Sponsor Arrival Email Notifications
 
 - Replaced the check-in-only “Sponsor has been notified” indicator with an actual sponsor arrival email action.
