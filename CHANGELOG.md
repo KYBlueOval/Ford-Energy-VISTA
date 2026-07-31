@@ -1,3 +1,15 @@
+## VISTA 2.4.4 — Focused Security Operations Dashboard
+
+- Kept the live visitor KPIs permanently visible at the top of Security Operations.
+- Expanded Alerts & Notifications into a full-width Operational Awareness banner.
+- Promoted Visitor Records to the always-visible primary operational workspace.
+- Added polished launchers for Live Site Accountability, Security Reporting, and Shift Accountability.
+- Opens one supporting Security workspace at a time with close and back controls.
+- Added live launcher summaries for onsite visitors, badges out, open incidents, and open handoffs.
+- Added URL hash support for `#security-accountability`, `#security-incidents`, and `#security-handoffs`.
+- Preserved approval, denial, check-in, checkout, badge, photo, alert acknowledgement, incident, handoff, permission, and audit behavior.
+- Frontend-only release; no Apps Script redeployment or spreadsheet migration is required after v2.4.3.
+
 ## VISTA 2.4.3 — Focused Administration Dashboard
 
 - Reorganized Administration into an operational landing dashboard instead of one continuous vertical page.

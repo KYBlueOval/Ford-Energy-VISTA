@@ -217,3 +217,35 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
 /* VISTA 2.3.8 Administration broadcasts and individual sign-off */
 .notification-row.admin-broadcast{border-left-width:7px;box-shadow:0 8px 22px rgba(0,52,120,.09)}.notification-row.severity-info{border-left-color:#1787c9;background:#f5fbff}.notification-evidence-photo{display:block;width:100%;max-height:60vh;object-fit:contain;border-radius:12px;background:#eef3f8}.broadcast-login-alert{display:grid;gap:16px}.broadcast-login-alert>p{margin:0;font-size:15px;line-height:1.6;white-space:pre-wrap}.broadcast-login-meta{display:flex;flex-wrap:wrap;gap:7px}.broadcast-login-meta span{padding:6px 9px;border-radius:999px;background:#eaf3fb;color:var(--ford);font-size:10px;font-weight:900;text-transform:uppercase}.broadcast-login-alert.severity-high{border-top:5px solid #f79009;padding-top:14px}.broadcast-login-alert.severity-critical{border-top:5px solid #d92d20;padding-top:14px}.broadcast-login-alert.severity-critical .broadcast-login-meta span:first-child{background:#fde7e5;color:#a4231b}
 .field-help{margin:-5px 0 4px 30px;color:#64778b;font-size:.82rem;line-height:1.4}
+
+/* VISTA 2.4.4 focused Security Operations dashboard */
+.operational-awareness-banner{margin:18px 0;padding:20px;width:100%}
+.visitor-record-workspace{margin:22px 0 0}
+.workspace-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 2px 12px}
+.workspace-heading h2{margin:4px 0 5px;font-size:25px}
+.workspace-heading p:last-child{margin:0;color:var(--muted);font-size:12px}
+.visitor-record-workspace .toolbar{margin:0 0 14px}
+.security-workspace-launcher{margin:28px 0 18px;padding:24px;border:1px solid #cbdbea;border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(237,246,254,.97));box-shadow:0 16px 36px rgba(13,45,80,.1)}
+.security-launcher-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
+.security-launcher-heading h2{margin:4px 0 5px;font-size:25px}
+.security-launcher-heading p:last-child{margin:0;color:var(--muted);font-size:12px}
+.security-workspace-close,.security-workspace-return button{border:1px solid #a7c7e7;border-radius:9px;background:#fff;color:var(--ford);padding:10px 14px;font-weight:800;cursor:pointer}
+.security-workspace-close:hover,.security-workspace-return button:hover{background:#eaf4fd}
+.security-launcher-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.security-launcher-card{position:relative;display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:13px;min-width:0;min-height:118px;padding:18px;text-align:left;border:1px solid #c8d9e9;border-radius:15px;background:linear-gradient(145deg,#fff,#f2f8fd);color:var(--ink);cursor:pointer;box-shadow:0 8px 18px rgba(0,52,120,.07);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.security-launcher-card:hover,.security-launcher-card:focus-visible{transform:translateY(-2px);border-color:#68a8df;box-shadow:0 14px 28px rgba(0,52,120,.14);outline:0}
+.security-launcher-card[aria-selected="true"]{border-color:#0b67ad;background:linear-gradient(145deg,#e8f4ff,#fff);box-shadow:0 0 0 3px rgba(11,103,173,.12),0 14px 28px rgba(0,52,120,.14)}
+.security-launcher-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#003478,#0b67ad);color:#fff;font-size:23px;font-weight:900;box-shadow:0 8px 18px rgba(0,52,120,.2)}
+.security-launcher-copy{display:grid;gap:4px;min-width:0}
+.security-launcher-copy strong{font-size:15px;color:#102d4c}
+.security-launcher-copy small{color:var(--muted);line-height:1.35}
+.security-launcher-copy em{margin-top:4px;color:#0b5cab;font-size:10px;font-style:normal;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.security-launcher-arrow{color:#0b5cab;font-size:23px;font-weight:900}
+.security-workspace-host{scroll-margin-top:18px}
+.security-focused-workspace{margin:18px 0;padding:20px;animation:securityWorkspaceReveal .24s ease both}
+.security-workspace-return{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:-4px 0 18px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.security-workspace-return span{color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.09em}
+.security-focused-workspace.active-operations,.security-focused-workspace.handoff-panel{margin:18px 0}
+@keyframes securityWorkspaceReveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1050px){.security-launcher-grid{grid-template-columns:1fr}.security-launcher-card{min-height:96px}}
+@media(max-width:620px){.operational-awareness-banner{padding:15px}.operational-awareness-banner .alert-count{justify-self:start}.workspace-heading,.security-launcher-heading{display:grid}.security-workspace-launcher{padding:15px;margin-top:22px}.security-launcher-card{grid-template-columns:42px 1fr auto;padding:14px}.security-launcher-icon{width:42px;height:42px}.security-focused-workspace{padding:15px}.security-workspace-return{align-items:flex-start}.security-workspace-return span{display:none}}
