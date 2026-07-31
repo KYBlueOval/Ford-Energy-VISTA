@@ -166,3 +166,42 @@
 .ev-approval-panel{margin-bottom:22px;padding:22px;border-top:5px solid #0b67ad;overflow:hidden}.ev-approval-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px}.ev-approval-head h2{margin:2px 0 5px;font-size:27px}.ev-approval-head p{margin:0;color:var(--muted)}.ev-admin-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.ev-admin-kpis article{padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(145deg,#f8fbff,#eef5fb)}.ev-admin-kpis b{display:block;color:var(--ford);font-size:25px}.ev-admin-kpis span{color:var(--muted);font-size:12px;font-weight:800;text-transform:uppercase}.ev-admin-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 240px auto;gap:10px;margin-bottom:16px}.ev-request-list{display:grid;gap:12px}.ev-request-row{padding:17px;border:1px solid var(--line);border-left:6px solid #7c8b9b;border-radius:13px;background:#fff;box-shadow:0 6px 16px rgba(0,52,120,.06)}.ev-request-row.status-pending-manager-approval{border-left-color:#f79009}.ev-request-row.status-approved{border-left-color:#1b8b55}.ev-request-row.status-denied{border-left-color:#d92d20}.ev-request-primary,.ev-request-actions{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.ev-request-primary h3{margin:6px 0 2px;font-size:19px}.ev-request-primary p{margin:0;color:var(--muted)}.ev-request-primary>strong{color:var(--ford);font-size:12px;letter-spacing:.08em}.ev-status{display:inline-flex;padding:4px 8px;border-radius:999px;background:#eaf3fb;color:var(--ford);font-size:10px;font-weight:900;text-transform:uppercase}.ev-request-details{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:15px 0}.ev-request-details span{padding:11px;border-radius:9px;background:#f5f8fb;color:#1a2d42}.ev-request-details b,.ev-request-details small{display:block}.ev-request-details b{margin-bottom:4px;color:#6b7f92;font-size:10px;text-transform:uppercase}.ev-request-details small{margin-top:3px;color:#667789}.ev-request-actions{justify-content:flex-end}.ev-request-actions span{color:var(--muted);font-size:12px;font-weight:800;text-transform:uppercase}.ev-decision-history{margin:8px 0 13px;padding:9px 11px;border-radius:8px;background:#edf5fb;color:#3f566d;font-size:12px}.ev-decision-dialog{width:min(680px,calc(100vw - 28px))}.ev-decision-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}.ev-decision-summary>div{padding:11px;border-radius:9px;background:#f4f7fa}.ev-decision-summary b,.ev-decision-summary span{display:block}.ev-decision-summary b{margin-bottom:4px;color:#63778b;font-size:10px;text-transform:uppercase}.ev-decision-warning{margin:14px 0;padding:13px 15px;border-left:5px solid #f79009;border-radius:8px;background:#fff5e8;color:#69410a;line-height:1.45}.ev-loading{opacity:.72;pointer-events:none}
 @media(max-width:900px){.ev-admin-kpis,.ev-request-details{grid-template-columns:1fr 1fr}.ev-admin-toolbar{grid-template-columns:1fr 1fr}.ev-admin-toolbar button{grid-column:1/-1}.ev-approval-head{flex-direction:column}}
 @media(max-width:560px){.ev-admin-kpis,.ev-request-details,.ev-decision-summary,.ev-admin-toolbar{grid-template-columns:1fr}.ev-request-primary{flex-direction:column}.ev-request-actions{justify-content:stretch}.ev-request-actions button{flex:1}.ev-approval-head button{width:100%}}
+
+/* VISTA 2.4.3 focused Administration dashboard */
+.analytics-panel{margin:18px 0}
+.admin-launchpad{position:relative;margin:22px 0 0;padding:24px;border:1px solid #cbddeb;border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(240,248,255,.96));box-shadow:0 15px 38px rgba(18,59,97,.10);overflow:hidden}
+.admin-launchpad::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:4px;background:linear-gradient(90deg,var(--ford),#178ad2,#79d5ff)}
+.admin-launchpad-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px}
+.admin-launchpad-head h2{margin:4px 0 5px;font-size:25px}
+.admin-launchpad-head p:last-child{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+.admin-launch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.admin-launch-card{position:relative;min-height:158px;padding:18px;text-align:left;display:grid;grid-template-columns:48px 1fr;grid-template-rows:auto 1fr auto;gap:8px 13px;color:var(--ink);background:linear-gradient(145deg,#fff,#f4f9fd);border:1px solid #d1e0ec;border-radius:16px;box-shadow:0 7px 18px rgba(18,59,97,.07);overflow:hidden;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.admin-launch-card::after{content:"";position:absolute;inset:auto -35px -50px auto;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(36,151,219,.13),transparent 67%);pointer-events:none}
+.admin-launch-card:hover,.admin-launch-card:focus-visible{transform:translateY(-3px);border-color:#70b9e6;box-shadow:0 14px 28px rgba(0,52,120,.14)}
+.admin-launch-card.is-active{color:#fff;border-color:transparent;background:linear-gradient(135deg,#062e68,#07569f 62%,#1688ce);box-shadow:0 16px 30px rgba(0,52,120,.24)}
+.admin-launch-icon{grid-row:1/3;width:48px;height:48px;display:grid;place-items:center;border-radius:14px;color:#fff;background:linear-gradient(145deg,var(--ford),#168bd2);font-size:25px;font-weight:900;box-shadow:0 8px 16px rgba(0,52,120,.22)}
+.admin-launch-icon-text{font-size:14px;letter-spacing:.04em}
+.admin-launch-copy{align-self:center}
+.admin-launch-copy b{display:block;font-size:16px;line-height:1.2}
+.admin-launch-copy small{display:block;margin-top:6px;color:var(--muted);font-size:11px;font-weight:500;line-height:1.4}
+.admin-launch-status{grid-column:1/3;align-self:end;justify-self:start;padding:5px 9px;border-radius:999px;color:#31617f;background:#e8f3fb;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+.admin-launch-status.has-alert{color:#9b5200;background:#fff0d9}
+.admin-launch-arrow{position:absolute;right:17px;bottom:19px;color:var(--ford);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.admin-launch-card.is-active .admin-launch-icon{color:var(--ford);background:#fff;box-shadow:none}
+.admin-launch-card.is-active .admin-launch-copy small{color:#c6e7fb}
+.admin-launch-card.is-active .admin-launch-status{color:#fff;background:rgba(255,255,255,.17)}
+.admin-launch-card.is-active .admin-launch-arrow{color:#fff}
+.admin-workspace{margin-top:18px;scroll-margin-top:18px;animation:adminWorkspaceIn .24s ease both}
+.admin-workspace-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 18px;padding-bottom:12px;border-bottom:1px solid #dce7f0}
+.admin-workspace-bar span{color:#648097;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}
+.admin-workspace-bar button{padding:8px 11px;font-size:11px}
+#workspaceDirectory{margin-top:18px}
+#workspaceDirectory>.admin-workspace-bar{margin:0 0 12px;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 8px 22px rgba(22,59,97,.06)}
+#workspaceDirectory .kpis{margin-top:0}
+#workspaceDirectory .table-card{margin-bottom:0}
+.admin-workspace.audit .section-head h2{margin:4px 0 0}
+@keyframes adminWorkspaceIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@media(max-width:1050px){.admin-launch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.hero{display:grid}.hero button{width:100%;margin-top:3px}.admin-launchpad{padding:18px}.admin-launchpad-head{display:grid}.admin-launchpad-head button{width:100%}.admin-launch-grid{grid-template-columns:1fr}.admin-launch-card{min-height:144px}.admin-workspace{scroll-margin-top:10px}.admin-workspace-bar{align-items:stretch;flex-direction:column}.admin-workspace-bar button{width:100%}}
+@media(max-width:430px){.admin-launch-card{grid-template-columns:42px 1fr;padding:15px}.admin-launch-icon{width:42px;height:42px;border-radius:12px}.admin-launch-arrow{right:14px;bottom:16px}}
+@media(prefers-reduced-motion:reduce){.admin-launch-card{transition:none}.admin-workspace{animation:none}}

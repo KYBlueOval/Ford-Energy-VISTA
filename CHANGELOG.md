@@ -1,3 +1,15 @@
+## VISTA 2.4.3 — Focused Administration Dashboard
+
+- Reorganized Administration into an operational landing dashboard instead of one continuous vertical page.
+- Kept VISTA Analytics immediately below the Administration hero as the always-visible operational overview.
+- Added six polished launcher tiles for Security Operations Communication, Reports & Exports, VISTA Active Directory, Badge Inventory, EV Charging Access Control, and VISTA Activity Logs.
+- Opens only one Administration workspace at a time and visually identifies the active workspace.
+- Added live launcher summaries for total users, total badges, pending EV requests, and active alerts.
+- Added URL hash support for direct links such as `#admin-ev`, `#admin-directory`, and `#admin-reports`.
+- Preserved every existing Administration form, permission, workflow, dialog, audit action, and backend endpoint.
+- Corrected the Administration hero action layout at mobile widths and verified the dashboard without horizontal overflow.
+- Frontend-only release; no Apps Script redeployment or spreadsheet migration is required after v2.4.2.
+
 ## VISTA 2.4.2 — EV Administration Approval and Facilities Integration
 
 - Added an Administration workspace for searching, reviewing, approving, and denying EV charging requests.
