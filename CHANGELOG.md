@@ -1,3 +1,15 @@
+## VISTA 2.5.0 — Sponsor & Approver Portal
+
+- Added a dedicated Ford Energy Sponsor & Approver Portal with badge and username/PIN access.
+- Restricts every dashboard, visitor, photograph, activity, update, and decision request to the authenticated sponsor identity on the server.
+- Provides pending, approved/upcoming, onsite, completed, and searchable assigned-visitor views.
+- Allows assigned sponsors to approve, deny, cancel, and update eligible visit schedules, access scope, escort requirements, and restrictions.
+- Sends branded visitor decision emails and records delivery success or failure in Visit Activity and Audit Log.
+- Routes new sponsor-review and guest-arrival email buttons to the Sponsor Portal.
+- Prevents Sponsor and Approver accounts from retrieving unrelated visitor photographs or badge history.
+- Adds the `SPONSOR_PORTAL_URL` Config setting through `setupVista()` without replacing existing Config values.
+- Adds Sponsor Portal access to the VISTA home dashboard and preserves all Security, Front Desk, Administration, EV, badge, photo, alert, and reporting workflows.
+
 ## VISTA 2.4.5A — Processed Manual Visitor Portraits
 
 - Added a dedicated **Take Photo** camera workflow to Manual Visitor Check-In.
