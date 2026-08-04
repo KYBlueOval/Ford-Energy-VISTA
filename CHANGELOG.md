@@ -1,3 +1,16 @@
+## VISTA 2.4.5 — Supervised Manual Visitor Check-In
+
+- Added a complete walk-in visitor intake workflow inside Security Operations.
+- Allows Front Desk to prepare manual visitor, sponsor, visit, vehicle, photo, badge, and operational information.
+- Requires a Security Supervisor, Admin, or Super Administrator badge or PIN authorization before Front Desk can submit.
+- Allows an already signed-in Security Supervisor or higher account to authorize through the current session without a second credential prompt.
+- Creates an Approved visit record, assigns the visitor badge, checks the visitor in, and refreshes live accountability in one protected server workflow.
+- Supports optional visitor camera/photo capture and the existing sponsor-arrival email notification.
+- Records the initiating user, authorizing user, authorization method, manual registration, badge assignment, and check-in across Visit Activity and Audit Log.
+- Explicitly records that visitor agreements were not collected during the manual override instead of falsely marking them accepted.
+- Restricts the launch permission to Front Desk and authorized leadership; ordinary Security accounts cannot invoke the override endpoint.
+- Includes both visitor-badge and authorizer-badge NFC input targets for the planned Android wrapper.
+
 ## VISTA 2.4.4 — Focused Security Operations Dashboard
 
 - Kept the live visitor KPIs permanently visible at the top of Security Operations.

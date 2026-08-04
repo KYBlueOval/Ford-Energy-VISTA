@@ -249,3 +249,31 @@ button:disabled{opacity:.55;cursor:wait}.record-id{font-size:10px;letter-spacing
 @keyframes securityWorkspaceReveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:1050px){.security-launcher-grid{grid-template-columns:1fr}.security-launcher-card{min-height:96px}}
 @media(max-width:620px){.operational-awareness-banner{padding:15px}.operational-awareness-banner .alert-count{justify-self:start}.workspace-heading,.security-launcher-heading{display:grid}.security-workspace-launcher{padding:15px;margin-top:22px}.security-launcher-card{grid-template-columns:42px 1fr auto;padding:14px}.security-launcher-icon{width:42px;height:42px}.security-focused-workspace{padding:15px}.security-workspace-return{align-items:flex-start}.security-workspace-return span{display:none}}
+
+/* VISTA 2.4.5 supervised manual visitor check-in */
+.manual-visitor-launch{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:10px;padding:12px 17px;background:linear-gradient(135deg,#003478,#0b67ad);color:#fff;font-weight:900;white-space:nowrap;cursor:pointer;box-shadow:0 8px 18px rgba(0,52,120,.2)}
+.manual-visitor-launch:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.operation-dialog:has(.manual-intake-grid){width:min(1040px,100%)}
+.manual-intake-intro,.manual-agreement-warning{display:grid;gap:5px;padding:15px 17px;border-left:5px solid #0b67ad;border-radius:10px;background:#eaf4ff;color:#173b61}
+.manual-intake-intro span,.manual-agreement-warning span{font-size:12px;line-height:1.5}
+.manual-intake-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.manual-intake-grid fieldset{min-width:0;margin:0;padding:17px;border:1px solid #d3e0ec;border-radius:13px;background:#f9fcff}
+.manual-intake-grid legend{padding:0 8px;color:var(--ford);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.manual-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.manual-form-grid label{display:grid;align-content:start;gap:6px;min-width:0;color:var(--ink);font-size:11px;font-weight:800}
+.manual-form-grid input,.manual-form-grid select,.manual-form-grid textarea{width:100%;min-width:0;background:#fff}
+.manual-form-grid textarea{min-height:76px;resize:vertical}
+.manual-form-grid small{color:var(--muted);font-weight:500;line-height:1.35}
+.manual-form-grid .wide{grid-column:1/-1}
+.manual-form-grid .check-row{align-self:center;margin-top:5px}
+.manual-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.manual-review-grid section{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#f8fbfe}
+.manual-review-grid h3{grid-column:1/-1;margin:0 0 4px;color:var(--ford)}
+.manual-review-grid .field{background:#fff;border:1px solid #e1e9f1}
+.manual-agreement-warning{margin-top:16px;border-left-color:#f79009;background:#fff7e9;color:#70420a}
+.supervisor-authorization{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:16px;padding:17px;border:1px solid #bca8dc;border-radius:12px;background:#f6f1fc}
+.supervisor-authorization h3,.supervisor-authorization p{grid-column:1/-1;margin:0}.supervisor-authorization p{color:#68527f;font-size:12px;line-height:1.45}
+.supervisor-authorization label{display:grid;gap:6px;font-size:11px;font-weight:800}.supervisor-authorization>label{grid-column:1/-1}
+.supervisor-authorization #manualAuthBadge,.supervisor-authorization #manualAuthPin{grid-column:1/-1}.supervisor-authorization #manualAuthPin{display:grid;grid-template-columns:1fr 1fr;gap:13px}.supervisor-authorization #manualAuthPin.hidden{display:none!important}
+@media(max-width:820px){.workspace-heading{align-items:stretch}.manual-visitor-launch{justify-self:start}.manual-intake-grid,.manual-review-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.manual-visitor-launch{width:100%}.manual-form-grid,.manual-review-grid section,.supervisor-authorization,.supervisor-authorization #manualAuthPin{grid-template-columns:1fr}.manual-form-grid .wide,.manual-review-grid h3,.supervisor-authorization h3,.supervisor-authorization p,.supervisor-authorization>label,.supervisor-authorization #manualAuthBadge,.supervisor-authorization #manualAuthPin{grid-column:auto}.operation-dialog:has(.manual-intake-grid){width:100%}}

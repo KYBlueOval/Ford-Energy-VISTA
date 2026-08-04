@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.4.2-ev-administration-approval',
+  VERSION: '2.4.5-manual-visitor-check-in',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs', NOTIFICATIONS:'Notifications', NOTIFICATION_ACKS:'NotificationAcknowledgements', INCIDENTS:'Incidents', EV_REQUESTS:'EVChargingRequests', EV_ACTIVITY:'EVChargingActivity', EV_POLICIES:'EVChargingPolicies' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt','SponsorNotificationStatus','SponsorNotifiedAt','SponsorNotificationEmail','SponsorNotificationError'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -89,6 +89,7 @@ function doPost(e) {
       else if(action==='getUserPhoto') result=getUserPhotoAuthorized_(req.payload||{},session);
       else if(action==='listVisitActivity') { requirePermission_(session,'viewVisits'); result=listVisitActivityAuthorized_(req.payload||{},session); }
       else if(action==='checkInVisit') { requirePermission_(session,'checkIn'); result=checkInVisitAuthorized_(req.payload||{},session); }
+      else if(action==='manualVisitorCheckIn') { requirePermission_(session,'manualVisitIntake'); result=manualVisitorCheckInAuthorized_(req.payload||{},session); }
       else if(action==='checkOutVisit') { requirePermission_(session,'checkOut'); result=checkOutVisitAuthorized_(req.payload||{},session); }
       else if(action==='updateVisitStatus') result=updateVisitStatusAuthorized_(req.payload||{},session);
       else if(action==='listUsers') { requirePermission_(session,'manageUsers'); result=listVistaUsers_(req.payload||{},session); }
@@ -683,6 +684,62 @@ function escalateShiftHandoff_(p,session){
 }
 function publicShiftHandoff_(r){const created=r.CreatedAt?new Date(r.CreatedAt):null,ageMinutes=created&&!isNaN(created)?Math.max(0,Math.floor((new Date()-created)/60000)):0;return{handoffId:String(r.HandoffID||''),createdAt:dateText_(r.CreatedAt),createdBy:String(r.CreatedBy||''),role:String(r.Role||''),shiftLabel:String(r.ShiftLabel||''),notes:String(r.Notes||''),visitorsOnsite:Number(r.VisitorsOnsite||0),overdueVisitors:Number(r.OverdueVisitors||0),badgesOut:Number(r.BadgesOut||0),badgeExceptions:Number(r.BadgeExceptions||0),status:String(r.Status||''),workflowStatus:String(r.WorkflowStatus||'Pending'),ageMinutes:ageMinutes,acknowledgedAt:dateText_(r.AcknowledgedAt),acknowledgedBy:String(r.AcknowledgedBy||''),assignedTo:String(r.AssignedTo||''),escalationLevel:String(r.EscalationLevel||'None'),escalationNotes:String(r.EscalationNotes||''),resolutionNotes:String(r.ResolutionNotes||''),resolvedAt:dateText_(r.ResolvedAt),resolvedBy:String(r.ResolvedBy||'')};}
 
+function manualVisitorCheckInAuthorized_(p,session){
+  requirePermission_(session,'manualVisitIntake');
+  const lock=LockService.getScriptLock();
+  if(!lock.tryLock(30000))throw new Error('Another visitor operation is being completed. Wait a moment and try again.');
+  try{
+    const visitor=(p&&p.visitor)||{},authorization=(p&&p.authorization)||{},authorizer=resolveManualVisitAuthorizer_(authorization,session);
+    validateRequired_(visitor,['firstName','lastName','phone','company','sponsorName','sponsorEmail','department','reason','startDate','arrivalTime','endDate','departureTime','accessScope','badgeUid']);
+    const visitorEmail=String(visitor.email||'').trim(),sponsorEmail=String(visitor.sponsorEmail||'').trim();
+    if(visitorEmail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(visitorEmail))throw new Error('Enter a valid visitor email address or leave it blank.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sponsorEmail))throw new Error('Enter a valid sponsor email address.');
+    const arrival=new Date(String(visitor.startDate)+'T'+String(visitor.arrivalTime)),departure=new Date(String(visitor.endDate)+'T'+String(visitor.departureTime));
+    if(isNaN(arrival)||isNaN(departure)||departure<=arrival)throw new Error('Expected departure must be after the arrival date and time.');
+
+    const ss=SpreadsheetApp.getActive(),sheet=ss.getSheetByName(FE.SHEETS.VISITS);if(!sheet)throw new Error('Run setupVista first.');
+    const now=new Date(),visitId='VST-'+Utilities.formatDate(now,tz_(),'yyyyMMdd')+'-'+Utilities.getUuid().slice(0,8).toUpperCase(),confirmation='FE-'+Utilities.getUuid().replace(/-/g,'').slice(0,8).toUpperCase();
+    const fullName=[visitor.firstName,visitor.middleName,visitor.lastName].filter(Boolean).join(' '),allowUnknown=truthy_(visitor.allowRegisterUnknownBadge);
+    const badge=ensureBadgeAvailable_(visitor.badgeUid,visitId,{allowUnknown:allowUnknown,badgeNumber:visitor.badgeNumber||'',session:authorizer.user});
+    let photoFileId='',photoFileName='',photoUrl='';
+    if(String(visitor.photoDataUrl||'').trim()){const saved=savePhoto_(visitor.photoDataUrl,fullName,visitor.company,visitId);photoFileId=saved.id;photoFileName=saved.name;photoUrl=saved.url;}
+    const record={VisitID:visitId,ConfirmationNumber:confirmation,CreatedAt:now,Status:'Approved',FirstName:visitor.firstName,MiddleName:visitor.middleName||'',LastName:visitor.lastName,FullName:fullName,Email:visitorEmail,Phone:visitor.phone,Company:visitor.company,JobTitle:visitor.jobTitle||'',Relationship:visitor.relationship||'Walk-In Visitor',Street:'',City:'',State:'',PostalCode:'',Country:visitor.country||'United States',EmergencyName:'',EmergencyPhone:'',SponsorID:'',SponsorSource:'Manual Security Intake',SponsorName:visitor.sponsorName,SponsorEmail:sponsorEmail,Department:visitor.department,SecondaryContact:'',Reason:visitor.reason,Project:visitor.project||'',VisitorType:visitor.visitorType||'Walk-In',StartDate:visitor.startDate,ArrivalTime:visitor.arrivalTime,EndDate:visitor.endDate,DepartureTime:visitor.departureTime,AccessScope:visitor.accessScope,EscortRequired:visitor.escortRequired||'',LineTour:visitor.lineTour||'No',SpecialItems:visitor.specialItems||'',Driving:visitor.driving||'No',VehicleMake:visitor.vehicleMake||'',VehicleModel:visitor.vehicleModel||'',VehicleYear:visitor.vehicleYear||'',VehicleColor:visitor.vehicleColor||'',LicensePlate:visitor.licensePlate||'',PlateState:visitor.plateState||'',PhotoFileId:photoFileId,PhotoFileName:photoFileName,PhotoUrl:photoUrl,AgreementVersion:config_().AGREEMENT_VERSION||'2026.2',AcknowledgementName:'',AcknowledgementDate:'',AgreementTimestamp:'',AgreementCompletionCount:0,AgreementCompletionStatus:'Manual Override - Not Collected',SessionID:'MANUAL-'+Utilities.getUuid().slice(0,12).toUpperCase(),ClientLanguage:visitor.clientLanguage||'',ClientTimeZone:visitor.clientTimeZone||'',UserAgent:visitor.userAgent||'',ClientTimestamp:visitor.clientTimestamp||'',Referrer:'Security Operations Manual Intake',AgreeSecurity:'No',AgreeBiometric:'No',AgreePrivacy:'No',AgreeSafety:'No',AgreeConduct:'No',AgreeTraining:'No',AgreeRestricted:'No',LastUpdatedAt:now};
+    appendObjectRow_(sheet,record,FE.VISIT_HEADERS);
+    const authorizationDetails='Authorized by '+String(authorizer.user.FullName||authorizer.user.Username)+' ('+String(authorizer.user.Role)+') via '+authorizer.method;
+    logActivity_(visitId,'MANUAL_VISITOR_REGISTERED',session.FullName||session.Username,'',authorizationDetails+' · Confirmation '+confirmation);
+    logActivity_(visitId,'MANUAL_OVERRIDE_APPROVED',authorizer.user.FullName||authorizer.user.Username,'',authorizationDetails+' · Agreements not collected');
+    auditVisit_(session,'MANUAL_VISITOR_CREATED',visitId,'Success',authorizationDetails);
+    auditVisit_(authorizer.user,'MANUAL_VISITOR_OVERRIDE_AUTHORIZED',visitId,'Success','Initiated by '+String(session.FullName||session.Username)+' ('+String(session.Role)+') · '+authorizer.method);
+    const checkInPayload={visitId:visitId,badgeUid:visitor.badgeUid,badgeNumber:badge.badgeNumber||visitor.badgeNumber||'',allowRegisterUnknownBadge:false,officerName:session.FullName||session.Username,notes:['Manual walk-in registration',visitor.notes||''].filter(Boolean).join(' · '),idRetained:truthy_(visitor.idRetained),sponsorNotified:truthy_(visitor.sponsorNotified)};
+    const checkIn=checkInVisit_(checkInPayload,authorizer.user),savedVisit=findVisitRow_(visitId).obj;
+    auditVisit_(session,'MANUAL_VISITOR_CHECK_IN',visitId,'Success','Badge '+String(visitor.badgeUid)+' · '+authorizationDetails+' · Agreements not collected during manual override');
+    return{ok:true,visit:publicVisit_(savedVisit),visitId:visitId,confirmationNumber:confirmation,authorizer:publicSessionUser_(authorizer.user),authorizationMethod:authorizer.method,badge:checkIn.badge,sponsorNotification:checkIn.sponsorNotification,message:'Manual visitor record created, authorized, and checked in.'};
+  }catch(err){audit_(session,'MANUAL_VISITOR_CHECK_IN','','','Denied',String(err.message||err).slice(0,500));throw err;}
+  finally{lock.releaseLock();}
+}
+
+function resolveManualVisitAuthorizer_(authorization,session){
+  if(permissionsForRole_(session.Role).authorizeManualVisit)return{user:session,method:'CURRENT SESSION'};
+  const method=String(authorization.method||'').trim().toUpperCase();let user;
+  if(method==='BADGE'){
+    validateRequired_(authorization,['badgeUid']);
+    user=userForBadge_(normalizeBadgeUid_(authorization.badgeUid));
+  }else if(method==='PIN'){
+    validateRequired_(authorization,['username','pin']);
+    const username=String(authorization.username).trim().toLowerCase(),row=findUserRow_(username);user=row.obj;
+    const maxFailures=Math.max(3,Number(config_().AUTH_MAX_FAILED_LOGINS||5)),failures=Number(user.FailedLoginCount||0);
+    if(failures>=maxFailures)throw new Error('The authorizing account is locked. Use an authorized badge or contact a VISTA administrator.');
+    if(!user.PINHash||String(user.PINHash)!==pinHash_(username,authorization.pin)){
+      const next=failures+1;updateObjectRow_(FE.SHEETS.USERS,row.row,{FailedLoginCount:next});audit_(user,'MANUAL_OVERRIDE_PIN','','','Denied','Invalid PIN; failed attempt '+next);
+      throw new Error(next>=maxFailures?'The authorizing account was locked after repeated failed attempts.':'Supervisor authorization failed. Verify the username and PIN.');
+    }
+    updateObjectRow_(FE.SHEETS.USERS,row.row,{FailedLoginCount:0});
+  }else throw new Error('A Security Supervisor, Admin, or Super Administrator must authorize this manual visitor check-in.');
+  if(!truthyActive_(user.Active))throw new Error('The authorizing VISTA account is disabled.');
+  if(!permissionsForRole_(user.Role).authorizeManualVisit)throw new Error('Authorization requires a Security Supervisor, Admin, or Super Administrator account.');
+  return{user:user,method:method};
+}
+
 function checkInVisit_(p,session) {
   validateRequired_(p,['visitId','badgeUid','officerName']); const row=findVisitRow_(p.visitId), rec=row.obj;
   if(String(rec.Status)!=='Approved')throw new Error('Check-in prohibited: the reservation must be Approved before a badge UID can be assigned.');
@@ -1070,12 +1127,12 @@ function truthyActive_(v){return !['no','false','0','inactive','disabled',''].in
 
 function permissionsForRole_(role){
   const r=String(role||'').trim().toLowerCase();
-  const none={viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false,reportIncident:false,manageIncidents:false};
-  if(r==='admin'||r==='super administrator'||r==='superadmin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true,viewAnalytics:true,viewBadges:true,manageBadges:true,registerUnknownBadge:true,reportIncident:true,manageIncidents:true};
-  if(r==='security supervisor')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewAnalytics:true,viewBadges:true,manageBadges:false,registerUnknownBadge:true,reportIncident:true,manageIncidents:true};
-  if(r==='security')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewAnalytics:false,viewBadges:true,manageBadges:false,registerUnknownBadge:false,reportIncident:true,manageIncidents:false};
-  if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:true,manageBadges:false,registerUnknownBadge:false,reportIncident:true,manageIncidents:false};
-  if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false,reportIncident:false,manageIncidents:false};
+  const none={viewVisits:false,viewPhoto:false,approve:false,deny:false,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false,reportIncident:false,manageIncidents:false,manualVisitIntake:false,authorizeManualVisit:false};
+  if(r==='admin'||r==='super administrator'||r==='superadmin')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:true,manageUsers:true,manageConfig:true,viewAudit:true,viewAnalytics:true,viewBadges:true,manageBadges:true,registerUnknownBadge:true,reportIncident:true,manageIncidents:true,manualVisitIntake:true,authorizeManualVisit:true};
+  if(r==='security supervisor')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewAnalytics:true,viewBadges:true,manageBadges:false,registerUnknownBadge:true,reportIncident:true,manageIncidents:true,manualVisitIntake:true,authorizeManualVisit:true};
+  if(r==='security')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:true,viewAnalytics:false,viewBadges:true,manageBadges:false,registerUnknownBadge:false,reportIncident:true,manageIncidents:false,manualVisitIntake:false,authorizeManualVisit:false};
+  if(r==='frontdesk')return {viewVisits:true,viewPhoto:true,approve:false,deny:false,checkIn:true,checkOut:true,noShow:true,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:true,manageBadges:false,registerUnknownBadge:false,reportIncident:true,manageIncidents:false,manualVisitIntake:true,authorizeManualVisit:false};
+  if(r==='sponsor'||r==='approver')return {viewVisits:true,viewPhoto:true,approve:true,deny:true,checkIn:false,checkOut:false,noShow:false,admin:false,manageUsers:false,manageConfig:false,viewAudit:false,viewAnalytics:false,viewBadges:false,manageBadges:false,registerUnknownBadge:false,reportIncident:false,manageIncidents:false,manualVisitIntake:false,authorizeManualVisit:false};
   return none;
 }
 function requirePermission_(session,key){if(!permissionsForRole_(session.Role)[key])throw new Error('Your '+session.Role+' role is not authorized to perform this action.');}
