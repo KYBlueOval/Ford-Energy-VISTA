@@ -1,3 +1,12 @@
+## VISTA 2.4.5A — Processed Manual Visitor Portraits
+
+- Added a dedicated **Take Photo** camera workflow to Manual Visitor Check-In.
+- Automatically center-crops captured and uploaded visitor photos to a consistent 3:4 portrait.
+- Removes the portrait background and replaces it with the VISTA light-blue identity background.
+- Added a processed portrait preview, retake, upload, retry-processing, and remove controls.
+- Stops the camera whenever the operator cancels, advances to authorization, or closes the intake.
+- Preserves the cropped portrait if the browser background-removal model is temporarily unavailable.
+
 ## VISTA 2.4.5 — Supervised Manual Visitor Check-In
 
 - Added a complete walk-in visitor intake workflow inside Security Operations.
