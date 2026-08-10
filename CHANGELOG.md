@@ -1,3 +1,12 @@
+## VISTA 2.5.1 — Sponsor Delegation & Coverage
+
+- Added date-bounded sponsor delegation and out-of-office coverage between active Sponsor and Approver accounts.
+- Added server-side delegated visitor ownership checks across dashboards, photographs, activity, updates, approvals, denials, and cancellations.
+- Added active, scheduled, expired, and cancelled coverage states with participant and Administration cancellation controls.
+- Added coverage attribution to visitor rows and records so substitute approvers know whose visitors they are managing.
+- Added the `SponsorDelegations` worksheet and non-destructive `SPONSOR_DELEGATION_MAX_DAYS` configuration.
+- Added audited delegation creation and cancellation events.
+
 ## VISTA 2.5.0 — Sponsor & Approver Portal
 
 - Added a dedicated Ford Energy Sponsor & Approver Portal with badge and username/PIN access.
