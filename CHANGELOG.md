@@ -1,3 +1,13 @@
+## VISTA 2.5.3 — Sponsor Self-Service & Administrator Oversight
+
+- Added Sponsor Portal access for active Admin and Super Administrator accounts.
+- Added a clearly identified, fully audited administrator oversight mode spanning all sponsor-assigned visitor requests.
+- Preserved own/delegated scoping for Sponsor and Approver accounts.
+- Added sponsor-created single and weekly recurring visitor requests with separate visit IDs and confirmation numbers.
+- Added administrator selection of the accountable Sponsor or Approver for new requests and delegated coverage.
+- Added sponsor-created-request email delivery, Visit Activity events, and Audit Log attribution.
+- Added responsive self-service scheduling controls and sponsor attribution throughout the visitor list and record workspace.
+
 ## VISTA 2.5.2 — Sponsor Approval Governance
 
 - Added a focused Administration workspace for pending sponsor reviews, reminder thresholds, escalation, and delegated coverage.
