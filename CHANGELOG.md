@@ -1,3 +1,14 @@
+## VISTA 2.5.4 — Secure Visitor Invitations & Intake Completion
+
+- Added automatic secure intake invitations for visitor requests created by Sponsors, Approvers, Administrators, and Super Administrators.
+- Added one-time, hashed, expiring visitor-intake tokens; usable tokens are never stored in Google Sheets.
+- Reused the public registration workflow in invitation mode for profile completion, camera/photo processing, vehicle details, safety video, and all seven acknowledgements.
+- Updated the original VisitRequests record instead of creating a duplicate reservation.
+- Added sponsor completion emails plus VisitActivity and AuditLog tracking.
+- Added audited Send / Resend Intake Email controls for existing or undelivered sponsor-created requests; each resend invalidates the prior link.
+- Blocked approval and check-in for sponsor-created requests until visitor intake is complete.
+- Synchronized Sponsor/Approver Administration accounts with the Sponsors worksheet on create, edit, enable, disable, role change, and deletion.
+
 ## VISTA 2.5.3 — Sponsor Self-Service & Administrator Oversight
 
 - Added Sponsor Portal access for active Admin and Super Administrator accounts.

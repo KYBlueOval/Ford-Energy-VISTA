@@ -1,4 +1,4 @@
-/* VISTA 2.5.3 sponsor scheduling and administrative oversight */
+/* VISTA sponsor scheduling, administrator oversight, and visitor intake status */
 .hero-actions{display:flex;gap:10px;align-items:center}
 .oversight-banner{display:flex;align-items:center;gap:18px;margin:16px 0;padding:15px 18px;border:1px solid #efb366;border-left:6px solid #f07822;border-radius:13px;background:linear-gradient(100deg,#fff5e7,#fffaf3);color:#674000;box-shadow:0 8px 22px rgba(116,73,0,.08)}
 .oversight-banner strong{flex:0 0 auto;color:#8f4700}
