@@ -1,3 +1,13 @@
+## VISTA 2.5.2 — Sponsor Approval Governance
+
+- Added a focused Administration workspace for pending sponsor reviews, reminder thresholds, escalation, and delegated coverage.
+- Added manual reminder and escalation delivery with sponsor, active delegate, and configured escalation recipients.
+- Added a concurrency-safe automated reminder cycle with configurable reminder, escalation, and cooldown thresholds.
+- Added optional hourly Apps Script trigger installation and removal functions.
+- Added `SponsorReviewReminders` records plus Visit Activity and Audit Log events for every delivery outcome.
+- Added Administration creation and cancellation of sponsor coverage assignments.
+- Added dashboard aging, last-reminder visibility, delivery status, and escalation attention indicators.
+
 ## VISTA 2.5.1 — Sponsor Delegation & Coverage
 
 - Added date-bounded sponsor delegation and out-of-office coverage between active Sponsor and Approver accounts.
