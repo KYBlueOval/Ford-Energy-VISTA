@@ -1,5 +1,5 @@
 (() => {
-  console.info('Ford Energy VISTA public registration v2.5.4 loaded');
+  console.info('Ford Energy VISTA public registration v2.5.5 loaded');
   const cfg = window.FE_VISITOR_CONFIG || {};
   const invitationToken = new URLSearchParams(window.location.search).get('invitation') || '';
   const form = document.querySelector('#registrationForm');
@@ -16,6 +16,7 @@
   let originalPhotoDataUrl = '';
   let stream;
   let invitationData = null;
+  let advanceNoticeDays = 7;
 
   const $ = s => document.querySelector(s);
   const nextBtn = $('#nextBtn'), backBtn = $('#backBtn'), submitBtn = $('#submitBtn');
@@ -492,6 +493,9 @@
     });
   }
 
+  function updateAdvanceNoticeMessage(){const host=$('#advanceNoticeMessage'),value=form.startDate.value;if(!host)return;if(!value){host.className='advance-notice-message span-2';host.textContent=`Ford Energy requests at least ${advanceNoticeDays} days advance notice. Late requests may still be submitted and will be reported as a sponsor performance exception.`;return}const visit=new Date(value+'T'+(form.arrivalTime.value||'00:00')),days=Math.floor((visit-new Date())/86400000),compliant=days>=advanceNoticeDays;host.className=`advance-notice-message span-2 ${compliant?'compliant':'late'}`;host.innerHTML=compliant?`<strong>Advance-notice standard met.</strong> Approximately ${Math.max(0,days)} days notice is being provided.`:`<strong>Late request notice.</strong> Approximately ${Math.max(0,days)} days notice is being provided; ${advanceNoticeDays} days is requested. You may continue and submit this request.`}
+  async function loadPublicSettings(){try{if(!cfg.API_URL||cfg.API_URL.includes('PASTE_'))return updateAdvanceNoticeMessage();const url=new URL(cfg.API_URL);url.searchParams.set('action','getPublicSettings');const data=await jsonpRequest(url.toString());if(data?.ok)advanceNoticeDays=Math.max(0,Number(data.advanceNoticeRequiredDays||7));}catch(err){console.warn('Advance-notice setting unavailable; using the seven-day default.',err)}updateAdvanceNoticeMessage()}
+
   async function loadVisitorInvitation(){
     if(!invitationToken)return;
     const banner=$('#invitationBanner'),message=$('#invitationMessage');banner.classList.remove('hidden');
@@ -665,5 +669,5 @@
       submitBtn.textContent=invitationToken?'Complete Visitor Intake':'Submit Visit Request';
     }
   });
-  loadVisitorInvitation();
+  form.startDate.addEventListener('change',updateAdvanceNoticeMessage);form.arrivalTime.addEventListener('change',updateAdvanceNoticeMessage);loadPublicSettings();loadVisitorInvitation();
 })();

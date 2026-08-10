@@ -12,7 +12,7 @@
   <link rel="manifest" href="/Ford-Energy-VISTA/site.webmanifest">
   <meta name="msapplication-TileColor" content="#003478">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="styles.css?v=2.5.4" />
+  <link rel="stylesheet" href="styles.css?v=2.5.5" />
 
 <style>
   .vista-product-wordmark{
@@ -124,7 +124,7 @@
           </label>
           <label>Country *<input name="country" value="United States" required /></label>
         </div>
-        <h3>Home Address</h3>
+        <h3>Visitor Address</h3>
         <div class="grid cols-3">
           <label class="span-2">Street address *<input name="street" required autocomplete="street-address" /></label>
           <label>City *<input name="city" required autocomplete="address-level2" /></label>
@@ -163,6 +163,7 @@
           <label>Expected arrival time *<input name="arrivalTime" type="time" required /></label>
           <label>End date *<input name="endDate" type="date" required /></label>
           <label>Expected departure time *<input name="departureTime" type="time" required /></label>
+          <div id="advanceNoticeMessage" class="advance-notice-message span-2">Loading the site advance-notice standard…</div>
           <label class="span-2">Requested access areas *<textarea name="accessScope" required rows="3" placeholder="Example: Administration Building, Main Conference Room, Electrode Phase 1"></textarea></label>
           <label>Escort required?<select name="escortRequired"><option>No</option><option>Yes</option><option>To be determined</option></select></label>
           <label>Line tour requested?<select name="lineTour"><option>No</option><option>Yes</option></select></label>
@@ -264,11 +265,11 @@
       <div class="form-actions"><button id="backBtn" class="btn btn-secondary" type="button" disabled>Back</button><button id="nextBtn" class="btn btn-primary" type="button">Continue</button><button id="submitBtn" class="btn btn-primary hidden" type="submit">Submit Visit Request</button></div>
     </form>
   </main>
-  <footer class="vista-module-footer branded-module-footer"><img src="../shared/assets/ford-energy-bwrdo-footer.png" alt="BlueOval Rechargeable Battery Development Organization"><div><span>Ford Energy V • I • S • T • A</span><span>Visitor Pre-Arrival Registration</span><span>Version 2.5.4</span></div></footer>
+  <footer class="vista-module-footer branded-module-footer"><img src="../shared/assets/ford-energy-bwrdo-footer.png" alt="BlueOval Rechargeable Battery Development Organization"><div><span>Ford Energy V • I • S • T • A</span><span>Visitor Pre-Arrival Registration</span><span>Version 2.5.5</span></div></footer>
 
   <dialog id="confirmationDialog"><div class="confirmation"><div class="success-icon">✓</div><p class="eyebrow">REQUEST RECEIVED</p><h2>Visitor Registration Submitted</h2><p>Your request has been recorded and sent to the selected Ford Energy sponsor for review.</p><p>Your confirmation number is:</p><div id="confirmationNumber" class="confirmation-number"></div><div id="confirmationQr" class="confirmation-qr" aria-label="Registration QR code"></div><div id="confirmationSummary" class="confirmation-summary"></div><div id="confirmationNotifications" class="confirmation-notifications"></div><div class="arrival-reminder"><strong>What happens next</strong><p>Your sponsor and Security Operations will review the request. Submission does not guarantee approval or site access.</p><p>Upon arrival, proceed to the Main Security Building, park in Ford Energy / Visitor Parking, and bring a valid government-issued photo ID.</p><p>Do not bring undeclared restricted items or electronic storage devices.</p></div><div class="confirmation-actions"><a id="vgsLink" class="btn btn-secondary hidden" target="_blank" rel="noopener">Open VGS Navigation</a><button class="btn btn-primary" onclick="location.reload()">Start Another Registration</button></div></div></dialog>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="config.js?v=130173"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
-  <script src="app.js?v=25400"></script>
+  <script src="app.js?v=25500"></script>
 </body>
 </html>

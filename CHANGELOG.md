@@ -1,3 +1,13 @@
+## VISTA 2.5.5 — Sponsor Performance & Leadership Outlook
+
+- Added configurable `VISITOR_ADVANCE_NOTICE_DAYS` governance while keeping late requests submittable.
+- Captured the required notice, actual notice, compliance result, and late-request flag on each visit record.
+- Required approval notes, parking assignment, and office/seating assignment for every new approval.
+- Recorded decision time, approving identity, approving role, approval source, and manual override status.
+- Added an executive Sponsor & Approver Performance scorecard with compliance, late requests, manual approvals, response time, and lead-time metrics.
+- Added Sponsor / Approver Performance and Two-Week Leadership Outlook reports with CSV and print export.
+- Changed the public intake label from Home Address to Visitor Address.
+
 ## VISTA 2.5.4 — Secure Visitor Invitations & Intake Completion
 
 - Added automatic secure intake invitations for visitor requests created by Sponsors, Approvers, Administrators, and Super Administrators.
