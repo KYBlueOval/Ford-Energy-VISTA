@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-10T16:11:11.783637+00:00",
+  "generatedAt": "2026-08-10T17:11:40.710117+00:00",
   "source": "Ford Energy VISTA Sponsors worksheet via Apps Script",
-  "count": 2,
+  "count": 3,
   "sponsors": [
     {
       "sponsorId": "KY-Glendale",
@@ -16,6 +16,13 @@
       "email": "jysunza@ford.com",
       "department": "Security",
       "keywords": "Security, Justin,"
+    },
+    {
+      "sponsorId": "sgrosse4",
+      "name": "Stephen Grosse",
+      "email": "bosk300576@outlook.com",
+      "department": "Security",
+      "keywords": "Stephen, Security, Grosse"
     }
   ]
 }
