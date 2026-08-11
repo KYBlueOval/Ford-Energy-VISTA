@@ -1,3 +1,12 @@
+## VISTA 2.5.6 — Permanent Badge Authorization
+
+- Added Sponsor and Approver authorization for permanent visitor credentials after visit approval.
+- Added Ford Energy Blue, Contractor Green, and OEM Orange badge selections with required access and business justification.
+- Added visitor email delivery with the standard Ford Energy onboarding intake QR code and hyperlink.
+- Added configured Ford Global Security distribution delivery with visitor identity, company, photograph, badge type, and access requirements.
+- Added the `PermanentBadgeRequests` worksheet, duplicate-request protection, visitor activity events, and full Administration audit records.
+- Added a focused Administration workspace for pending, in-production, issued, closed, and cancelled badge requests.
+
 ## VISTA 2.5.5A — Sponsor Metric Serialization Hotfix
 
 - Corrected advance-notice values returned from Google Sheets date-formatted numeric cells.
