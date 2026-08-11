@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-11T12:26:57.605489+00:00",
+  "generatedAt": "2026-08-11T14:00:21.128530+00:00",
   "source": "Ford Energy VISTA Sponsors worksheet via Apps Script",
   "count": 3,
   "sponsors": [
@@ -18,11 +18,11 @@
       "keywords": "Security, Justin,"
     },
     {
-      "sponsorId": "sgrosse4",
-      "name": "Stephen Grosse",
+      "sponsorId": "sponsor",
+      "name": "Sponsor",
       "email": "bosk300576@outlook.com",
-      "department": "Security",
-      "keywords": "Stephen, Security, Grosse"
+      "department": "TEST",
+      "keywords": "Sponsor, TEST, Ford Energy, sponsor, sponsor"
     }
   ]
 }
