@@ -1,3 +1,10 @@
+## VISTA 2.5.5A — Sponsor Metric Serialization Hotfix
+
+- Corrected advance-notice values returned from Google Sheets date-formatted numeric cells.
+- Prevented epoch-millisecond values and negative elapsed-day displays in approval dialogs.
+- Applied explicit numeric formats to advance-notice and approval-response columns during setup.
+- Updated parking and office/seating assignment examples in Sponsor and Security approval workflows.
+
 ## VISTA 2.5.5 — Sponsor Performance & Leadership Outlook
 
 - Added configurable `VISITOR_ADVANCE_NOTICE_DAYS` governance while keeping late requests submittable.
