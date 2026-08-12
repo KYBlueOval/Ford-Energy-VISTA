@@ -1,3 +1,10 @@
+## VISTA 2.5.6B - Permanent Badge Control Layout Hotfix
+
+- Corrected the Sponsor permanent-badge action overflow in the narrow Visitor Record panel.
+- Scoped the orange callout eyebrow rule so it no longer overrides button icon and label styling.
+- Converted the badge authorization callout to a contained single-column layout with a full-width responsive action.
+- Added explicit text wrapping, sizing, color, and box constraints for every button element.
+
 ## VISTA 2.5.6A - Portal Transport and Permanent Badge UI Hotfix
 
 - Replaced raw JSON parsing in Sponsor and Administration portals with validated API-response handling.
