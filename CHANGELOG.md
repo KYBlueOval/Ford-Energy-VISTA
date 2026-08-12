@@ -1,3 +1,11 @@
+## VISTA 2.5.6A - Portal Transport and Permanent Badge UI Hotfix
+
+- Replaced raw JSON parsing in Sponsor and Administration portals with validated API-response handling.
+- Added clear timeout, connectivity, invalid-response, and Apps Script deployment guidance instead of exposing browser parser errors.
+- Preserved the production Apps Script endpoint and all authenticated permission checks.
+- Rebuilt the Sponsor Permanent Badge action as a polished Ford-blue dimensional control with responsive and accessible interaction states.
+- Added cache-busting for the corrected Sponsor styles and both corrected portal scripts.
+
 ## VISTA 2.5.6 — Permanent Badge Authorization
 
 - Added Sponsor and Approver authorization for permanent visitor credentials after visit approval.

@@ -5,7 +5,25 @@
   const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const normalizeBadgeUid=v=>String(v||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
   const roleAvatarClass=role=>{const k=String(role||'').toLowerCase().replace(/[^a-z]/g,'');if(k==='admin'||k==='superadministrator'||k==='superadmin')return'avatar-admin';if(k==='securitysupervisor')return'avatar-security-supervisor';if(k==='security'||k==='securityofficer'||k==='frontdesk')return'avatar-security';if(k==='sponsor')return'avatar-sponsor';if(k==='approver')return'avatar-approver';return'avatar-neutral'};
-  async function api(action,payload={}){if(!cfg.API_URL)throw new Error('Administration API URL is not configured.');const r=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token,payload})});const d=await r.json();if(!d.ok)throw new Error(d.error||'Request failed');return d}
+  async function api(action,payload={},options={}){
+    if(!cfg.API_URL)throw new Error('Administration API URL is not configured.');
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),90000);
+    let response,text;
+    try{
+      response=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','Accept':'application/json'},cache:'no-store',signal:controller.signal,body:JSON.stringify({action,token:options.authenticated===false?'':token,payload})});
+      text=await response.text();
+    }catch(error){
+      if(error.name==='AbortError')throw new Error('The VISTA service did not respond within 90 seconds. Please retry.');
+      throw new Error('VISTA could not reach the Google Apps Script service. Check the internet connection and retry.');
+    }finally{clearTimeout(timeout)}
+    let data;
+    try{data=JSON.parse(text)}catch(_error){
+      const html=/<!doctype|<html/i.test(text||'');
+      throw new Error(html?'VISTA received a Google service page instead of application data. Refresh and retry. If this continues, verify the current Apps Script web-app deployment.':`VISTA received an invalid service response (HTTP ${response.status}). Please retry.`);
+    }
+    if(!response.ok||!data.ok)throw new Error(data.error||`VISTA request failed (HTTP ${response.status}).`);
+    return data;
+  }
   function toast(m){$('#toast').textContent=m;$('#toast').classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').classList.add('hidden'),3000)}
   const adminWorkspaceNames=new Set(['communications','sponsors','reports','directory','badges','permanentbadges','ev','activity']);
   function workspaceFromHash(){const match=String(location.hash||'').match(/^#admin-(communications|sponsors|reports|directory|badges|permanentbadges|ev|activity)$/);return match?match[1]:''}
@@ -18,7 +36,7 @@
     if(scroll){const target=selected?document.querySelector(`[data-admin-workspace="${selected}"]`):document.querySelector('.admin-launchpad');requestAnimationFrame(()=>target?.scrollIntoView({behavior:'smooth',block:'start'}))}
   }
   document.querySelectorAll('[data-admin-workspace]').forEach(panel=>{const bar=document.createElement('div');bar.className='admin-workspace-bar';bar.innerHTML='<span>Focused workspace</span><button class="secondary" type="button" data-admin-back>← Back to Dashboard</button>';panel.prepend(bar)});
-  async function completeLogin(action,payload){const msg=$('#loginMsg');msg.textContent='Signing in…';try{const r=await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,payload:{...payload,userAgent:navigator.userAgent}})});const d=await r.json();if(!d.ok)throw new Error(d.error||'Login failed');if(!d.permissions?.manageUsers){try{await fetch(cfg.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logout',token:d.token,payload:{}})})}catch(_e){}throw new Error('This account is not authorized for VISTA Administration.');}token=d.token;user=d.user;permissions=d.permissions||{};sessionStorage.setItem('feVistaToken',token);sessionStorage.setItem('feVistaUser',JSON.stringify(user));sessionStorage.setItem('feVistaPermissions',JSON.stringify(permissions));msg.textContent='';show();await load()}catch(e){msg.textContent=e.message;if(action==='badgeLogin'){$('#loginBadgeUid').value='';$('#loginBadgeUid').focus()}}}
+  async function completeLogin(action,payload){const msg=$('#loginMsg');msg.textContent='Signing in…';try{const d=await api(action,{...payload,userAgent:navigator.userAgent},{authenticated:false});if(!d.permissions?.manageUsers){const priorToken=token;token=d.token;try{await api('logout')}catch(_e){}token=priorToken;throw new Error('This account is not authorized for VISTA Administration.');}token=d.token;user=d.user;permissions=d.permissions||{};sessionStorage.setItem('feVistaToken',token);sessionStorage.setItem('feVistaUser',JSON.stringify(user));sessionStorage.setItem('feVistaPermissions',JSON.stringify(permissions));msg.textContent='';show();await load()}catch(e){msg.textContent=e.message;if(action==='badgeLogin'){$('#loginBadgeUid').value='';$('#loginBadgeUid').focus()}}}
   async function pinLogin(){const username=$('#username').value.trim(),pin=$('#pin').value.trim();if(!username||!pin){$('#loginMsg').textContent='Enter your username and PIN.';return}await completeLogin('pinLogin',{username,pin})}
   async function badgeLogin(){const badgeUid=normalizeBadgeUid($('#loginBadgeUid').value);if(!badgeUid){$('#loginMsg').textContent='Scan or enter a Ford Energy badge UID.';return}await completeLogin('badgeLogin',{badgeUid})}
   function show(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');$('#sessionUser').textContent=`${user.fullName} · ${user.role}`;const avatar=$('#sessionAvatar');avatar.classList.remove('avatar-admin','avatar-security','avatar-security-supervisor','avatar-sponsor','avatar-approver','avatar-neutral');avatar.classList.add(roleAvatarClass(user.role));openAdminWorkspace(workspaceFromHash(),{scroll:false,updateHash:false});loadSessionAvatar()}
