@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-20T18:02:30.051122+00:00",
+  "generatedAt": "2026-08-20T18:55:58.012048+00:00",
   "source": "Ford Energy VISTA Sponsors worksheet via Apps Script",
-  "count": 3,
+  "count": 4,
   "sponsors": [
     {
       "sponsorId": "KY-Glendale",
@@ -16,6 +16,13 @@
       "email": "jysunza@ford.com",
       "department": "Security",
       "keywords": "Security, Justin,"
+    },
+    {
+      "sponsorId": "nweid",
+      "name": "Nathaniel Weid",
+      "email": "nweid@ford.com",
+      "department": "MP&L",
+      "keywords": "Nathaniel Weid, MP&L, Ford Energy, nweid, nweid"
     },
     {
       "sponsorId": "sponsor",
