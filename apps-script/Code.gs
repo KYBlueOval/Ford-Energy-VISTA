@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.6.1-executive-governance-ui',
+  VERSION: '2.6.2-responsibility-notice-standard',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs', NOTIFICATIONS:'Notifications', NOTIFICATION_ACKS:'NotificationAcknowledgements', INCIDENTS:'Incidents', EV_REQUESTS:'EVChargingRequests', EV_ACTIVITY:'EVChargingActivity', EV_POLICIES:'EVChargingPolicies', SPONSOR_DELEGATIONS:'SponsorDelegations', SPONSOR_REMINDERS:'SponsorReviewReminders', SPONSOR_HIERARCHY:'SponsorLeadership', VISIT_RESPONSIBILITY:'VisitResponsibilityAssignments', PERMANENT_BADGE_REQUESTS:'PermanentBadgeRequests' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt','SponsorNotificationStatus','SponsorNotifiedAt','SponsorNotificationEmail','SponsorNotificationError','VisitorIntakeTokenHash','VisitorIntakeExpiresAt','VisitorIntakeStatus','VisitorIntakeSentAt','VisitorIntakeCompletedAt','VisitorIntakeCompletionNotificationStatus','VisitorIntakeCompletionNotificationAt','VisitorIntakeCompletionNotificationError','AdvanceNoticeRequiredDays','AdvanceNoticeActualDays','AdvanceNoticeHours','AdvanceNoticeCompliant','AdvanceNoticeFlaggedAt','SponsorApprovalNotes','ParkingLotAssignment','OfficeSeatingAssignment','ApprovalDecisionAt','ApprovalResponseMinutes','ApprovalDecisionBy','ApprovalDecisionRole','ApprovalSource','ApprovalManualOverride','OperationalSponsorUserID','OperationalSponsorEmployeeID','OperationalSponsorName','OperationalSponsorEmail','OperationalSponsorAssignedAt','OperationalSponsorAssignedBy'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -256,7 +256,7 @@ function setupVisitorManagement() {
     SPONSOR_ESCALATION_EMAILS:'',
     SPONSOR_DELEGATION_MAX_DAYS:'90',
     PUBLIC_REGISTRATION_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/public-registration/',
-    VISITOR_ADVANCE_NOTICE_DAYS:'7',
+    VISITOR_ADVANCE_NOTICE_DAYS:'14',
     VISITOR_INTAKE_INVITATION_DAYS:'14',
     PERMANENT_BADGE_INTAKE_URL:'https://script.google.com/macros/s/AKfycbxnXEYqn0Ejt7dxUJ_jMneuM0QMnnsQwdwgUTP2-eXAuLIFIzfQLQkbjQsfHmhk6Xz3/exec',
     PERMANENT_BADGE_QR_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/shared/assets/permanent-badge-intake-qr.png',
@@ -280,11 +280,15 @@ function setupVisitorManagement() {
   };
   const existing = config.getDataRange().getValues().slice(1).reduce((o,r)=>(o[String(r[0])]=r[1],o),{});
   Object.keys(defaults).forEach(k=>{ if (existing[k] === undefined) config.appendRow([k,defaults[k]]); });
+  if(String(existing.VISITOR_ADVANCE_NOTICE_DAYS??'').trim()==='7'){
+    const noticeRow=config.getDataRange().getValues().findIndex((row,index)=>index>0&&String(row[0]).trim()==='VISITOR_ADVANCE_NOTICE_DAYS');
+    if(noticeRow>0)config.getRange(noticeRow+1,2).setValue(14);
+  }
   seedAgreements_();
   seedEVChargingPolicy_();
   seedInitialAdmin_();
   [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS,FE.SHEETS.NOTIFICATIONS,FE.SHEETS.NOTIFICATION_ACKS,FE.SHEETS.INCIDENTS,FE.SHEETS.EV_REQUESTS,FE.SHEETS.EV_ACTIVITY,FE.SHEETS.EV_POLICIES,FE.SHEETS.SPONSOR_DELEGATIONS,FE.SHEETS.SPONSOR_REMINDERS,FE.SHEETS.SPONSOR_HIERARCHY,FE.SHEETS.VISIT_RESPONSIBILITY,FE.SHEETS.PERMANENT_BADGE_REQUESTS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.6.0 setup complete. Sponsor leadership hierarchy, visitor responsibility assignments, executive reporting, and staged permanent badge processing are ready.';
+  return 'VISTA 2.6.2 setup complete. The visitor advance-notice standard is 14 days and operational responsibility language is current.';
 }
 
 function seedAgreements_(){
@@ -1091,7 +1095,7 @@ function timeOnly_(v){if(!v)return'';if(v instanceof Date)return Utilities.forma
 function dateTime_(v){if(!v)return'';if(v instanceof Date)return Utilities.formatDate(v,tz_(),'yyyy-MM-dd HH:mm:ss');return String(v)}
 function parseDateSafe_(v){if(!v)return null;const d=new Date(v);return isNaN(d.getTime())?null:d}
 function sheetNumber_(value,fallback){if(value instanceof Date){const text=Utilities.formatDate(value,tz_(),'yyyy-MM-dd HH:mm:ss'),m=text.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);if(m){const serial=(Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3]),Number(m[4]),Number(m[5]),Number(m[6]))-Date.UTC(1899,11,30))/86400000;return Math.round(serial*1000000)/1000000;}}const number=Number(value);return isFinite(number)?number:fallback;}
-function advanceNoticeRequiredDays_(){const value=Math.floor(Number(config_().VISITOR_ADVANCE_NOTICE_DAYS||7));return isFinite(value)&&value>=0?value:7;}
+function advanceNoticeRequiredDays_(){const value=Math.floor(Number(config_().VISITOR_ADVANCE_NOTICE_DAYS||14));return isFinite(value)&&value>=0?value:14;}
 function scheduledVisitDate_(startDate,arrivalTime){const date=dateOnly_(startDate),time=timeOnly_(arrivalTime)||'00:00';if(!date)return null;return parseDateSafe_(date+'T'+time);}
 function advanceNoticeMetrics_(createdAt,startDate,arrivalTime){const required=advanceNoticeRequiredDays_(),created=parseDateSafe_(createdAt)||new Date(),scheduled=scheduledVisitDate_(startDate,arrivalTime),rawHours=scheduled?Math.round((scheduled-created)/360000)/10:0,hours=Math.max(0,rawHours),days=Math.round(hours/24*10)/10,compliant=Boolean(scheduled&&rawHours>=required*24);return{AdvanceNoticeRequiredDays:required,AdvanceNoticeActualDays:days,AdvanceNoticeHours:hours,AdvanceNoticeCompliant:compliant?'Yes':'No',AdvanceNoticeFlaggedAt:compliant?'':created};}
 function advanceNoticeForVisit_(r){const requiredRaw=String(r.AdvanceNoticeRequiredDays||'')!==''?sheetNumber_(r.AdvanceNoticeRequiredDays,advanceNoticeRequiredDays_()):advanceNoticeRequiredDays_(),created=parseDateSafe_(r.CreatedAt),scheduled=scheduledVisitDate_(r.StartDate,r.ArrivalTime),storedHours=String(r.AdvanceNoticeHours||'')!==''?sheetNumber_(r.AdvanceNoticeHours,0):null,rawHours=storedHours!==null?storedHours:(created&&scheduled?Math.round((scheduled-created)/360000)/10:0),storedDays=String(r.AdvanceNoticeActualDays||'')!==''?sheetNumber_(r.AdvanceNoticeActualDays,0):null,required=Math.max(0,Math.round(requiredRaw*10)/10),hours=Math.max(0,Math.round(rawHours*10)/10),days=Math.max(0,Math.round((storedDays!==null?storedDays:hours/24)*10)/10),compliant=String(r.AdvanceNoticeCompliant||'')?String(r.AdvanceNoticeCompliant)==='Yes':rawHours>=required*24;return{requiredDays:required,actualDays:days,hours:hours,compliant:compliant};}
