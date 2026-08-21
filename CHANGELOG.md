@@ -1,3 +1,11 @@
+## VISTA 2.6.3 — Recurring Visitor Term Governance
+
+- Replaced the ambiguous weekly-occurrence presets with explicit One-time Visit and Weekly Recurring Visit schedule types.
+- Weekly schedules now use a last weekly arrival date and show the exact request count and calendar-day term before submission.
+- Added a configurable `SPONSOR_VISIT_TERM_MAX_DAYS` limit with a production default of 90 days.
+- One-time or recurring terms longer than 90 days are blocked from temporary scheduling and routed to permanent Ford Energy badge review.
+- Added matching client and server validation, weekly-series audit detail, cache updates, and consistent 2.6.3 module version labels.
+
 ## VISTA 2.6.2 — Visitor Responsibility & Advance Notice Standard
 
 - Updated operational responsibility language to explicitly identify day-to-day visitor supervision, arrival notifications, and day-of-visit coordination duties.

@@ -11,5 +11,14 @@
 .schedule-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 13px}
 .schedule-form-grid label.full{grid-column:1/-1}
 .schedule-form-grid select{width:100%;border:1px solid #b8cadb;border-radius:9px;padding:12px;background:#fff}
+.recurrence-summary{display:grid;gap:4px;margin:3px 0 13px;padding:13px 15px;border:1px solid #bdd2e7;border-left:5px solid #1c72bd;border-radius:11px;background:linear-gradient(120deg,#f2f8ff,#e8f2fc);color:#153657;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+.recurrence-summary strong{font-size:13px;color:#073b78}
+.recurrence-summary span{font-size:11px;line-height:1.45}
+.recurrence-summary.ready{border-left-color:#17834f;background:linear-gradient(120deg,#eefaf4,#e4f6ed)}
+.recurrence-summary.ready strong{color:#116c40}
+.recurrence-summary.attention{border-left-color:#dd8a19;background:linear-gradient(120deg,#fff8e8,#fff1d2)}
+.recurrence-summary.attention strong{color:#85500a}
+.recurrence-summary.permanent-review{border-color:#e5a29b;border-left-color:#c83d2b;background:linear-gradient(120deg,#fff3f1,#ffe8e4);color:#7b2b23}
+.recurrence-summary.permanent-review strong{color:#a62d20}
 .modal-dialog:has(.schedule-form-grid){width:min(820px,100%)}
 @media(max-width:700px){.hero-actions,.schedule-card,.oversight-banner{display:grid}.hero-actions button,.schedule-card button{width:100%}.schedule-form-grid{grid-template-columns:1fr}.schedule-form-grid label.full{grid-column:auto}.oversight-banner{gap:7px}}

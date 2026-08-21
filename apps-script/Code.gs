@@ -1,5 +1,5 @@
 const FE = {
-  VERSION: '2.6.2-responsibility-notice-standard',
+  VERSION: '2.6.3-recurring-visit-terms',
   SHEETS: { VISITS:'VisitRequests', ACTIVITY:'VisitActivity', BADGES:'BadgeInventory', CONFIG:'Config', AGREEMENTS:'Agreements', ACKS:'AgreementAcknowledgements', SPONSORS:'Sponsors', USERS:'Users', FRONTDESK:'FrontDesk', SECURITY:'Security', SESSIONS:'AuthSessions', AUDIT:'AuditLog', HANDOFFS:'ShiftHandoffs', NOTIFICATIONS:'Notifications', NOTIFICATION_ACKS:'NotificationAcknowledgements', INCIDENTS:'Incidents', EV_REQUESTS:'EVChargingRequests', EV_ACTIVITY:'EVChargingActivity', EV_POLICIES:'EVChargingPolicies', SPONSOR_DELEGATIONS:'SponsorDelegations', SPONSOR_REMINDERS:'SponsorReviewReminders', SPONSOR_HIERARCHY:'SponsorLeadership', VISIT_RESPONSIBILITY:'VisitResponsibilityAssignments', PERMANENT_BADGE_REQUESTS:'PermanentBadgeRequests' },
   VISIT_HEADERS: ['VisitID','ConfirmationNumber','CreatedAt','Status','FirstName','MiddleName','LastName','FullName','Email','Phone','Company','JobTitle','Relationship','Street','City','State','PostalCode','Country','EmergencyName','EmergencyPhone','SponsorID','SponsorSource','SponsorName','SponsorEmail','Department','SecondaryContact','Reason','Project','VisitorType','StartDate','ArrivalTime','EndDate','DepartureTime','AccessScope','EscortRequired','LineTour','SpecialItems','Driving','VehicleMake','VehicleModel','VehicleYear','VehicleColor','LicensePlate','PlateState','PhotoFileId','PhotoFileName','PhotoUrl','AgreementVersion','AcknowledgementName','AcknowledgementDate','AgreementTimestamp','AgreementCompletionCount','AgreementCompletionStatus','SessionID','ClientLanguage','ClientTimeZone','UserAgent','ClientTimestamp','Referrer','AgreeSecurity','AgreeBiometric','AgreePrivacy','AgreeSafety','AgreeConduct','AgreeTraining','AgreeRestricted','CheckInTime','CheckOutTime','BadgeUID','CheckInOfficer','CheckOutOfficer','SponsorNotified','IDRetained','IDReturned','ActualDurationMinutes','LastUpdatedAt','SponsorNotificationStatus','SponsorNotifiedAt','SponsorNotificationEmail','SponsorNotificationError','VisitorIntakeTokenHash','VisitorIntakeExpiresAt','VisitorIntakeStatus','VisitorIntakeSentAt','VisitorIntakeCompletedAt','VisitorIntakeCompletionNotificationStatus','VisitorIntakeCompletionNotificationAt','VisitorIntakeCompletionNotificationError','AdvanceNoticeRequiredDays','AdvanceNoticeActualDays','AdvanceNoticeHours','AdvanceNoticeCompliant','AdvanceNoticeFlaggedAt','SponsorApprovalNotes','ParkingLotAssignment','OfficeSeatingAssignment','ApprovalDecisionAt','ApprovalResponseMinutes','ApprovalDecisionBy','ApprovalDecisionRole','ApprovalSource','ApprovalManualOverride','OperationalSponsorUserID','OperationalSponsorEmployeeID','OperationalSponsorName','OperationalSponsorEmail','OperationalSponsorAssignedAt','OperationalSponsorAssignedBy'],
   ACTIVITY_HEADERS: ['ActivityID','VisitID','EventType','EventTime','PerformedBy','BadgeUID','Details'],
@@ -255,6 +255,7 @@ function setupVisitorManagement() {
     SPONSOR_REMINDER_COOLDOWN_HOURS:'20',
     SPONSOR_ESCALATION_EMAILS:'',
     SPONSOR_DELEGATION_MAX_DAYS:'90',
+    SPONSOR_VISIT_TERM_MAX_DAYS:'90',
     PUBLIC_REGISTRATION_URL:'https://kyblueoval.github.io/Ford-Energy-VISTA/public-registration/',
     VISITOR_ADVANCE_NOTICE_DAYS:'14',
     VISITOR_INTAKE_INVITATION_DAYS:'14',
@@ -288,7 +289,7 @@ function setupVisitorManagement() {
   seedEVChargingPolicy_();
   seedInitialAdmin_();
   [FE.SHEETS.VISITS,FE.SHEETS.ACTIVITY,FE.SHEETS.BADGES,FE.SHEETS.AGREEMENTS,FE.SHEETS.ACKS,FE.SHEETS.SPONSORS,FE.SHEETS.USERS,FE.SHEETS.FRONTDESK,FE.SHEETS.SECURITY,FE.SHEETS.SESSIONS,FE.SHEETS.AUDIT,FE.SHEETS.HANDOFFS,FE.SHEETS.NOTIFICATIONS,FE.SHEETS.NOTIFICATION_ACKS,FE.SHEETS.INCIDENTS,FE.SHEETS.EV_REQUESTS,FE.SHEETS.EV_ACTIVITY,FE.SHEETS.EV_POLICIES,FE.SHEETS.SPONSOR_DELEGATIONS,FE.SHEETS.SPONSOR_REMINDERS,FE.SHEETS.SPONSOR_HIERARCHY,FE.SHEETS.VISIT_RESPONSIBILITY,FE.SHEETS.PERMANENT_BADGE_REQUESTS].forEach(n=>ss.getSheetByName(n).setFrozenRows(1));
-  return 'VISTA 2.6.2 setup complete. The visitor advance-notice standard is 14 days and operational responsibility language is current.';
+  return 'VISTA 2.6.3 setup complete. Weekly recurring visitor terms are limited to 90 days and longer terms require permanent badge review.';
 }
 
 function seedAgreements_(){
@@ -1395,10 +1396,24 @@ function createSponsoredVisitAuthorized_(p,session){
   requirePermission_(session,'approve');
   validateRequired_(p,['firstName','lastName','email','phone','company','reason','startDate','arrivalTime','endDate','departureTime','accessScope']);
   if(!validEmailAddress_(p.email))throw new Error('Enter a valid visitor email address.');
-  const oversight=sponsorOversightRole_(session),sponsor=oversight?activeSponsorUser_(String(p.sponsorUserId||'')):activeSponsorUser_(String(session.UserID||'')),repeatWeeks=Number(p.repeatWeeks||1);
-  if(!Number.isInteger(repeatWeeks)||repeatWeeks<1||repeatWeeks>12)throw new Error('Recurring visit count must be a whole number from 1 through 12.');
+  const oversight=sponsorOversightRole_(session),sponsor=oversight?activeSponsorUser_(String(p.sponsorUserId||'')):activeSponsorUser_(String(session.UserID||''));let scheduleType=String(p.scheduleType||'').toLowerCase()==='weekly'?'weekly':'single';const maxTermDays=Math.min(90,Math.max(1,Math.floor(Number(config_().SPONSOR_VISIT_TERM_MAX_DAYS||90))));
   const initialStart=new Date(String(p.startDate)+'T'+String(p.arrivalTime)),initialEnd=new Date(String(p.endDate)+'T'+String(p.departureTime));
   if(isNaN(initialStart.getTime())||isNaN(initialEnd.getTime())||initialEnd<=initialStart)throw new Error('Enter a valid visit period with departure after arrival.');
+  const initialTermStart=new Date(String(p.startDate)+'T12:00:00'),initialTermEnd=new Date(String(p.endDate)+'T12:00:00'),initialTermDays=Math.round((initialTermEnd-initialTermStart)/86400000);
+  if(initialTermDays>maxTermDays)throw new Error('Temporary visitor terms longer than '+maxTermDays+' days require permanent Ford Energy badge review. Shorten the visit term and use Request Permanent Badge after the initial visit is approved.');
+  let repeatWeeks=1,recurrenceTermDays=0;
+  if(scheduleType==='weekly'){
+    if(!String(p.recurrenceEndDate||'').trim())throw new Error('Select the last weekly arrival date.');
+    const seriesStart=new Date(String(p.startDate)+'T12:00:00'),seriesEnd=new Date(String(p.recurrenceEndDate)+'T12:00:00');
+    if(isNaN(seriesStart.getTime())||isNaN(seriesEnd.getTime()))throw new Error('Enter a valid weekly series end date.');
+    recurrenceTermDays=Math.round((seriesEnd-seriesStart)/86400000);
+    if(recurrenceTermDays<7)throw new Error('A weekly recurring series must include at least two visits, seven days apart.');
+    if(recurrenceTermDays>maxTermDays)throw new Error('Visitor terms longer than '+maxTermDays+' days require permanent Ford Energy badge review. Create a term of '+maxTermDays+' days or less, then use Request Permanent Badge after the initial visit is approved.');
+    repeatWeeks=Math.floor(recurrenceTermDays/7)+1;
+  }else if(p.repeatWeeks!==undefined&&Number(p.repeatWeeks)>1){
+    scheduleType='weekly';repeatWeeks=Number(p.repeatWeeks);recurrenceTermDays=(repeatWeeks-1)*7;
+    if(!Number.isInteger(repeatWeeks)||repeatWeeks<1||recurrenceTermDays>maxTermDays)throw new Error('Legacy recurring visit count exceeds the '+maxTermDays+'-day visitor term. Use permanent Ford Energy badge review for longer access.');
+  }
   const lock=LockService.getScriptLock();lock.waitLock(15000);const createdRecords=[];
   try{
     for(let week=0;week<repeatWeeks;week++){
@@ -1409,14 +1424,14 @@ function createSponsoredVisitAuthorized_(p,session){
       const intakeToken=Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,''),invitationDays=Math.max(1,Number(config_().VISITOR_INTAKE_INVITATION_DAYS||14)),visitExpiry=new Date(end.getTime()+86400000),configuredExpiry=new Date(now.getTime()+invitationDays*86400000),intakeExpiry=new Date(Math.max(visitExpiry.getTime(),configuredExpiry.getTime()));
       record.VisitorIntakeTokenHash=sha256_(intakeToken);record.VisitorIntakeExpiresAt=intakeExpiry;record.VisitorIntakeStatus='Pending';record.VisitorIntakeSentAt='';record._VisitorIntakeToken=intakeToken;
       appendObjectRow_(SpreadsheetApp.getActive().getSheetByName(FE.SHEETS.VISITS),record,FE.VISIT_HEADERS);
-      const creationDetails=[oversight?'Administrative oversight':'Sponsor self-service','Series '+(week+1)+' of '+repeatWeeks,'Agreements pending visitor acknowledgement'].join(' · ');
+      const creationDetails=[oversight?'Administrative oversight':'Sponsor self-service',repeatWeeks>1?'Weekly series '+(week+1)+' of '+repeatWeeks+' · '+recurrenceTermDays+'-day term':'One-time visit','Agreements pending visitor acknowledgement'].join(' · ');
       logActivity_(visitId,'SPONSOR_VISIT_CREATED',session.FullName||session.Username,'',creationDetails);
       audit_(session,'SPONSOR_VISIT_CREATED',visitId,confirmation,'Success',record.SponsorName+' · '+fullName+' · '+dateOnly_(start)+(repeatWeeks>1?' · recurring series':''));
       createdRecords.push(record);
     }
   }finally{lock.releaseLock()}
   const delegations=activeSponsorDelegations_(new Date()),created=createdRecords.map(record=>{const notifications=notifySubmission_(record,record._VisitorIntakeToken);if(notifications.visitorSent){const found=findVisitRow_(record.VisitID);updateObjectRow_(FE.SHEETS.VISITS,found.row,{VisitorIntakeSentAt:new Date(),LastUpdatedAt:new Date()});record.VisitorIntakeSentAt=new Date()}delete record._VisitorIntakeToken;return{visit:publicSponsorVisit_(record,session,delegations),notifications:notifications}});
-  return{ok:true,createdCount:created.length,created:created,message:created.length===1?'Visitor request created.':created.length+' recurring visitor requests created.'};
+  return{ok:true,createdCount:created.length,created:created,series:{scheduleType:scheduleType,occurrences:created.length,termDays:recurrenceTermDays,maxTermDays:maxTermDays,permanentBadgeReviewRequired:false},message:created.length===1?'Visitor request created.':created.length+' weekly visitor requests created across a '+recurrenceTermDays+'-day term.'};
 }
 function saveSponsorDelegationAuthorized_(p,session){
   const admin=permissionsForRole_(session.Role).manageConfig;if(!admin&&!sponsorRole_(session))throw new Error('Only Sponsors, Approvers, and Administrators can manage sponsor coverage.');
