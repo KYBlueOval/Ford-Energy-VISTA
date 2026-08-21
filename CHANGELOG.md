@@ -1,3 +1,11 @@
+## VISTA 2.6.1 — Executive Governance & Responsibility UI
+
+- Rebuilt Sponsor Executive Oversight with branded hierarchy guidance, polished assignment cards, a meaningful empty state, and a direct all-Sponsor visitor workspace action.
+- Expanded Plant Leader and Administrator visibility to all Sponsors, visitor performance, sponsored visits, coverage delegations, and operational responsibility.
+- Kept Plant Leader visitor access read-only while retaining audited assignment authority for primary Sponsors and Administrators.
+- Added Sponsor and responsibility labels to every visitor row and moved the operational assignment control into a prominent visitor-detail card.
+- Rebuilt the EV Charging approval/denial dialog with aligned fields, a full-width decision area, notification guidance, dimensional styling, and responsive behavior.
+
 ## VISTA 2.6.0 — Sponsor Leadership, Responsibility & Executive Governance
 
 - Added Sponsor-to-Plant-Leader hierarchy assignments with LL5/leadership level, email, report-access, and notification controls.
