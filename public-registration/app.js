@@ -1,6 +1,7 @@
 (() => {
-  console.info('Ford Energy VISTA public registration v2.0A loaded');
+  console.info('Ford Energy VISTA public registration v2.5.5 loaded');
   const cfg = window.FE_VISITOR_CONFIG || {};
+  const invitationToken = new URLSearchParams(window.location.search).get('invitation') || '';
   const form = document.querySelector('#registrationForm');
   const steps = [...document.querySelectorAll('.form-step')];
   const stepButtons = [...document.querySelectorAll('.step')];
@@ -14,6 +15,8 @@
   let photoDataUrl = '';
   let originalPhotoDataUrl = '';
   let stream;
+  let invitationData = null;
+  let advanceNoticeDays = 7;
 
   const $ = s => document.querySelector(s);
   const nextBtn = $('#nextBtn'), backBtn = $('#backBtn'), submitBtn = $('#submitBtn');
@@ -21,7 +24,7 @@
   let sponsorDirectory = [];
   let sponsorDirectoryMetadata = {};
   const SPONSOR_CACHE_KEY = 'feVistaSponsorDirectoryV17';
-  const DRAFT_KEY = 'feVisitorDraftV17';
+  const DRAFT_KEY = invitationToken ? `feVisitorInvitationDraft-${invitationToken.slice(-12)}` : 'feVisitorDraftV17';
   let draftTimer = null;
 
   let selectedSponsor = null;
@@ -394,6 +397,7 @@
   }
   function formObject(){
     const o=Object.fromEntries(new FormData(form).entries());
+    if(invitationData)Object.assign(o,{sponsorId:invitationData.sponsorId,sponsorSource:'VISTA Sponsor Portal',sponsorName:invitationData.sponsorName,sponsorEmail:invitationData.sponsorEmail,department:invitationData.department,secondaryContact:invitationData.secondaryContact,reason:invitationData.reason,project:invitationData.project,visitorType:invitationData.visitorType,startDate:invitationData.startDate,arrivalTime:invitationData.arrivalTime,endDate:invitationData.endDate,departureTime:invitationData.departureTime,accessScope:invitationData.accessScope,escortRequired:invitationData.escortRequired,lineTour:invitationData.lineTour,specialItems:invitationData.specialItems,invitationToken:invitationToken});
     o.driving=$('#drivingToggle').checked?'Yes':'No';o.photoDataUrl=photoDataUrl;
     o.agreementVersion=cfg.AGREEMENT_VERSION||'2026.2';o.clientTimestamp=nowIso();o.userAgent=navigator.userAgent;
     o.sessionId=sessionId;o.clientLanguage=navigator.language||'';o.clientTimeZone=Intl.DateTimeFormat().resolvedOptions().timeZone||'';o.referrer=document.referrer||'';
@@ -489,6 +493,26 @@
     });
   }
 
+  function updateAdvanceNoticeMessage(){const host=$('#advanceNoticeMessage'),value=form.startDate.value;if(!host)return;if(!value){host.className='advance-notice-message span-2';host.textContent=`Ford Energy requests at least ${advanceNoticeDays} days advance notice. Late requests may still be submitted and will be reported as a sponsor performance exception.`;return}const visit=new Date(value+'T'+(form.arrivalTime.value||'00:00')),days=Math.floor((visit-new Date())/86400000),compliant=days>=advanceNoticeDays;host.className=`advance-notice-message span-2 ${compliant?'compliant':'late'}`;host.innerHTML=compliant?`<strong>Advance-notice standard met.</strong> Approximately ${Math.max(0,days)} days notice is being provided.`:`<strong>Late request notice.</strong> Approximately ${Math.max(0,days)} days notice is being provided; ${advanceNoticeDays} days is requested. You may continue and submit this request.`}
+  async function loadPublicSettings(){try{if(!cfg.API_URL||cfg.API_URL.includes('PASTE_'))return updateAdvanceNoticeMessage();const url=new URL(cfg.API_URL);url.searchParams.set('action','getPublicSettings');const data=await jsonpRequest(url.toString());if(data?.ok)advanceNoticeDays=Math.max(0,Number(data.advanceNoticeRequiredDays||7));}catch(err){console.warn('Advance-notice setting unavailable; using the seven-day default.',err)}updateAdvanceNoticeMessage()}
+
+  async function loadVisitorInvitation(){
+    if(!invitationToken)return;
+    const banner=$('#invitationBanner'),message=$('#invitationMessage');banner.classList.remove('hidden');
+    try{
+      if(!cfg.API_URL||cfg.API_URL.includes('PASTE_'))throw new Error('The VISTA service is not configured.');
+      const url=new URL(cfg.API_URL);url.searchParams.set('action','getVisitorInvitation');url.searchParams.set('token',invitationToken);
+      const data=await jsonpRequest(url.toString(),20000);if(!data?.ok)throw new Error(data?.error||'The invitation could not be loaded.');invitationData=data.invitation;
+      Object.entries(invitationData).forEach(([name,value])=>{const el=form.elements[name];if(!el||value===undefined||value===null)return;if(el.type==='checkbox')el.checked=String(value)==='Yes';else el.value=String(value)});
+      $('#drivingToggle').checked=String(invitationData.driving)==='Yes';$('#vehicleFields').classList.toggle('hidden',!$('#drivingToggle').checked);
+      document.querySelectorAll('.form-step[data-step="2"] input,.form-step[data-step="2"] select,.form-step[data-step="2"] textarea').forEach(el=>{el.disabled=true;el.classList.add('invitation-locked')});
+      $('#manualSponsorToggle').closest('label')?.classList.add('hidden');$('#sponsorSearch').closest('.sponsor-picker')?.querySelector('.sponsor-search-wrap')?.classList.add('hidden');
+      message.textContent=`${invitationData.sponsorName} created this request. Complete your remaining profile, photograph, vehicle information, safety briefing, and seven acknowledgements.`;
+      $('#invitationConfirmation').textContent=invitationData.confirmationNumber;document.querySelector('.hero-description').textContent='Complete the required visitor intake for the request your Ford Energy sponsor created. Your entries update the existing reservation.';
+      submitBtn.textContent='Complete Visitor Intake';updateAgreementProgress();
+    }catch(err){banner.classList.add('invitation-error');banner.querySelector('strong').textContent='Invitation unavailable';message.textContent=err.message;$('#invitationConfirmation').textContent='';nextBtn.disabled=true;submitBtn.disabled=true}
+  }
+
   function submitVisitThroughBridge(payload){
     return new Promise((resolve,reject)=>{
       const requestId=`VISTA-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -514,7 +538,7 @@
       };
 
       addField('transport','iframe');
-      addField('action','createVisit');
+      addField('action',invitationToken?'completeSponsoredVisitIntake':'createVisit');
       addField('requestId',requestId);
       addField('parentOrigin',window.location.origin);
       addField('payload',JSON.stringify(payload));
@@ -581,6 +605,7 @@
   }
 
   function renderConfirmation(data,payload){
+    if(data.intakeCompleted){const dialog=$('#confirmationDialog');dialog.querySelector('h2').textContent='Visitor Intake Completed';dialog.querySelector('h2 + p').textContent='Your existing visitor request has been updated and your Ford Energy sponsor has been notified.'}
     $('#confirmationNumber').textContent=data.confirmationNumber||'—';
     const qrPayload=data.qrPayload||JSON.stringify({confirmationNumber:data.confirmationNumber,visitId:data.visitId});
     $('#confirmationQr').innerHTML='';
@@ -602,7 +627,11 @@
 
     const notice=$('#confirmationNotifications');
     if(notice){
-      notice.innerHTML=`
+      notice.innerHTML=data.intakeCompleted?`
+        <strong>Completion status</strong>
+        <span class="notice-ok">✓ Visitor profile and seven acknowledgements recorded</span>
+        ${emailState(Boolean(notifications.sponsorSent),'Sponsor completion notification sent')}
+      `:`
         <strong>Notification status</strong>
         ${emailState(Boolean(notifications.sponsorSent),'Sponsor notification sent')}
         ${emailState(Boolean(notifications.visitorSent),'Visitor confirmation email sent')}
@@ -619,7 +648,7 @@
     if(!validateStep(5))return;
     const msg=$('#submitMessage');
     msg.className='message';
-    msg.textContent='Submitting registration and securely uploading the visitor photograph…';
+    msg.textContent=invitationToken?'Updating your visitor request and securely uploading the visitor photograph…':'Submitting registration and securely uploading the visitor photograph…';
     msg.classList.remove('hidden');
     submitBtn.disabled=true;
     submitBtn.textContent='Submitting…';
@@ -630,14 +659,15 @@
       clearDraft();
       renderConfirmation(data,payload);
       msg.className='message success';
-      msg.textContent='Registration submitted successfully.';
+      msg.textContent=invitationToken?'Visitor intake completed successfully.':'Registration submitted successfully.';
       msg.classList.add('hidden');
     }catch(err){
       console.error('VISTA registration submission failed:',err);
       msg.className='message error';
       msg.textContent=err?.message||'Registration submission failed. Please try again.';
       submitBtn.disabled=false;
-      submitBtn.textContent='Submit Visit Request';
+      submitBtn.textContent=invitationToken?'Complete Visitor Intake':'Submit Visit Request';
     }
   });
+  form.startDate.addEventListener('change',updateAdvanceNoticeMessage);form.arrivalTime.addEventListener('change',updateAdvanceNoticeMessage);loadPublicSettings();loadVisitorInvitation();
 })();

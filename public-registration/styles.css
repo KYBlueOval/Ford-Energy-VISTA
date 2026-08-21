@@ -1,456 +1,234 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-    <title>Ford Energy SiteNav Command v13.5</title>
-    <link rel="manifest" href="manifest.json"/>
-    <link rel="icon" href="assets/icons/favicon.ico" sizes="any"/>
-    <link rel="stylesheet" href="style.css?v=13.5.0"/>
-    <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.0/examples/jsm/"
-      }
-    }
-    </script>
-    <style>
-        /* Base Reset & Flexible Root Container */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #071629;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
+:root{--ford:#003478;--blue:#0b5cab;--light:#eef4fb;--ink:#16283d;--muted:#667587;--line:#d8e0e8;--orange:#ff7a00;--ok:#18864b;--danger:#b42318;--shadow:0 12px 35px rgba(13,45,80,.12)}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#f4f7fa}button,input,select,textarea{font:inherit}.topbar{height:72px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:20}.brand{display:flex;align-items:center;gap:12px}.brand-mark{width:42px;height:42px;border-radius:12px;background:var(--ford);color:white;display:grid;place-items:center;font-weight:800}.brand strong,.brand span{display:block}.brand span{font-size:12px;color:var(--muted);margin-top:2px}.shell{max-width:1240px;margin:0 auto;padding:32px 24px 60px}.hero{background:linear-gradient(135deg,var(--ford),#0868b8);color:white;padding:30px;border-radius:20px;display:flex;justify-content:space-between;gap:30px;align-items:center;box-shadow:var(--shadow)}.hero h1{margin:3px 0 10px;font-size:36px}.hero p{max-width:760px;margin:0;line-height:1.55}.eyebrow{font-size:12px;font-weight:800;letter-spacing:1.5px;margin:0;color:var(--orange)}.hero .eyebrow{color:#9fd5ff}.status-card{min-width:220px;background:rgba(255,255,255,.12);padding:16px;border-radius:14px}.progress{height:8px;background:rgba(255,255,255,.25);border-radius:99px;margin-top:10px;overflow:hidden}.progress i{display:block;height:100%;width:20%;background:white;border-radius:99px;transition:.25s}.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:24px 0}.step{border:1px solid var(--line);background:white;padding:13px;border-radius:12px;color:var(--muted);font-weight:800}.step span{display:block;font-size:11px;font-weight:600;margin-top:3px}.step.active,.step.complete{border-color:var(--blue);color:var(--blue)}.step.complete{background:var(--light)}.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 7px 20px rgba(13,45,80,.05)}.form-step{display:none}.form-step.active{display:block}.section-heading{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:17px;margin-bottom:22px}.section-heading h2{margin:4px 0 0}.section-heading>span{color:var(--muted);font-size:13px}.grid{display:grid;gap:18px;margin-bottom:22px}.cols-3{grid-template-columns:repeat(3,1fr)}.cols-2{grid-template-columns:repeat(2,1fr)}.span-2{grid-column:span 2}label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:700}input,select,textarea{width:100%;border:1px solid #bfcbd7;border-radius:8px;padding:11px 12px;background:white;color:var(--ink)}input:focus,select:focus,textarea:focus{outline:3px solid rgba(11,92,171,.15);border-color:var(--blue)}textarea{resize:vertical}.panel h3{font-size:16px;margin:25px 0 14px}.btn{border:0;border-radius:9px;padding:11px 18px;font-weight:800;cursor:pointer}.btn-primary{background:var(--ford);color:white}.btn-secondary{background:#e8eef5;color:var(--ford)}.btn-ghost{background:transparent;color:var(--ford);border:1px solid var(--line)}.form-actions{display:flex;justify-content:space-between;margin-top:22px}.hidden{display:none!important}.check{display:flex;flex-direction:row;align-items:flex-start;gap:9px;font-size:15px}.check input{width:auto;margin-top:2px}.choice-row{padding:15px;background:var(--light);border-radius:10px;margin-bottom:20px}.photo-layout{display:grid;grid-template-columns:1.5fr 1fr;gap:28px;align-items:start}.upload-actions{display:flex;gap:10px;flex-wrap:wrap}.photo-card{min-height:280px;border:2px dashed #b8c6d4;border-radius:16px;display:grid;place-items:center;overflow:hidden;background:#f8fafc}.photo-card img{width:100%;height:320px;object-fit:cover;display:none}.muted{color:var(--muted);line-height:1.5}.camera{margin-top:15px}.camera video{width:100%;max-width:520px;border-radius:14px;display:block;margin-bottom:10px}.agreement-tabs{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:0}.agreement-tab{border:1px solid #9faab5;background:#a9aeb3;color:white;padding:13px;font-weight:700}.agreement-tab:first-child{border-radius:10px 0 0}.agreement-tab:last-child{border-radius:0 10px 0 0}.agreement-tab.active{background:white;color:var(--ford);border-bottom-color:white}.agreement-content{display:none;border:1px solid #9faab5;border-top:0;padding:24px;min-height:260px;line-height:1.65}.agreement-content.active{display:block}.agreement-content .check{margin-top:34px;color:var(--orange);font-weight:800}.agreement-signoff{margin-top:22px}.review-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.review-card{border:1px solid var(--line);border-radius:12px;padding:15px}.review-card b{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}.final-cert{background:#fff8ed;border:1px solid #ffd3a4;padding:16px;border-radius:10px;margin-top:20px}.message{padding:14px;border-radius:10px;margin-top:15px}.message.error{background:#fee4e2;color:var(--danger)}.message.success{background:#dcfae6;color:var(--ok)}dialog{border:0;border-radius:20px;box-shadow:var(--shadow);max-width:520px}dialog::backdrop{background:rgba(0,29,61,.65)}.confirmation{text-align:center;padding:25px}.success-icon{width:64px;height:64px;border-radius:50%;background:#dcfae6;color:var(--ok);display:grid;place-items:center;font-size:34px;margin:auto}.confirmation-number{font-size:25px;font-weight:900;color:var(--ford);padding:15px;background:var(--light);border-radius:12px;margin:12px 0 20px}@media(max-width:800px){.topbar{padding:0 15px}.shell{padding:18px 12px 40px}.hero{padding:22px;display:block}.status-card{margin-top:18px}.steps{grid-template-columns:repeat(5,1fr);gap:5px}.step{padding:10px 3px;font-size:12px}.step span{display:none}.cols-3,.cols-2,.photo-layout,.review-grid{grid-template-columns:1fr}.span-2{grid-column:auto}.panel{padding:19px}.agreement-tabs{grid-template-columns:1fr 1fr}.agreement-tab{border-radius:0!important}.hero h1{font-size:29px}}
 
-        .app-shell {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
+/* Ford Energy VISTA branding */
+body{background:radial-gradient(circle at 90% 0,#dbeeff 0,transparent 30%),#f3f7fb}.topbar{background:linear-gradient(135deg,#061f4a,#003478 55%,#0b67ad);border:0;box-shadow:0 8px 24px rgba(0,35,79,.2)}.brand-logo{height:42px;width:auto;object-fit:contain}.brand strong{color:white;font-size:17px;letter-spacing:.08em}.brand span{color:#bfe1fb}.btn-primary{background:linear-gradient(135deg,#003478,#0b67ad);box-shadow:0 8px 18px rgba(0,52,120,.18)}.panel{box-shadow:0 14px 32px rgba(13,45,80,.08)}
 
-        /* LANDSCAPE / DESKTOP / UNFOLDED MODE (Side-by-Side 1/3 Sidebar, 2/3 Map) */
-        @media (min-width: 901px) and (orientation: landscape), (min-aspect-ratio: 1/1) {
-            .app-shell {
-                flex-direction: row !important;
-            }
 
-            .sidebar {
-                width: 360px !important;
-                min-width: 320px !important;
-                max-width: 400px !important;
-                height: 100vh !important;
-                max-height: 100vh !important;
-                overflow-y: auto !important;
-                padding: 16px !important;
-                box-sizing: border-box !important;
-                background: #071629;
-                border-right: 1px solid #1a3a5f;
-                display: flex !important;
-                flex-direction: column !important;
-                z-index: 100;
-                flex-shrink: 0;
-            }
+/* v1.2.0 photo, agreement, training, and confirmation enhancements */
+.photo-guidance{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0 1rem}.photo-guidance span{background:#e8f3ff;border:1px solid #b8d8f8;border-radius:999px;color:#003478;font-size:.82rem;font-weight:700;padding:.35rem .65rem}.agreement-progress{display:flex;align-items:center;gap:1rem;margin:0 0 1rem}.agreement-progress>span{font-weight:800;white-space:nowrap}.agreement-progress .progress{flex:1}.agreement-tabs{display:grid;grid-template-columns:repeat(7,minmax(125px,1fr));overflow-x:auto}.agreement-tab{min-height:54px}.agreement-tab.acknowledged::after{content:' ✓';color:#b7f5d1}.training-video{background:#0c1d32;border-radius:14px;min-height:260px;margin:1rem 0;display:block;overflow:hidden}.training-video iframe,.training-video video{width:100%;min-height:360px;border:0}.video-placeholder{max-width:660px;color:#fff;text-align:center;padding:2rem;line-height:1.6}.confirmation{max-width:620px}.confirmation-qr{display:grid;place-items:center;margin:1rem auto}.confirmation-qr img,.confirmation-qr canvas{padding:10px;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,52,120,.16)}.confirmation-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem;text-align:left;margin:1rem 0}.confirmation-summary div{background:#f4f7fb;border:1px solid #dce6f2;border-radius:10px;padding:.7rem}.confirmation-summary b{display:block;color:#003478;font-size:.78rem;text-transform:uppercase;margin-bottom:.2rem}.arrival-reminder{background:#eaf4ff;border-left:5px solid #003478;border-radius:10px;text-align:left;padding:1rem;margin:1rem 0}.arrival-reminder p{margin:.35rem 0}@media(max-width:1000px){.agreement-tabs{grid-template-columns:repeat(7,170px)}}@media(max-width:650px){.confirmation-summary{grid-template-columns:1fr}.photo-guidance{display:grid;grid-template-columns:1fr 1fr}}
 
-            .workspace {
-                flex: 1 !important;
-                height: 100vh !important;
-                position: relative !important;
-                overflow: hidden !important;
-            }
-        }
+.field-help{display:block;margin-top:7px;color:#5a6b7d;font-size:.78rem;line-height:1.35;font-weight:500}
+.video-fallback{background:#fff;color:#16283d;border:1px solid #d8e0e8;border-radius:10px;margin:12px;padding:14px;text-align:center}.video-fallback a{color:#0b5cab;font-weight:800}.field-help{display:block;color:#667587;font-size:.78rem;font-weight:500;line-height:1.35;margin-top:2px}
 
-        /* PORTRAIT / FOLDED MOBILE MODE (Vertical Layout) */
-        @media (max-width: 900px) or (orientation: portrait) {
-            .app-shell {
-                flex-direction: column !important;
-                overflow-y: auto !important;
-            }
 
-            .sidebar {
-                width: 100% !important;
-                height: auto !important;
-                max-height: none !important;
-                overflow-y: visible !important;
-                padding: 16px !important;
-                box-sizing: border-box !important;
-                background: #071629;
-                border-bottom: 2px solid #1a3a5f;
-                flex-shrink: 0;
-            }
+/* v1.3.0 Sprint 1 — searchable sponsor picker */
+.sponsor-picker{position:relative}.sponsor-search-wrap{position:relative}.sponsor-search-wrap input{padding-left:42px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%23667587' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") no-repeat 13px center}.sponsor-results{position:absolute;z-index:50;top:calc(100% + 5px);left:0;right:0;max-height:310px;overflow:auto;background:#fff;border:1px solid #b8c6d4;border-radius:12px;box-shadow:0 18px 38px rgba(0,35,79,.2);padding:6px}.sponsor-result{display:grid;grid-template-columns:1fr auto;gap:3px 14px;width:100%;border:0;background:#fff;text-align:left;padding:12px 13px;border-radius:8px;color:var(--ink);cursor:pointer}.sponsor-result:hover,.sponsor-result.active{background:#e8f3ff}.sponsor-result strong{font-size:.95rem;color:var(--ford)}.sponsor-result span{grid-row:1;color:#516477;font-size:.82rem}.sponsor-result small{grid-column:1 / -1;color:#667587}.sponsor-empty{padding:15px;color:#667587;line-height:1.45}.manual-sponsor-toggle{display:flex;flex-direction:row;align-items:center;gap:8px;margin-top:12px;color:var(--ford);font-weight:800}.manual-sponsor-toggle input{width:auto}.sponsor-picker.has-selection #sponsorSearch{border-color:#18864b;background-color:#f1fff6}.manual-entry{background:#fffdf3!important;border-color:#e8b968!important}input[readonly]{background:#eef3f8;color:#31465d} @media(max-width:650px){.sponsor-result{grid-template-columns:1fr}.sponsor-result span,.sponsor-result small{grid-column:1;grid-row:auto}}
 
-            .workspace {
-                width: 100% !important;
-                height: 70vh !important;
-                min-height: 450px !important;
-                position: relative !important;
-                flex-shrink: 0;
-            }
-        }
 
-        /* Sidebar Control Sections */
-        .control-section, .quick-routes, .route-status {
-            flex-shrink: 0;
-            margin-bottom: 12px;
-            position: relative;
-        }
+/* v1.3.0 Sprint 1.7 — sponsor freshness, resilient drafts, and training launch */
+.draft-controls{display:flex;align-items:center;gap:12px}.draft-status{font-size:.78rem;color:#d7ecff;opacity:0;transition:.2s}.draft-status.visible{opacity:1}.draft-restore-banner{display:flex;justify-content:space-between;align-items:center;gap:14px;background:#e8f3ff;border:1px solid #a9cff2;border-left:5px solid var(--blue);border-radius:12px;padding:12px 16px;margin:18px 0;color:#153a60}.link-button{border:0;background:transparent;color:var(--blue);font-weight:800;text-decoration:underline;cursor:pointer;padding:4px}.sponsor-sync-status{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px;padding:8px 10px;border-radius:8px;background:#eff8f2;color:#28603c;font-size:.78rem}.sponsor-sync-status.stale{background:#fff5dd;color:#7a5200}.training-launch-card{color:white;text-align:center;max-width:650px;padding:34px 24px}.training-launch-card h4{font-size:1.25rem;margin:10px 0}.training-launch-card p{line-height:1.5;color:#d9e7f5}.training-launch-card small{display:block;margin-top:16px;color:#bcd2e8}.training-play-icon{width:70px;height:70px;margin:auto;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--ford);font-size:28px;padding-left:4px}@media(max-width:650px){.draft-controls{gap:5px}.draft-status{display:none}.draft-restore-banner,.sponsor-sync-status{align-items:flex-start;flex-direction:column}}
 
-        .route-status {
-            background: rgba(15, 32, 58, 0.75);
-            border: 1px solid #1a4b82;
-            border-radius: 8px;
-            padding: 12px;
-            color: #ffffff;
-        }
+/* Sprint 1.7.1 submission and confirmation */
+.confirmation-notifications{display:grid;gap:.5rem;text-align:left;background:#f8fafc;border:1px solid #dce6f2;border-radius:12px;padding:1rem;margin:1rem 0}.confirmation-notifications strong{color:#003478}.confirmation-notifications span{display:block;padding:.45rem .6rem;border-radius:8px}.notice-ok{background:#dcfae6;color:#17663a}.notice-warn{background:#fff4d6;color:#7a4b00}.confirmation-actions{display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap;margin-top:1rem}dialog#confirmationDialog{width:min(680px,calc(100vw - 24px))}
 
-        .sidebar-logo-container {
-            margin-top: auto !important;
-            padding-top: 14px;
-            padding-bottom: 6px;
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-        }
+.video-fallback.visible{display:block;background:#fff;color:#16283d;margin:0;padding:12px 16px;border-radius:0;border:0;border-top:1px solid #d8e0e8}.training-video iframe{display:block}
 
-        .sidebar-footer-logo {
-            max-width: 110px;
-            height: auto;
-            opacity: 0.85;
-            transition: opacity 0.2s ease-in-out;
-        }
 
-        .sidebar-footer-logo:hover { opacity: 1; }
+/* Sprint 2.0A Build 1 — enterprise registration shell */
+.topbar{height:76px;padding:0 32px}.brand{gap:15px}.brand-logo{height:46px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.2))}.brand-copy strong{font-size:19px;letter-spacing:.16em}.brand-copy span{font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}.btn-save-draft{min-height:36px;padding:7px 13px;border-radius:999px;border-color:rgba(255,255,255,.45)!important;color:#fff!important;background:rgba(255,255,255,.1)!important;box-shadow:none;font-size:.82rem;letter-spacing:.01em;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.btn-save-draft:hover{background:rgba(255,255,255,.2)!important;border-color:#fff!important;transform:translateY(-1px)}
+.shell{max-width:1280px;padding-top:36px}.hero{position:relative;overflow:hidden;min-height:310px;padding:44px 46px;border-radius:24px;background:linear-gradient(122deg,#061f4a 0%,#003478 48%,#0875bf 100%);box-shadow:0 24px 55px rgba(0,38,86,.22)}.hero::before{content:"";position:absolute;inset:auto -110px -160px auto;width:390px;height:390px;border-radius:50%;border:74px solid rgba(255,255,255,.055)}.hero::after{content:"";position:absolute;inset:-150px auto auto 44%;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(132,207,255,.18),transparent 66%)}.hero-copy,.status-card{position:relative;z-index:1}.hero-copy{max-width:800px}.hero .eyebrow{font-size:11px;letter-spacing:.19em;color:#b9e3ff;margin-bottom:19px}.hero-title-lockup h1{font-size:clamp(58px,7vw,92px);line-height:.86;margin:0;font-weight:900;letter-spacing:.035em;text-shadow:0 8px 26px rgba(0,0,0,.18)}.hero-subtitle{font-size:clamp(20px,2.6vw,31px)!important;line-height:1.15!important;font-weight:700;margin:15px 0 0!important;letter-spacing:-.015em;max-width:none!important}.hero-description{font-size:15px;max-width:690px!important;color:#e7f4ff;margin-top:22px!important}.hero-badges{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}.hero-badges span{font-size:.76rem;font-weight:700;letter-spacing:.025em;padding:7px 11px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);border-radius:999px;color:#fff}.status-card{min-width:310px;padding:19px 20px;border:1px solid rgba(255,255,255,.18);background:rgba(3,27,61,.36);backdrop-filter:blur(7px)}.status-card>span{font-size:.79rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.steps{margin:27px 0}.panel{border-radius:18px;padding:31px 32px}.section-heading h2{font-size:25px;letter-spacing:-.02em}.panel label{font-size:13px;line-height:1.35}.panel input,.panel select,.panel textarea{border-radius:10px;min-height:45px}.panel textarea{min-height:auto}.btn{transition:transform .16s ease,box-shadow .16s ease,background .16s ease}.btn:hover{transform:translateY(-1px)}
+@media(max-width:800px){.topbar{height:68px}.brand-logo{height:38px}.brand-copy span{display:none}.btn-save-draft{padding:7px 10px}.shell{padding-top:18px}.hero{min-height:0;padding:29px 23px}.hero-title-lockup h1{font-size:54px}.hero-subtitle{font-size:21px!important}.hero-description{font-size:14px}.hero-badges{display:none}.panel{padding:22px 19px}}
+@media(max-width:430px){.topbar{padding:0 12px}.brand{gap:8px}.brand-copy strong{font-size:15px}.draft-controls{gap:4px}.btn-save-draft{font-size:.75rem}.hero-title-lockup h1{font-size:48px}.hero-subtitle{font-size:19px!important}}
 
-        .version-footer {
-            margin-top: 0 !important;
-            padding-top: 8px !important;
-            padding-bottom: 12px !important;
-            font-size: 11px !important;
-            color: #6c8ba7 !important;
-            text-align: left;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            flex-shrink: 0;
-        }
+/* Sprint 2.0A Build 2 — unified Ford Energy VISTA global header */
+.vista-global-header{height:auto;min-height:98px;display:grid;grid-template-columns:minmax(310px,1fr) minmax(430px,2.25fr) minmax(220px,1fr);align-items:center;gap:24px;padding:14px 34px;overflow:hidden;position:sticky}
+.vista-global-header::after{content:"";position:absolute;width:290px;height:290px;border-radius:50%;right:-120px;top:-200px;background:rgba(255,255,255,.055);pointer-events:none}
+.vista-global-header .header-brand,.vista-global-header .header-center,.vista-global-header .draft-controls{position:relative;z-index:1}
+.vista-global-header .header-brand{min-width:0;gap:22px}.vista-global-header .brand-logo{height:58px}.vista-global-header .brand-copy strong{font-size:24px;line-height:1;letter-spacing:.16em}
+.vista-global-header .header-center{text-align:center;min-width:0}.vista-global-header .vista-expansion{font-size:clamp(13px,1.28vw,19px);font-weight:800;letter-spacing:.105em;text-transform:uppercase;color:rgba(255,255,255,.39);white-space:nowrap}.vista-global-header .page-description{font-size:12px;color:#d9efff;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-top:8px}
+.vista-global-header .draft-controls{justify-self:end}.vista-global-header .btn-save-draft{position:relative;z-index:2}
+@media(max-width:980px){.vista-global-header{grid-template-columns:1fr auto;min-height:90px;gap:8px 14px}.vista-global-header .header-center{grid-column:1/-1;grid-row:2}.vista-global-header .vista-expansion{white-space:normal;font-size:11px;line-height:1.35}.vista-global-header .page-description{font-size:10px;margin-top:4px}.vista-global-header .brand-logo{height:46px}.vista-global-header .brand-copy strong{font-size:19px}}
+@media(max-width:560px){.vista-global-header{padding:10px 12px}.vista-global-header .brand-logo{height:38px}.vista-global-header .brand-copy strong{font-size:16px}.vista-global-header .btn-save-draft{font-size:.72rem;padding:6px 9px}.vista-global-header .vista-expansion{font-size:9px;letter-spacing:.07em}.vista-global-header .page-description{font-size:9px}}
 
-        /* FIX: LAYERS & LEGEND OVERFLOW MODAL SCROLLING */
-        .layers-panel, .legend-panel {
-            display: none;
-            position: absolute;
-            top: 60px;
-            right: 16px;
-            width: 280px;
-            max-width: calc(100vw - 32px);
-            max-height: 80vh !important;
-            background: rgba(6, 26, 51, 0.96);
-            border: 1px solid #1a4b82;
-            z-index: 99999 !important;
-            padding: 16px;
-            border-radius: 12px;
-            color: white;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.85);
-            backdrop-filter: blur(12px);
-            box-sizing: border-box;
-            flex-direction: column;
-        }
 
-        .layers-panel.show, .legend-panel.show {
-            display: flex !important;
-        }
+/* Sprint 2.0A Build 2.1 — registration header visibility hotfix */
+@media (min-width:981px){
+  .vista-global-header{position:sticky;display:flex;justify-content:space-between;align-items:center;padding:12px 30px;min-height:92px}
+  .vista-global-header .header-brand{flex:0 0 auto;min-width:310px}
+  .vista-global-header .header-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(58vw,980px);text-align:center;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:none;z-index:2}
+  .vista-global-header .vista-expansion{display:block!important;visibility:visible!important;opacity:1!important;color:rgba(255,255,255,.42)!important;font-size:clamp(13px,1.28vw,19px);font-weight:800;letter-spacing:.105em;text-transform:uppercase;white-space:nowrap}
+  .vista-global-header .page-description{display:block!important;visibility:visible!important;color:#d9efff!important;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-top:8px}
+  .vista-global-header .draft-controls{flex:0 0 auto;min-width:310px;justify-content:flex-end;margin-left:auto;z-index:3}
+}
 
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1a3a5f;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
-            flex-shrink: 0;
-        }
+/* Sprint 2.0A Build 2.2: global navigation and versioning */
+.vista-home-link{text-decoration:none;color:inherit;cursor:pointer;border-radius:10px;transition:opacity .2s ease,transform .2s ease}.vista-home-link:hover{opacity:.9;transform:translateY(-1px)}.vista-home-link:focus-visible{outline:2px solid #fff;outline-offset:5px}.vista-breadcrumb{max-width:1320px;margin:0 auto 14px;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.055em;text-transform:uppercase;color:#6b7f94}.vista-breadcrumb a{color:#0b67ad;text-decoration:none}.vista-breadcrumb a:hover{text-decoration:underline}.vista-module-footer{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:20px 16px 26px;color:#6b7f94;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.vista-module-footer span+span:before{content:"•";margin-right:12px;color:#1496d4}@media(max-width:560px){.vista-breadcrumb{margin-bottom:10px;font-size:9px}.vista-module-footer{gap:6px}.vista-module-footer span+span:before{margin-right:6px}}
 
-        .panel-body {
-            overflow-y: auto !important;
-            max-height: calc(80vh - 60px);
-            padding-right: 4px;
-        }
 
-        .panel-body::-webkit-scrollbar {
-            width: 5px;
-        }
-        .panel-body::-webkit-scrollbar-thumb {
-            background: #1a4b82;
-            border-radius: 4px;
-        }
+/* VISTA shared branded footer */
+.branded-module-footer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+.branded-module-footer img{width:92px;max-height:36px;object-fit:contain}
+.branded-module-footer div{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
 
-        /* 3D Canvas Rigid Constraints */
-        #mapFrame { display: none !important; }
-        #threeFrame, .map-shell { 
-            display: block !important; 
-            position: absolute !important; 
-            top: 0; 
-            left: 0; 
-            width: 100% !important; 
-            height: 100% !important; 
-            z-index: 10; 
-        }
 
-        #threeCanvas, .three-canvas {
-            width: 100% !important;
-            height: 100% !important;
-            position: absolute !important;
-            top: 0;
-            left: 0;
-            overflow: hidden;
-        }
+/* VISTA 2.2.2C compact branded module footer */
+.branded-module-footer{
+  width:100%;
+  margin-top:34px;
+  padding:12px 18px 14px;
+  min-height:98px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  text-align:center;
+  color:#eef7ff;
+  background:linear-gradient(105deg,rgba(7,35,81,.96),rgba(12,72,145,.91) 58%,rgba(20,111,180,.88));
+  border-top:1px solid rgba(255,255,255,.24);
+  box-shadow:0 -8px 24px rgba(4,35,75,.10);
+}
+.branded-module-footer img{
+  width:112px;
+  height:auto;
+  max-height:48px;
+  object-fit:contain;
+  display:block;
+  filter:none;
+}
+.branded-module-footer div{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  color:#eef7ff;
+}
+.branded-module-footer span{color:#eef7ff}
+.branded-module-footer span+span:before{color:#72c8ff;margin-right:10px}
+@media(max-width:620px){
+  .branded-module-footer{min-height:90px;padding:10px 12px 12px;gap:4px}
+  .branded-module-footer img{width:96px;max-height:42px}
+  .branded-module-footer div{gap:6px;font-size:9px}
+  .branded-module-footer span+span:before{margin-right:6px}
+}
 
-        #threeCanvas canvas {
-            width: 100% !important;
-            height: 100% !important;
-            display: block !important;
-        }
 
-        /* Field Labels & Input Controls */
-        .field-label {
-            font-size: 11px;
-            font-weight: bold;
-            color: #4da8da;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 10px;
-            margin-bottom: 4px;
-            display: block;
-        }
+/* VISTA 2.2.2D unified full-width premium module footer */
+.branded-module-footer{
+  position:relative;
+  width:100%;
+  max-width:none;
+  min-height:104px;
+  margin:54px 0 0;
+  padding:13px 24px 15px;
+  box-sizing:border-box;
+  overflow:hidden;
+  border:0;
+  border-radius:0;
+  background:
+    radial-gradient(circle at 88% -25%,rgba(121,214,255,.30),transparent 34%),
+    linear-gradient(115deg,rgba(6,39,91,.98) 0%,rgba(13,72,145,.97) 48%,rgba(26,137,205,.93) 100%);
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,.56) inset,
+    0 -10px 30px rgba(8,42,88,.10),
+    0 -1px 0 rgba(14,91,158,.16);
+  isolation:isolate;
+}
+.branded-module-footer::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.13),transparent 27%),
+    linear-gradient(90deg,transparent 0%,rgba(255,255,255,.055) 48%,transparent 100%);
+}
+.branded-module-footer::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:2px;
+  background:linear-gradient(90deg,transparent,rgba(176,229,255,.92),transparent);
+  opacity:.82;
+}
+.branded-module-footer img{
+  width:112px;
+  height:40px;
+  max-height:40px;
+  object-fit:contain;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.34));
+}
+.branded-module-footer div{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  font-size:10px;
+  line-height:1.35;
+  letter-spacing:.075em;
+  text-shadow:0 1px 2px rgba(0,28,67,.52);
+}
+.branded-module-footer span{color:#f4f9ff}
+.branded-module-footer span+span:before{color:#7ed4ff;margin-right:12px}
+@media(max-width:620px){
+  .branded-module-footer{min-height:96px;margin-top:36px;padding:11px 14px 13px}
+  .branded-module-footer img{width:104px;height:37px;max-height:37px}
+  .branded-module-footer div{gap:6px;font-size:9px}
+  .branded-module-footer span+span:before{margin-right:6px}
+}
 
-        .combobox-container { position: relative; width: 100%; margin-bottom: 6px; }
-        
-        .combobox-input {
-            background: linear-gradient(145deg, #0b2038, #102e52);
-            border: 1px solid #1a4b82;
-            border-radius: 8px;
-            color: #ffffff;
-            padding: 10px 14px;
-            font-size: 13px;
-            width: 100%;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .combobox-input:focus { border-color: #00a8ff; box-shadow: 0 0 10px rgba(0, 168, 255, 0.4); }
 
-        .select-input {
-            background: rgba(15, 32, 58, 0.9);
-            border: 1px solid #23558c;
-            color: #fff;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 12px;
-            outline: none;
-        }
-        .select-input:focus { border-color: #00a8ff; }
+/* VISTA 2.2.2D enterprise branding polish */
+.vista-global-header{min-height:98px!important;padding:14px 34px!important}
+.vista-global-header .header-brand{gap:22px!important;min-width:310px!important}
+.vista-global-header .brand-logo{height:58px!important;width:auto!important}
+.vista-global-header .brand-copy strong{font-size:24px!important}
+@media(max-width:980px){.vista-global-header{min-height:90px!important}.vista-global-header .header-brand{min-width:0!important}.vista-global-header .brand-logo{height:46px!important}}
+@media(max-width:560px){.vista-global-header{padding:10px 12px!important}.vista-global-header .brand-logo{height:38px!important}.vista-global-header .header-brand{gap:13px!important}}
 
-        /* Navigation Action Controls */
-        .route-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        
-        .btn-gps-toggle {
-            background: rgba(0, 168, 255, 0.12);
-            border: 1px solid #00a8ff;
-            color: #38d8ff;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-gps-toggle.active {
-            background: #00a8ff;
-            color: #ffffff;
-            box-shadow: 0 0 12px rgba(0, 168, 255, 0.5);
-        }
+/* ==========================================================
+   VISTA 2.3.6 Header Wordmark Fix
+   ========================================================== */
 
-        .btn-clear-route {
-            background: #15344d;
-            border: 1px solid #23558c;
-            color: #a0c0e0;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-clear-route:hover { background: #23558c; color: #fff; }
+.vista-global-header .header-brand{
+    display:flex !important;
+    align-items:center !important;
+    gap:18px !important;
+    flex-wrap:nowrap !important;
+}
 
-        /* Floating Viewport Buttons */
-        #cancelNavBtn {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 10001;
-            padding: 10px 16px;
-            background: rgba(239, 51, 64, 0.25);
-            border: 1px solid #ef3340;
-            color: #ff6b78;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            transition: all 0.2s;
-        }
-        #cancelNavBtn:hover {
-            background: #ef3340;
-            color: #fff;
-        }
-    </style>
-</head>
-<body>
-<div class="app-shell">
-    <aside class="sidebar">
-        <section class="brand-panel">
-            <img class="brand-logo" src="assets/logos/ford-energy-white.png" alt="Ford Energy" onerror="this.src='assets/ford_energy_logo_white.png'"/>
-            <div class="app-title"><h1>SiteNav Command</h1><p>Pedestrian Guidance System with Spatial Awareness</p></div>
-            <div class="system-status"><span class="online-dot"></span><div><b>Spatial Engine System Online</b><small>Kentucky ONE • v13.5 Digital-Twin</small></div></div>
-        </section>
+.vista-global-header .brand-copy{
+    display:flex !important;
+    align-items:center !important;
+    white-space:nowrap !important;
+    flex:0 0 auto;
+}
 
-        <section class="control-section">
-            <label>Navigation Mode</label>
-            <div class="mode-grid">
-                <button class="mode active" data-mode="visitor"><span>👥</span>Visitor</button>
-                <button class="mode" data-mode="employee"><span>🏭</span>Employee</button>
-                <button class="mode" data-mode="contractor"><span>🦺</span>Contractor</button>
-                <button class="mode emergency" data-mode="emergency"><span>🚨</span>Emergency</button>
-            </div>
+.vista-global-header .brand-copy strong{
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    white-space:nowrap !important;
+    font-size:24px !important;
+    letter-spacing:.12em !important;
+    line-height:1 !important;
+}
 
-            <label class="field-label" for="startSearchInput">Start Location</label>
-            <div class="combobox-container">
-                <input type="text" id="startSearchInput" class="combobox-input" placeholder="🔍 Type room or select below..." autocomplete="off"/>
-            </div>
-            <select id="startSelect" class="select-input"></select>
+.vista-product-wordmark{
+    display:inline-flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    white-space:nowrap !important;
+}
 
-            <label class="field-label" for="endSearchInput">Destination</label>
-            <div class="combobox-container">
-                <input type="text" id="endSearchInput" class="combobox-input" placeholder="🔍 Type or search destination..." autocomplete="off"/>
-            </div>
-            <select id="endSelect" class="select-input"></select>
+.vista-product-dot{
+    display:inline-block !important;
+    margin:0 .16em !important;
+    opacity:.50;
+    vertical-align:middle;
+}
 
-            <label class="field-label" for="destinationCategory">Filter Category</label>
-            <select id="destinationCategory" class="select-input">
-                <option value="all">All Categories</option>
-                <option value="visitor">Visitor</option>
-                <option value="production">Production & Departments</option>
-                <option value="security">Security & Entrances</option>
-                <option value="amenity">Amenities</option>
-                <option value="emergency">Emergency</option>
-            </select>
+.vista-global-header .brand span{
+    display:inline !important;
+}
 
-            <button id="routeBtn" class="primary-action">Generate Route</button>
-
-            <!-- Navigation Actions -->
-            <div class="route-action-grid">
-                <button id="gpsToggleBtn" class="btn-gps-toggle">📡 GPS: OFF</button>
-                <button id="clearRouteBtn" class="btn-clear-route">❌ Clear Route</button>
-            </div>
-        </section>
-
-        <section class="quick-routes"><div class="section-heading">Quick Routes</div><div id="quickRoutes"></div></section>
-        
-        <section class="route-status">
-            <div class="route-title"><span>Route Status</span><b id="routeStatus">3D ROUTE</b></div>
-            <div id="steps" class="turn-instructions-box"></div>
-        </section>
-
-        <div class="sidebar-logo-container">
-            <img class="sidebar-footer-logo" src="assets/logos/bwrdo.png" alt="RDO Logo" onerror="this.src='assets/bwrdo.png'"/>
-        </div>
-
-        <footer class="version-footer">PGS v13.5.0 BETA</footer>
-    </aside>
-
-    <main class="workspace">
-        <header class="topbar">
-            <h2>BlueOval Glendale • Ground Floor</h2>
-            <nav class="top-actions">
-                <button id="searchFocus">⌕ Search</button>
-                <button id="legendOpen">Legend</button>
-                <button id="layersOpen">Layers</button>
-                <button id="resetView">Reset</button>
-                <button id="fitRoute" class="fit-button">Fit Route</button>
-            </nav>
-        </header>
-
-        <section class="map-shell">
-            <button id="cancelNavBtn">🛑 Cancel Nav</button>
-
-            <button id="recenterUserBtn" style="position: absolute; bottom: 20px; right: 20px; z-index: 10001; padding: 10px 14px; background: #00a8ff; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
-                🎯 Recenter Location
-            </button>
-
-            <!-- Layers Panel -->
-            <div id="layersPanel" class="layers-panel hide">
-                <div class="panel-header">
-                    <h3>Map Layers</h3>
-                    <button id="layersClose" class="close-btn" title="Close Panel">&times;</button>
-                </div>
-                <div class="panel-body">
-                    <div class="layer-section">
-                        <h4>3D Floor & Structure Layers</h4>
-                        <label class="layer-item"><input type="checkbox" data-3d-layer="site"><span>Site Level / Grounds</span></label>
-                        <label class="layer-item"><input type="checkbox" data-3d-layer="ground" checked><span>Ground Floor</span></label>
-                        <label class="layer-item"><input type="checkbox" data-3d-layer="mezzanine"><span>Mezzanine Level</span></label>
-                        <label class="layer-item"><input type="checkbox" data-3d-layer="roof"><span>Roof Level</span></label>
-                        <label class="layer-item"><input type="checkbox" id="threeDestinationsToggle" checked><span>Destination Anchors & Points</span></label>
-                    </div>
-                    <hr class="panel-divider">
-                    <div class="layer-section">
-                        <h4>Labels & Overlays</h4>
-                        <label class="layer-item"><input type="checkbox" data-semantic-label="building" checked><span>Building Labels</span></label>
-                        <label class="layer-item"><input type="checkbox" data-semantic-label="area" checked><span>Departments & Zones</span></label>
-                        <label class="layer-item"><input type="checkbox" data-semantic-label="room" checked><span>Individual Room Names</span></label>
-                        <label class="layer-item"><input type="checkbox" data-semantic-label="amenity" checked><span>Amenities & Employee Services</span></label>
-                        <label class="layer-item"><input type="checkbox" data-semantic-label="vertical" checked><span>Stairs & Elevators</span></label>
-                        <label class="layer-item"><input type="checkbox" id="threeWalkwaysToggle" checked><span>Pedestrian Walkway Network</span></label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Legend Panel -->
-            <div id="legendPanel" class="legend-panel">
-                <div class="panel-header"><h3>Legend</h3><button id="legendClose">×</button></div>
-                <div class="panel-body" id="legendContent">
-                    <p><span style="color: #4da8da; font-weight: bold;">━━</span> Primary Route</p>
-                    <p><span style="color: #ff4444; font-weight: bold;">━━</span> Emergency Route</p>
-                    <p><span style="color: #00ff88; font-size: 1.2em;">●</span> Approved Route</p>
-                    <p><span style="color: #ffaa00; font-size: 1.2em;">●</span> Tracking Point</p>
-                </div>
-            </div>
-
-            <div id="threeFrame" class="three-frame">
-                <div id="threeCanvas" class="three-canvas"></div>
-            </div>
-        </section>
-    </main>
-</div>
-
-<script src="app.js?v=13.5.0"></script>
-<script type="module" src="viewer3d.js?v=13.5.0"></script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById("layersOpen")?.addEventListener("click", () => document.getElementById("layersPanel").classList.add("show"));
-        document.getElementById("layersClose")?.addEventListener("click", () => document.getElementById("layersPanel").classList.remove("show"));
-        document.getElementById("legendOpen")?.addEventListener("click", () => document.getElementById("legendPanel").classList.add("show"));
-        document.getElementById("legendClose")?.addEventListener("click", () => document.getElementById("legendPanel").classList.remove("show"));
-    });
-</script>
-</body>
-</html>
+.invitation-banner{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:0 0 1rem;padding:1rem 1.15rem;border:1px solid #8ec8f1;border-left:6px solid #0b67ad;border-radius:12px;background:linear-gradient(135deg,#edf7ff,#dcefff);box-shadow:0 10px 25px rgba(0,52,120,.1);color:#17314d}.invitation-banner div{display:grid;gap:.2rem}.invitation-banner strong{color:#003478;font-size:1.05rem}.invitation-banner span{font-size:.9rem}.invitation-banner>span{flex:0 0 auto;padding:.45rem .7rem;border-radius:999px;background:#003478;color:#fff;font-weight:800;letter-spacing:.04em}.invitation-locked{background:#eef3f8!important;color:#42566c!important;cursor:not-allowed}.invitation-error{border-color:#ef9a9a;border-left-color:#c62828;background:#fff2f2}.invitation-error strong{color:#a51e1e}@media(max-width:700px){.invitation-banner{align-items:flex-start;flex-direction:column}.invitation-banner>span{align-self:flex-start}}
+@media(max-width:560px){.vista-global-header{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:7px 9px!important}.vista-global-header .header-brand{min-width:0!important;gap:8px!important}.vista-global-header .brand-logo{height:32px!important}.vista-global-header .brand-copy strong{font-size:14px!important;letter-spacing:.07em!important}.vista-global-header .header-center{grid-column:1/-1;grid-row:2}.vista-global-header .draft-controls{min-width:0!important;justify-self:end}.vista-global-header .btn-save-draft{width:38px;height:34px;padding:0!important;justify-content:center;font-size:0!important}.vista-global-header .btn-save-draft span{font-size:.9rem!important}.hero-title-lockup .vista-product-wordmark{font-size:clamp(2.7rem,15vw,4.2rem)!important}}
+.advance-notice-message{padding:13px 15px;border:1px solid #bfd6ec;border-left:5px solid #2b78bd;border-radius:10px;background:#eef6ff;color:#31506c;font-size:13px;line-height:1.45}.advance-notice-message.compliant{border-color:#8ed0aa;border-left-color:#1d8a53;background:#edf9f2;color:#17663f}.advance-notice-message.late{border-color:#ffbd76;border-left-color:#e96d00;background:#fff5e9;color:#824000}.advance-notice-message strong{display:block;margin-bottom:2px}

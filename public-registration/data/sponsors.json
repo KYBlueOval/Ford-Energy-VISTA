@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-10T16:11:11.783637+00:00",
+  "generatedAt": "2026-08-21T16:02:51.982917+00:00",
   "source": "Ford Energy VISTA Sponsors worksheet via Apps Script",
-  "count": 2,
+  "count": 6,
   "sponsors": [
     {
       "sponsorId": "KY-Glendale",
@@ -16,6 +16,34 @@
       "email": "jysunza@ford.com",
       "department": "Security",
       "keywords": "Security, Justin,"
+    },
+    {
+      "sponsorId": "nweid",
+      "name": "Nathaniel Weid",
+      "email": "nweid@ford.com",
+      "department": "MP&L",
+      "keywords": "Nathaniel Weid, MP&L, Ford Energy, nweid, nweid"
+    },
+    {
+      "sponsorId": "ssilvers",
+      "name": "Scott Silverson",
+      "email": "ssilvers@ford.com",
+      "department": "Plant Leadership",
+      "keywords": "Scott Silverson, Plant Leadership, Ford Energy, ssilvers, ssilvers"
+    },
+    {
+      "sponsorId": "schoi22",
+      "name": "SJ Choi",
+      "email": "schoi22@ford.com",
+      "department": "Plant Leadership",
+      "keywords": "SJ Choi, Plant Leadership, Ford Energy, schoi22, schoi22"
+    },
+    {
+      "sponsorId": "sponsor",
+      "name": "Sponsor",
+      "email": "bosk300576@outlook.com",
+      "department": "TEST",
+      "keywords": "Sponsor, TEST, Ford Energy, sponsor, sponsor"
     }
   ]
 }

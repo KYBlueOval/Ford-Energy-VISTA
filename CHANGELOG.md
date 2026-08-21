@@ -1,3 +1,55 @@
+## VISTA 2.5.6B - Permanent Badge Control Layout Hotfix
+
+- Corrected the Sponsor permanent-badge action overflow in the narrow Visitor Record panel.
+- Scoped the orange callout eyebrow rule so it no longer overrides button icon and label styling.
+- Converted the badge authorization callout to a contained single-column layout with a full-width responsive action.
+- Added explicit text wrapping, sizing, color, and box constraints for every button element.
+
+## VISTA 2.5.6A - Portal Transport and Permanent Badge UI Hotfix
+
+- Replaced raw JSON parsing in Sponsor and Administration portals with validated API-response handling.
+- Added clear timeout, connectivity, invalid-response, and Apps Script deployment guidance instead of exposing browser parser errors.
+- Preserved the production Apps Script endpoint and all authenticated permission checks.
+- Rebuilt the Sponsor Permanent Badge action as a polished Ford-blue dimensional control with responsive and accessible interaction states.
+- Added cache-busting for the corrected Sponsor styles and both corrected portal scripts.
+
+## VISTA 2.5.6 — Permanent Badge Authorization
+
+- Added Sponsor and Approver authorization for permanent visitor credentials after visit approval.
+- Added Ford Energy Blue, Contractor Green, and OEM Orange badge selections with required access and business justification.
+- Added visitor email delivery with the standard Ford Energy onboarding intake QR code and hyperlink.
+- Added configured Ford Global Security distribution delivery with visitor identity, company, photograph, badge type, and access requirements.
+- Added the `PermanentBadgeRequests` worksheet, duplicate-request protection, visitor activity events, and full Administration audit records.
+- Added a focused Administration workspace for pending, in-production, issued, closed, and cancelled badge requests.
+
+## VISTA 2.5.5A — Sponsor Metric Serialization Hotfix
+
+- Corrected advance-notice values returned from Google Sheets date-formatted numeric cells.
+- Prevented epoch-millisecond values and negative elapsed-day displays in approval dialogs.
+- Applied explicit numeric formats to advance-notice and approval-response columns during setup.
+- Updated parking and office/seating assignment examples in Sponsor and Security approval workflows.
+
+## VISTA 2.5.5 — Sponsor Performance & Leadership Outlook
+
+- Added configurable `VISITOR_ADVANCE_NOTICE_DAYS` governance while keeping late requests submittable.
+- Captured the required notice, actual notice, compliance result, and late-request flag on each visit record.
+- Required approval notes, parking assignment, and office/seating assignment for every new approval.
+- Recorded decision time, approving identity, approving role, approval source, and manual override status.
+- Added an executive Sponsor & Approver Performance scorecard with compliance, late requests, manual approvals, response time, and lead-time metrics.
+- Added Sponsor / Approver Performance and Two-Week Leadership Outlook reports with CSV and print export.
+- Changed the public intake label from Home Address to Visitor Address.
+
+## VISTA 2.5.4 — Secure Visitor Invitations & Intake Completion
+
+- Added automatic secure intake invitations for visitor requests created by Sponsors, Approvers, Administrators, and Super Administrators.
+- Added one-time, hashed, expiring visitor-intake tokens; usable tokens are never stored in Google Sheets.
+- Reused the public registration workflow in invitation mode for profile completion, camera/photo processing, vehicle details, safety video, and all seven acknowledgements.
+- Updated the original VisitRequests record instead of creating a duplicate reservation.
+- Added sponsor completion emails plus VisitActivity and AuditLog tracking.
+- Added audited Send / Resend Intake Email controls for existing or undelivered sponsor-created requests; each resend invalidates the prior link.
+- Blocked approval and check-in for sponsor-created requests until visitor intake is complete.
+- Synchronized Sponsor/Approver Administration accounts with the Sponsors worksheet on create, edit, enable, disable, role change, and deletion.
+
 ## VISTA 2.5.3 — Sponsor Self-Service & Administrator Oversight
 
 - Added Sponsor Portal access for active Admin and Super Administrator accounts.
