@@ -1,3 +1,15 @@
+## VISTA 2.6.0 — Sponsor Leadership, Responsibility & Executive Governance
+
+- Added Sponsor-to-Plant-Leader hierarchy assignments with LL5/leadership level, email, report-access, and notification controls.
+- Added scoped executive Sponsor scorecards and current/next-week visitor outlooks in the Sponsor Portal.
+- Added manual and scheduled weekly leadership report email dispatch.
+- Added visitor-specific Operational Sponsor assignments while preserving the primary Sponsor as the accountable owner.
+- Added assignment, reassignment, and return-to-primary history in `VisitResponsibilityAssignments`, Visitor Activity, and Audit Log.
+- Added arrival notifications to both the operational and primary Sponsor when responsibility has been delegated.
+- Added Plant Leader participation in escalated Sponsor-review notifications.
+- Expanded permanent badge processing into Security Review, Production Approval, Correction, Production, Pickup, Issuance, Denial, and Closure stages with stakeholder status emails.
+- Added explicit EV Charging Policy 2026.2 publishing support for the six-hour daily charging allotment.
+
 ## VISTA 2.5.6B - Permanent Badge Control Layout Hotfix
 
 - Corrected the Sponsor permanent-badge action overflow in the narrow Visitor Record panel.
