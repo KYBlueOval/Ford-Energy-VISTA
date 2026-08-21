@@ -1,3 +1,13 @@
+## VISTA 2.6.4 — Sponsor Hierarchy & Responsibility UI
+
+- Added a governed four-level accountability structure: Plant Leadership → OCM Sponsor (LL5) → Sponsor / Requestor → Visitor.
+- Extended the existing `SponsorLeadership` worksheet safely with OCM Sponsor identity fields while preserving legacy assignments.
+- Added OCM Sponsor portal oversight, visitor visibility, executive reporting scope, and hierarchy notification delivery.
+- Rebuilt Administration hierarchy setup with a guided four-level workflow and visual relationship cards.
+- Rebuilt the Sponsor Portal responsibility card as a clean stacked panel with a full-width dimensional action control.
+- Added the full Sponsor hierarchy to each visitor record and refined the responsible-person assignment dialog.
+- Updated cache keys, module labels, audit detail, deployment guidance, and Apps Script setup messaging for Version 2.6.4.
+
 ## VISTA 2.6.3 — Recurring Visitor Term Governance
 
 - Replaced the ambiguous weekly-occurrence presets with explicit One-time Visit and Weekly Recurring Visit schedule types.
