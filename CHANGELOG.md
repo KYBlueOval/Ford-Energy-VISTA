@@ -1,3 +1,10 @@
+## VISTA 2.6.2 — Visitor Responsibility & Advance Notice Standard
+
+- Updated operational responsibility language to explicitly identify day-to-day visitor supervision, arrival notifications, and day-of-visit coordination duties.
+- Changed the default visitor advance-notice standard from 7 calendar days to 14 calendar days.
+- Added a safe setup migration that changes the Config value from 7 to 14 only when the existing value is still the prior default; other customized values remain unchanged.
+- Updated the backend fallback to 14 days and synchronized version labels across all modules.
+
 ## VISTA 2.6.1 — Executive Governance & Responsibility UI
 
 - Rebuilt Sponsor Executive Oversight with branded hierarchy guidance, polished assignment cards, a meaningful empty state, and a direct all-Sponsor visitor workspace action.
