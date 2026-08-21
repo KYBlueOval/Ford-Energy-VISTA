@@ -268,7 +268,7 @@ function seedEVChargingPolicy_(){
   const sitePolicy=[
     'Charging access is limited to approved Ford Energy and Ford Motor Company employees and the approved vehicle listed on the request.',
     'Use only designated employee EV charging spaces and compatible charging equipment. Do not use unauthorized adapters, extension cords, damaged cables, or equipment.',
-    'Move the vehicle when charging is complete or when directed so charging capacity remains available to other approved employees.',
+    'Move the vehicle when charging is complete or when 6 hour daily charging allotment has been reached, so charging capacity remains available to other approved employees.',
     'Keep charging areas, access aisles, fire lanes, and accessible spaces clear. Follow posted time limits, parking controls, and Security instructions.',
     'Immediately report damaged equipment, unsafe conditions, collisions, fire, smoke, overheating, or suspected electrical hazards. Do not use equipment that appears damaged.',
     'Access may be suspended or revoked for unsafe use, policy violations, inaccurate request information, or failure to follow site direction.'
