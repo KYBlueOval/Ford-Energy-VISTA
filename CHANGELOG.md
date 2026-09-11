@@ -1,3 +1,14 @@
+## VISTA 2.7.0 — Android Operations Foundation
+
+- Rebuilt the existing Android prototype as a polished Ford Energy VISTA mobile operations client.
+- Added a native Ford Energy launcher for Security Operations, Sponsor & Approver, Administration, Visitor Registration, and EV Charging Access.
+- Added native online/offline status, retry handling, page progress, module navigation, Android back behavior, and secure external-link boundaries.
+- Preserved camera capture and gallery selection for visitor photos, incidents, handoffs, profile images, and supporting documentation.
+- Preserved NFC badge reads and routed scanned UIDs into existing VISTA login, badge assignment, check-in, checkout, incident, and credential workflows.
+- Added verified VISTA deep links, hardened WebView settings, disabled WebView debugging, and restricted in-app navigation to approved VISTA and Google service origins.
+- Added an automated Android debug-build workflow and installable APK artifact.
+- Verified the debug APK by compiling, installing, launching, and opening Security Operations on an Android emulator.
+
 ## VISTA 2.6.4 — Sponsor Hierarchy & Responsibility UI
 
 - Added a governed four-level accountability structure: Plant Leadership → OCM Sponsor (LL5) → Sponsor / Requestor → Visitor.

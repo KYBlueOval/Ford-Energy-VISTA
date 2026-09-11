@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="vista_navy">#06295E</color>
+    <color name="vista_blue">#003478</color>
+    <color name="vista_sky">#58B6E7</color>
+    <color name="vista_ice">#EAF5FC</color>
+    <color name="vista_orange">#F16F21</color>
+    <color name="vista_ink">#102A43</color>
+    <color name="vista_muted">#60758A</color>
+    <color name="vista_green">#1A7F52</color>
+</resources>

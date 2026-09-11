@@ -10,8 +10,8 @@ android {
         applicationId = "com.fordenergy.vista"
         minSdk = 26
         targetSdk = 36
-        versionCode = 23700
-        versionName = "2.3.7"
+        versionCode = 27000
+        versionName = "2.7.0"
     }
 
     buildTypes {
@@ -32,4 +32,5 @@ android {
 
 dependencies {
     implementation("androidx.core:core:1.17.0")
+    implementation("androidx.activity:activity:1.11.0")
 }
