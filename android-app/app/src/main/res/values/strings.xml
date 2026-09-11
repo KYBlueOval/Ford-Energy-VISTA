@@ -3,4 +3,5 @@
     <string name="app_name">Ford Energy VISTA</string>
     <string name="vista_title">V • I • S • T • A</string>
     <string name="vista_expansion">VISITOR • INFORMATION • SECURITY • TRACKING • ANALYTICS</string>
+    <string name="native_version">ANDROID OPERATIONS CLIENT · 2.7.1</string>
 </resources>

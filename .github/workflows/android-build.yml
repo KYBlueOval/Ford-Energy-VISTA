@@ -18,8 +18,8 @@ jobs:
       run:
         working-directory: android-app
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -31,7 +31,7 @@ jobs:
       - name: Upload installable test APK
         uses: actions/upload-artifact@v4
         with:
-          name: Ford-Energy-VISTA-Android-2.7.0-debug
+          name: Ford-Energy-VISTA-Android-2.7.1-debug
           path: android-app/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30

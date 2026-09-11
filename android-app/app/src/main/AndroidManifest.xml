@@ -10,7 +10,7 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@drawable/ic_vista"
+        android:icon="@mipmap/vista_app_icon"
         android:label="Ford Energy VISTA"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
@@ -28,6 +28,10 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.nfc.action.TAG_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter android:autoVerify="true">

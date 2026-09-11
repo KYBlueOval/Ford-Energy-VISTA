@@ -8,4 +8,9 @@
     <color name="vista_ink">#102A43</color>
     <color name="vista_muted">#60758A</color>
     <color name="vista_green">#1A7F52</color>
+    <color name="vista_surface">#F3F8FC</color>
+    <color name="vista_line">#CADBEC</color>
+    <color name="vista_panel">#FFFFFF</color>
+    <color name="vista_red">#B42318</color>
+    <color name="vista_gold">#FFB547</color>
 </resources>

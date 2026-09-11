@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.VISTA" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.VISTA" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#0B67AD</item>
+        <item name="colorPrimary">@color/vista_blue</item>
+        <item name="colorPrimaryVariant">@color/vista_navy</item>
+        <item name="colorSecondary">@color/vista_sky</item>
+        <item name="android:colorAccent">@color/vista_sky</item>
         <item name="android:navigationBarColor">#003478</item>
         <item name="android:statusBarColor">#06295E</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@drawable/bg_vista_native_surface</item>
     </style>
 </resources>

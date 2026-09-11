@@ -1,195 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:background="@drawable/bg_vista_native_surface">
 
-    <ScrollView
-        android:id="@+id/dashboard"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:background="@drawable/bg_vista_dashboard">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="700dp"
-            android:orientation="vertical"
-            android:paddingLeft="20dp"
-            android:paddingTop="28dp"
-            android:paddingRight="20dp"
-            android:paddingBottom="24dp">
-
-            <ImageView
-                android:layout_width="68dp"
-                android:layout_height="68dp"
-                android:layout_gravity="center_horizontal"
-                android:contentDescription="Ford Energy VISTA"
-                android:elevation="10dp"
-                android:src="@drawable/ic_vista" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:text="FORD ENERGY"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:fontFamily="sans-serif-medium"
-                android:gravity="center"
-                android:letterSpacing="0.18"
-                android:text="@string/vista_title"
-                android:textColor="#FFFFFF"
-                android:textSize="23sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:gravity="center"
-                android:letterSpacing="0.08"
-                android:text="@string/vista_expansion"
-                android:textColor="#A9D9F4"
-                android:textSize="8sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="18dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/networkStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_vista_status"
-                    android:text="● Connected"
-                    android:textColor="@color/vista_green"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/dashboardNfcStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:background="@drawable/bg_vista_status"
-                    android:text="NFC ready"
-                    android:textColor="@color/vista_green"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
+    <ScrollView android:id="@+id/dashboard" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:clipToPadding="false">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingBottom="28dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="260dp" android:background="@drawable/bg_vista_native_hero" android:elevation="14dp" android:gravity="center_horizontal" android:orientation="vertical" android:paddingLeft="26dp" android:paddingTop="26dp" android:paddingRight="26dp" android:paddingBottom="30dp">
+                <ImageView android:layout_width="240dp" android:layout_height="64dp" android:adjustViewBounds="true" android:contentDescription="Ford Energy" android:scaleType="fitCenter" android:src="@drawable/ford_energy_primary_logo" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:fontFamily="sans-serif-black" android:letterSpacing="0.20" android:text="@string/vista_title" android:textColor="#FFFFFF" android:textSize="29sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:gravity="center" android:letterSpacing="0.08" android:text="@string/vista_expansion" android:textColor="#BDE9FF" android:textSize="8sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:background="@drawable/bg_vista_status" android:letterSpacing="0.10" android:text="@string/native_version" android:textColor="#FFFFFF" android:textSize="9sp" android:textStyle="bold" />
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:background="@drawable/bg_vista_card"
-                android:elevation="12dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:letterSpacing="0.12"
-                    android:text="MOBILE OPERATIONS"
-                    android:textColor="@color/vista_orange"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Select a VISTA workspace"
-                    android:textColor="@color/vista_ink"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:layout_marginBottom="13dp"
-                    android:text="Secure access uses your existing VISTA badge or username and PIN. NFC scans are delivered directly to the active workflow."
-                    android:textColor="@color/vista_muted"
-                    android:textSize="12sp"
-                    android:lineSpacingExtra="2dp" />
-
-                <Button android:id="@+id/openSecurity" style="?android:attr/borderlessButtonStyle" android:layout_width="match_parent" android:layout_height="68dp" android:layout_marginTop="8dp" android:background="@drawable/bg_vista_button" android:gravity="center_vertical|start" android:paddingHorizontal="18dp" android:text="SECURITY OPERATIONS  →&#10;NFC check-in, badges, incidents and handoffs" android:textAllCaps="false" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/openSponsor" style="?android:attr/borderlessButtonStyle" android:layout_width="match_parent" android:layout_height="68dp" android:layout_marginTop="10dp" android:background="@drawable/bg_vista_button" android:gravity="center_vertical|start" android:paddingHorizontal="18dp" android:text="SPONSOR &amp; APPROVER  →&#10;Visitor decisions, delegation and oversight" android:textAllCaps="false" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/openAdmin" style="?android:attr/borderlessButtonStyle" android:layout_width="match_parent" android:layout_height="68dp" android:layout_marginTop="10dp" android:background="@drawable/bg_vista_button" android:gravity="center_vertical|start" android:paddingHorizontal="18dp" android:text="SYSTEM ADMINISTRATION  →&#10;Users, alerts, reports, badges and governance" android:textAllCaps="false" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/openRegistration" style="?android:attr/borderlessButtonStyle" android:layout_width="match_parent" android:layout_height="68dp" android:layout_marginTop="10dp" android:background="@drawable/bg_vista_button" android:gravity="center_vertical|start" android:paddingHorizontal="18dp" android:text="VISITOR REGISTRATION  →&#10;Camera-enabled pre-arrival intake" android:textAllCaps="false" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/openEv" style="?android:attr/borderlessButtonStyle" android:layout_width="match_parent" android:layout_height="68dp" android:layout_marginTop="10dp" android:background="@drawable/bg_vista_button" android:gravity="center_vertical|start" android:paddingHorizontal="18dp" android:text="EV CHARGING ACCESS  →&#10;Employee vehicle charging request" android:textAllCaps="false" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginLeft="18dp" android:layout_marginTop="-22dp" android:layout_marginRight="18dp" android:background="@drawable/bg_vista_module_card" android:elevation="16dp" android:gravity="center_vertical" android:orientation="horizontal" android:padding="16dp">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MOBILE OPERATIONS" android:textColor="@color/vista_orange" android:textSize="9sp" android:textStyle="bold" android:letterSpacing="0.12" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Ready for field operations" android:textColor="@color/vista_ink" android:textSize="16sp" android:textStyle="bold" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="end" android:orientation="vertical">
+                    <TextView android:id="@+id/networkStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="● Connected" android:textColor="@color/vista_green" android:textSize="11sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/dashboardNfcStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="NFC reader ready" android:textColor="@color/vista_green" android:textSize="10sp" android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center"
-                android:text="FORD ENERGY V • I • S • T • A\nANDROID OPERATIONS CLIENT · VERSION 2.7.0"
-                android:textColor="#45677F"
-                android:textSize="9sp"
-                android:textStyle="bold" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingLeft="18dp" android:paddingTop="28dp" android:paddingRight="18dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:letterSpacing="0.12" android:text="SECURE WORKSPACES" android:textColor="@color/vista_muted" android:textSize="10sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Choose your VISTA operation" android:textColor="@color/vista_ink" android:textSize="23sp" android:textStyle="bold" />
+
+                <LinearLayout android:id="@+id/openSecurity" android:layout_width="match_parent" android:layout_height="128dp" android:layout_marginTop="16dp" android:background="@drawable/bg_vista_module_security" android:clickable="true" android:elevation="12dp" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:gravity="center_vertical" android:orientation="horizontal" android:padding="20dp">
+                    <TextView android:layout_width="58dp" android:layout_height="58dp" android:background="@drawable/bg_vista_scan_ring" android:gravity="center" android:text="✓" android:textColor="@color/vista_blue" android:textSize="27sp" android:textStyle="bold" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginLeft="17dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:letterSpacing="0.08" android:text="PRIMARY OPERATIONS" android:textColor="#9DDBF8" android:textSize="9sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Security Operations" android:textColor="#FFFFFF" android:textSize="21sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Check-in · badges · incidents · handoffs" android:textColor="#D8F1FF" android:textSize="12sp" />
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textColor="#FFFFFF" android:textSize="36sp" />
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:orientation="horizontal">
+                    <LinearLayout android:id="@+id/openSponsor" android:layout_width="0dp" android:layout_height="148dp" android:layout_weight="1" android:layout_marginRight="7dp" android:background="@drawable/bg_vista_module_card" android:clickable="true" android:elevation="7dp" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:orientation="vertical" android:padding="17dp">
+                        <TextView android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_vista_scan_ring" android:gravity="center" android:text="S" android:textColor="@color/vista_blue" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Sponsor Portal" android:textColor="@color/vista_ink" android:textSize="16sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Approvals &amp; delegation" android:textColor="@color/vista_muted" android:textSize="11sp" />
+                    </LinearLayout>
+                    <LinearLayout android:id="@+id/openAdmin" android:layout_width="0dp" android:layout_height="148dp" android:layout_weight="1" android:layout_marginLeft="7dp" android:background="@drawable/bg_vista_module_card" android:clickable="true" android:elevation="7dp" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:orientation="vertical" android:padding="17dp">
+                        <TextView android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_vista_scan_ring" android:gravity="center" android:text="A" android:textColor="@color/vista_blue" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Administration" android:textColor="@color/vista_ink" android:textSize="16sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Control &amp; reporting" android:textColor="@color/vista_muted" android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:letterSpacing="0.12" android:text="PUBLIC SERVICES" android:textColor="@color/vista_muted" android:textSize="10sp" android:textStyle="bold" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
+                    <LinearLayout android:id="@+id/openRegistration" android:layout_width="0dp" android:layout_height="112dp" android:layout_weight="1" android:layout_marginRight="7dp" android:background="@drawable/bg_vista_module_card" android:clickable="true" android:elevation="7dp" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:orientation="vertical" android:padding="17dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="VISITOR" android:textColor="@color/vista_orange" android:textSize="9sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Pre-Arrival Registration" android:textColor="@color/vista_ink" android:textSize="15sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Camera-enabled intake  →" android:textColor="@color/vista_blue" android:textSize="11sp" />
+                    </LinearLayout>
+                    <LinearLayout android:id="@+id/openEv" android:layout_width="0dp" android:layout_height="112dp" android:layout_weight="1" android:layout_marginLeft="7dp" android:background="@drawable/bg_vista_module_card" android:clickable="true" android:elevation="7dp" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:orientation="vertical" android:padding="17dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="EMPLOYEE" android:textColor="@color/vista_orange" android:textSize="9sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="EV Charging Access" android:textColor="@color/vista_ink" android:textSize="15sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Submit access request  →" android:textColor="@color/vista_blue" android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:background="@drawable/bg_vista_module_card" android:gravity="center_vertical" android:orientation="horizontal" android:padding="16dp">
+                    <TextView android:layout_width="48dp" android:layout_height="48dp" android:background="@drawable/bg_vista_scan_ring" android:gravity="center" android:text=")))" android:textColor="@color/vista_blue" android:textSize="12sp" android:textStyle="bold" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginLeft="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NFC badge ready" android:textColor="@color/vista_ink" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Choose a secure workspace, then tap your Ford Energy badge." android:textColor="@color/vista_muted" android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
-    <LinearLayout
-        android:id="@+id/webContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#FFFFFF"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:background="@drawable/bg_vista_toolbar"
-            android:elevation="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="7dp">
-
-            <Button android:id="@+id/navBack" style="?android:attr/borderlessButtonStyle" android:layout_width="44dp" android:layout_height="48dp" android:text="‹" android:textColor="#FFFFFF" android:textSize="29sp" />
-            <Button android:id="@+id/navHome" style="?android:attr/borderlessButtonStyle" android:layout_width="48dp" android:layout_height="48dp" android:text="⌂" android:textColor="#FFFFFF" android:textSize="22sp" />
-            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingLeft="7dp">
-                <TextView android:id="@+id/moduleTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:maxLines="1" android:text="VISTA" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" />
-                <TextView android:id="@+id/moduleSubtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:maxLines="1" android:text="FORD ENERGY MOBILE OPERATIONS" android:textColor="#A9D9F4" android:textSize="8sp" android:textStyle="bold" />
-            </LinearLayout>
-            <TextView android:id="@+id/nfcStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="5dp" android:text="NFC" android:textColor="#C8F1FF" android:textSize="9sp" android:textStyle="bold" />
-            <Button android:id="@+id/navRefresh" style="?android:attr/borderlessButtonStyle" android:layout_width="44dp" android:layout_height="48dp" android:text="↻" android:textColor="#FFFFFF" android:textSize="21sp" />
+    <LinearLayout android:id="@+id/authContainer" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_vista_auth" android:gravity="center_horizontal" android:orientation="vertical" android:paddingLeft="22dp" android:paddingTop="16dp" android:paddingRight="22dp" android:paddingBottom="24dp" android:visibility="gone">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="54dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <ImageButton android:id="@+id/authBack" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Back" android:padding="12dp" android:src="@android:drawable/ic_media_previous" app:tint="#FFFFFF" />
+            <ImageView android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:adjustViewBounds="true" android:contentDescription="Ford Energy" android:scaleType="fitCenter" android:src="@drawable/ford_energy_primary_logo" />
+            <View android:layout_width="48dp" android:layout_height="48dp" />
         </LinearLayout>
+        <TextView android:id="@+id/authModuleTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:letterSpacing="0.12" android:text="SECURITY OPERATIONS" android:textColor="#A9E0FA" android:textSize="10sp" android:textStyle="bold" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Secure VISTA Sign-In" android:textColor="#FFFFFF" android:textSize="28sp" android:textStyle="bold" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="24dp" android:background="@drawable/bg_vista_module_card" android:elevation="18dp" android:gravity="center_horizontal" android:orientation="vertical" android:padding="24dp">
+            <LinearLayout android:id="@+id/authBadgePanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal" android:orientation="vertical">
+                <TextView android:id="@+id/authBadgeRing" android:layout_width="136dp" android:layout_height="136dp" android:background="@drawable/bg_vista_scan_ring" android:gravity="center" android:text=")))" android:textColor="@color/vista_blue" android:textSize="25sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Tap your Ford Energy badge" android:textColor="@color/vista_ink" android:textSize="21sp" android:textStyle="bold" />
+                <TextView android:id="@+id/authStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center" android:text="Hold the badge near the NFC area on your device." android:textColor="@color/vista_muted" android:textSize="13sp" />
+                <TextView android:id="@+id/authUid" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:fontFamily="monospace" android:gravity="center" android:textColor="@color/vista_blue" android:textSize="12sp" android:textStyle="bold" android:visibility="gone" />
+                <ProgressBar android:id="@+id/authProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="18dp" android:indeterminate="true" android:indeterminateTint="@color/vista_sky" android:visibility="gone" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/showPinLogin" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="24dp" android:text="Use username and PIN" android:textAllCaps="false" android:textColor="@color/vista_blue" app:backgroundTint="#FFFFFF" app:cornerRadius="14dp" app:strokeColor="@color/vista_line" app:strokeWidth="1dp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/authPinPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Backup PIN Access" android:textColor="@color/vista_ink" android:textSize="21sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Use the same VISTA credentials as the web application." android:textColor="@color/vista_muted" android:textSize="12sp" />
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:hint="Username" app:boxBackgroundMode="outline" app:boxCornerRadiusTopStart="14dp" app:boxCornerRadiusTopEnd="14dp" app:boxCornerRadiusBottomStart="14dp" app:boxCornerRadiusBottomEnd="14dp"><com.google.android.material.textfield.TextInputEditText android:id="@+id/authUsername" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" android:singleLine="true" /></com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:hint="PIN" app:boxBackgroundMode="outline" app:boxCornerRadiusTopStart="14dp" app:boxCornerRadiusTopEnd="14dp" app:boxCornerRadiusBottomStart="14dp" app:boxCornerRadiusBottomEnd="14dp"><com.google.android.material.textfield.TextInputEditText android:id="@+id/authPin" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberPassword" android:singleLine="true" /></com.google.android.material.textfield.TextInputLayout>
+                <TextView android:id="@+id/authPinStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:gravity="center" android:textColor="@color/vista_muted" android:textSize="12sp" android:visibility="gone" />
+                <ProgressBar android:id="@+id/authPinProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="10dp" android:indeterminate="true" android:indeterminateTint="@color/vista_sky" android:visibility="gone" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/authPinSubmit" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="18dp" android:text="Sign in securely" android:textAllCaps="false" android:textSize="15sp" android:textStyle="bold" app:backgroundTint="@color/vista_blue" app:cornerRadius="14dp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/showBadgeLogin" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="10dp" android:text="Return to NFC badge scan" android:textAllCaps="false" android:textColor="@color/vista_blue" app:backgroundTint="#FFFFFF" app:cornerRadius="14dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
 
-        <ProgressBar
-            android:id="@+id/pageProgress"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:max="100"
-            android:progressTint="@color/vista_sky"
-            android:visibility="gone" />
-
+    <LinearLayout android:id="@+id/webContainer" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#FFFFFF" android:orientation="vertical" android:visibility="gone">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="64dp" android:background="@drawable/bg_vista_toolbar" android:elevation="10dp" android:gravity="center_vertical" android:orientation="horizontal" android:paddingHorizontal="7dp">
+            <ImageButton android:id="@+id/navBack" android:layout_width="44dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Back" android:padding="12dp" android:src="@android:drawable/ic_media_previous" app:tint="#FFFFFF" />
+            <ImageButton android:id="@+id/navHome" android:layout_width="46dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="VISTA home" android:padding="12dp" android:src="@android:drawable/ic_menu_view" app:tint="#FFFFFF" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingLeft="8dp"><TextView android:id="@+id/moduleTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:maxLines="1" android:text="VISTA" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" /><TextView android:id="@+id/moduleSubtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:maxLines="1" android:text="FORD ENERGY · SECURE MOBILE WORKSPACE" android:textColor="#A9D9F4" android:textSize="8sp" android:textStyle="bold" /></LinearLayout>
+            <TextView android:id="@+id/nfcStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="6dp" android:text="NFC READY" android:textColor="#C8F1FF" android:textSize="8sp" android:textStyle="bold" />
+            <ImageButton android:id="@+id/navRefresh" android:layout_width="44dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Refresh" android:padding="12dp" android:src="@android:drawable/stat_notify_sync" app:tint="#FFFFFF" />
+        </LinearLayout>
+        <ProgressBar android:id="@+id/pageProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="3dp" android:max="100" android:progressTint="@color/vista_sky" android:visibility="gone" />
         <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
             <WebView android:id="@+id/webView" android:layout_width="match_parent" android:layout_height="match_parent" />
-            <LinearLayout android:id="@+id/offlinePanel" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F2F8FC" android:gravity="center" android:orientation="vertical" android:padding="30dp" android:visibility="gone">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Connection unavailable" android:textColor="@color/vista_ink" android:textSize="22sp" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center" android:text="VISTA requires a secure internet connection. Check Wi-Fi or mobile data, then retry." android:textColor="@color/vista_muted" android:textSize="13sp" />
-                <Button android:id="@+id/offlineRetry" android:layout_width="220dp" android:layout_height="54dp" android:layout_marginTop="20dp" android:background="@drawable/bg_vista_button" android:text="Retry Connection" android:textAllCaps="false" android:textColor="#FFFFFF" android:textStyle="bold" />
-            </LinearLayout>
+            <LinearLayout android:id="@+id/offlinePanel" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_vista_native_surface" android:gravity="center" android:orientation="vertical" android:padding="30dp" android:visibility="gone"><TextView android:layout_width="86dp" android:layout_height="86dp" android:background="@drawable/bg_vista_scan_ring" android:gravity="center" android:text="!" android:textColor="@color/vista_orange" android:textSize="36sp" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Connection unavailable" android:textColor="@color/vista_ink" android:textSize="22sp" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center" android:text="Check Wi-Fi or mobile data, then reconnect to the secure VISTA service." android:textColor="@color/vista_muted" android:textSize="13sp" /><com.google.android.material.button.MaterialButton android:id="@+id/offlineRetry" android:layout_width="230dp" android:layout_height="54dp" android:layout_marginTop="22dp" android:text="Retry connection" android:textAllCaps="false" android:textStyle="bold" app:backgroundTint="@color/vista_blue" app:cornerRadius="14dp" /></LinearLayout>
         </FrameLayout>
     </LinearLayout>
 </FrameLayout>

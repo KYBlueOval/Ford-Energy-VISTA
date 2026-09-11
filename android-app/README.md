@@ -1,6 +1,6 @@
 # Ford Energy VISTA Android Operations Client
 
-Version 2.7.0 is the Android foundation for the VISTA web suite. It uses the production GitHub Pages applications and existing Apps Script API as the authoritative system of record.
+Version 2.7.1 is the native Android operations experience for the VISTA suite. It uses native Ford Energy navigation and authentication while retaining the production GitHub Pages applications and Apps Script API as the authoritative system of record.
 
 ## Included workspaces
 
@@ -13,14 +13,14 @@ Version 2.7.0 is the Android foundation for the VISTA web suite. It uses the pro
 ## Device capabilities
 
 - Mobile data and Wi-Fi connectivity
-- NFC badge sign-in and badge UID capture
+- Native NFC badge sign-in and badge UID capture
 - Camera and photo-library access
 - Visitor, incident, handoff, and profile-photo uploads
 - VISTA deep links
 - Secure external-link handling
 - Offline detection and retry
 
-NFC scans are dispatched to the active VISTA page as a `vista:nfc-scan` browser event. Existing Security Operations, Administration, and Sponsor Portal listeners consume that event.
+The secure workspaces open a native sign-in screen before protected VISTA content is loaded. Android Reader Mode reads NFC-A, NFC-B, and DESFire-compatible credentials, verifies the UID directly with VISTA, validates the selected portal permission, and transfers the resulting secure session to the workspace. Once signed in, NFC scans are dispatched to the active VISTA workflow for badge assignment and operational actions.
 
 ## Build
 
@@ -45,7 +45,7 @@ android-app/app/build/outputs/apk/debug/app-debug.apk
 
 1. Install the debug APK on an NFC-capable Android device.
 2. Grant camera permission when requested.
-3. Open Security Operations and sign in with a VISTA badge or username/PIN.
+3. Select Security Operations, then sign in on the native screen with a VISTA badge or username/PIN.
 4. Open badge assignment or manual check-in and scan a visitor badge.
 5. Confirm the UID populates the active field.
 6. Open Manual Visitor Check-In and capture a visitor photo.

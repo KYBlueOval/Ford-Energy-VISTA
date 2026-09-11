@@ -1,3 +1,15 @@
+## VISTA 2.7.1 — Native Android Experience and NFC Authentication
+
+- Replaced the generic stacked-button Android launcher with a polished native Ford Energy operations dashboard aligned with the VISTA web suite and BadgeValidator visual language.
+- Replaced the placeholder VISTA artwork with the production Ford Energy logo and a recognizable Ford application icon.
+- Added native, role-aware sign-in for Security Operations, Sponsor & Approver, and Administration before opening protected workspaces.
+- Implemented Android NFC Reader Mode for NFC-A, NFC-B, and DESFire-compatible credentials with NDEF checks skipped, matching the proven BadgeValidator acquisition path.
+- Retained foreground-dispatch and launch-intent handling as compatibility fallbacks and added duplicate-scan suppression.
+- Added native badge verification against the VISTA Apps Script API and secure session transfer into the selected workspace.
+- Continued NFC routing after sign-in for visitor-badge assignment, check-in, checkout, manual authorization, incidents, and permanent-badge workflows.
+- Modernized camera permission and photo-selection handling and retained hardened in-app navigation boundaries.
+- Verified compilation, Android lint, installation, native dashboard rendering, and native secure sign-in rendering in the Android emulator.
+
 ## VISTA 2.7.0 — Android Operations Foundation
 
 - Rebuilt the existing Android prototype as a polished Ford Energy VISTA mobile operations client.
